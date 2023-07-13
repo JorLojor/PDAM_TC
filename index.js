@@ -11,13 +11,16 @@ app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 
 // database connection
-
+mongoose.connect('mongodb+srv://reacteev:teamPDAMproject@pdamtc.rr8ai5j.mongodb.net/')
 // database connection
 
 // routes
-
+const userRoutes = require('./routers/user')
 // routes
-// make me hello world
+app.use(userRoutes)
+
+
+
 app.get('/', (req, res) => {
     res.send('bismillah hirrohman nirrohim');
 });

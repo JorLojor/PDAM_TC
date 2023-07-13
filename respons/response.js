@@ -8,4 +8,4 @@ const response_valid = (status,data,message,res)=>{
     })
 }
 
-module.exports= response_valid
+module.exports= response_valid;
