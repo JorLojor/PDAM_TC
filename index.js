@@ -15,9 +15,22 @@ mongoose.connect('mongodb+srv://reacteev:teamPDAMproject@pdamtc.rr8ai5j.mongodb.
 // database connection
 
 // routes
+
+const instrukturRoutes = require('./routers/instruktur')
+const jadwalRoutes = require('./routers/jadwal')
+const kelasRoutes = require('./routers/kelas')
+const materiRoutes = require('./routers/materi')
+const pesertaRoutes = require('./routers/peserta')
 const userRoutes = require('./routers/user')
 // routes
-app.use(userRoutes)
+
+
+app.use('/instruktur/',instrukturRoutes)
+app.use('/jadwal/',jadwalRoutes)
+app.use('/kelas/',kelasRoutes)
+app.use('/materi/',materiRoutes)
+app.use('/peserta/',pesertaRoutes)
+app.use('/user/',userRoutes)
 
 
 
