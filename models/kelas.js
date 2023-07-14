@@ -3,7 +3,8 @@ const user = require('./user');
 const {Schema} = moongose;
 
 const materi = require('./materi');
-// const peserta = require('./peserta');
+const peserta = require('./pesertaKelas');
+const instruktur  = require('./instruktur');
 
 
 const kelasSchema = new Schema({
@@ -14,11 +15,17 @@ const kelasSchema = new Schema({
     deskription : {type: String, required: true},
     methods : {type: String, required: true}, //online,offline, onlineMeeting
     materi : {type: Schema.Types.ObjectId, ref: 'materi', required: false}, //refrensi ke schema materi
-    peserta : {type: Schema.Types.ObjectId, ref: 'peserta', required: false}, //refrensi ke schema user dengan role 3 atau peserta hanya untuk 
-    instruktur : {type: Schema.Types.ObjectId, ref: 'instruktur', required: false}, //refrensi ke schema user dengan role 2 atau instruktur
+    peserta : [peserta], //refrensi ke schema user dengan role 3 atau peserta hanya untuk 
+    instruktur : [instruktur], //refrensi ke schema user dengan role 2 atau instruktur
     kodeNotaDinas: {type: String, required: false}, //refrensi ke schema
+<<<<<<< HEAD
     kelasType : {type: String, required: false}, // internal pdam atau eksternal pdam atau All
 },{timestamps: true});
+=======
+    classType : {type: String, required: false},
+    classPermission : {type: String, required: false}
+});
+>>>>>>> 4a35976 (latest/feat : fixing models)
 
 module.exports = moongose.model('Kelas', kelasSchema);
    
