@@ -2,12 +2,9 @@ const mongoose = require('mongoose');
 const {Schema} = mongoose;
 
 const pesertaKelasSchema = new Schema({
-    user: {type: Schema.Types.ObjectId, ref: 'User'},
+    kelas: {type: Schema.Types.ObjectId, ref: 'Kelas', required: true},
+    user: {type: Schema.Types.ObjectId, ref: 'User', required: true},
     status: {type: String, required: true}, // pending, accepted, rejected
-})
-const pesertaKelas = mongoose.model('pesertaKelas',pesertaKelasSchema)
-
+},{timestamps: true,_id : false});
 
 module.exports = pesertaKelasSchema;
-
-// Path: models/pesertaKelas.js
