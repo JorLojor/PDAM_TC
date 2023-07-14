@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const pesertaKelasSchema = require('./pesertaKelas');
+const pesertaKelasSchema = require('../models/pesertaKelas');
 const response = require('../respons/response');
 
 module.exports = {

@@ -2,11 +2,9 @@ const mongoose = require('mongoose');
 const {Schema} = mongoose;
 
 const instruktur = new Schema({
-    nama: {type: String, required: true},
-    email: {type: String, required: true},
-    nohp: {type: Number, required: true},
-    spesialis: {type: String, required: true},
-});
+    user : {type: Schema.Types.ObjectId, ref: 'user'},
+    spesialis: {type: String, required: true},// spesialis, req false
+},{ timestamps: true,_id:false });
 
 module.exports = instruktur;
 
