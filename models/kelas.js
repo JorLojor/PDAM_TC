@@ -23,5 +23,3 @@ const kelasSchema = new Schema({
 
 module.exports = moongose.model('Kelas', kelasSchema);
    
-
-// Path: models/kelas.js
