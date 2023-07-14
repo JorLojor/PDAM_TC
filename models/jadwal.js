@@ -5,13 +5,13 @@ const kelas = require('./kelas');
 
 // pekhususan untuk kelas ofline livestraming
 const jadwalSchema = new Schema({
-    kelas:[kelas],
+    kelas:{type: Schema.Types.ObjectId, ref: 'kelas', required: false},
     jamMulai:{type: Date, required: false},
     jamSelesai:{type: Date, required: false},
     taggal:{type: Date, required: false}
-});
+},{ timestamps: true,_id:false });
 
-module.exports = moongose.model('Jadwal', jadwalSchema);
+module.exports = jadwalSchema;
 
 // yang bisa ngisi instruktur doang
 
