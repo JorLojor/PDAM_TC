@@ -2,6 +2,10 @@ const moongose = require('mongoose');
 const user = require('./user');
 const {Schema} = moongose;
 
+const materi = require('./materi');
+// const peserta = require('./peserta');
+
+
 const kelasSchema = new Schema({
     kodeKelas: {type: String, required: true, unique: true},
     nama : {type: String, required: true},
@@ -9,9 +13,9 @@ const kelasSchema = new Schema({
     kapasitasPeserta : {type: Number, required: true},
     deskription : {type: String, required: true},
     methods : {type: String, required: true}, //online,offline, onlineMeeting
-    materi : {type : Schema.Types.ObjectId, ref: 'materi', required: false},
-    peserta :  {type: Schema.Types.ObjectId, ref: 'peserta' , required: false},
-    instruktur : [{type: Schema.Types.ObjectId, ref: 'instruktur', required: false}], //refrensi ke schema user dengan role 2 atau instruktur
+    materi : {type: Schema.Types.ObjectId, ref: 'materi', required: false}, //refrensi ke schema materi
+    peserta : {type: Schema.Types.ObjectId, ref: 'peserta', required: false}, //refrensi ke schema user dengan role 3 atau peserta hanya untuk 
+    instruktur : {type: Schema.Types.ObjectId, ref: 'instruktur', required: false}, //refrensi ke schema user dengan role 2 atau instruktur
     kodeNotaDinas: {type: String, required: false}, //refrensi ke schema
     kelasType : {type: String, required: false}, // internal pdam atau eksternal pdam atau All
 },{timestamps: true});

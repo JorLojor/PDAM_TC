@@ -1,6 +1,9 @@
 const moongose = require('mongoose');
 const {Schema} = moongose;
 
+const kelas = require('./kelas');
+
+// pekhususan untuk kelas ofline livestraming
 const jadwalSchema = new Schema({
     kelas: [{ type: Schema.Types.ObjectId, ref: 'Kelas', required: true }],
     jamMulai: { type: Date, required: false },
