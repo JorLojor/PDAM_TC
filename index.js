@@ -11,7 +11,7 @@ app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 
 // database connection
-mongoose.connect('mongodb+srv://reacteev:teamPDAMproject@pdamtc.rr8ai5j.mongodb.net/')
+mongoose.connect(process.env.mongodb)
 // database connection
 
 // routes
