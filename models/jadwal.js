@@ -1,7 +1,7 @@
 const moongose = require('mongoose');
 const {Schema} = moongose;
 
-const kelas = require('kelas');
+const kelas = require('./kelas');
 
 // pekhususan untuk kelas ofline livestraming
 const jadwalSchema = new Schema({
