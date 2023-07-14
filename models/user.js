@@ -10,8 +10,9 @@ const userSchema = new Schema({
     UserType : {type: String, required: false}, // internal pdam atau eksternal pdam
     kelas : [{type: Schema.Types.ObjectId, ref: 'Kelas', required: false}], //refrensi ke schema kelas
     spesialis: {type: String, required: false},// spesialis, req false
-    nilai: [{type: Schema.Types.ObjectId, required: false, ref: 'Nilai'}],// nilai ref nilai
-});  
+    jabatan: {type: String, required: false},// jabatan, req false
+    nilai: {type: Schema.Types.ObjectId, required: false, ref: 'Nilai'},// nilai ref nilai
+},{timestamps: true});  
 
 module.exports = mongoose.model('User', userSchema);
 
