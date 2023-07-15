@@ -51,20 +51,20 @@ module.exports = {
     },
     getAllUser:async (req, res) => { // pake pagination
         try{
-            const {page, limit, isPaginate} = req.query;
+            const isPaginate = parseInt(req.query.paginate);
+            // const isPaginate = parseInt(req.body.paginate);
             if (isPaginate === 0) {
                 const result = await userModel.find();
                 response(200, result, "get user",res);
                 return;
             }
-            page =  parseInt(page, 10) || 1;
-            limit =  parseInt(limit, 10) || 10;
+            const page =  parseInt(req.query.page) || 1;
+            const limit =  parseInt(req.query.limit) || 10;
             const totalData = await userModel.countDocuments() 
             const result = await userModel.find()
-            .populate("User")
             .skip((page - 1) * limit)
             .limit(limit)
-            response(200, result, {totalData, totalPage, page}, "Berhasil get all user",res);            
+            response(200, result, "Berhasil get all user",res);            
         }catch(error){
             response(500, error, "Server error",res);
         }
