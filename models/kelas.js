@@ -1,4 +1,5 @@
 const moongose = require('mongoose');
+const user = require('./user');
 const {Schema} = moongose;
 
 const kelasSchema = new Schema({
@@ -6,12 +7,13 @@ const kelasSchema = new Schema({
     nama : {type: String, required: true},
     harga : {type: Number, required: false},
     kapasitasPeserta : {type: Number, required: true},
-    description : {type: String, required: true},
+    deskription : {type: String, required: true},
     methods : {type: String, required: true}, //online,offline, onlineMeeting
     materi : {type : Schema.Types.ObjectId, ref: 'materi', required: false},
     peserta :  {type: Schema.Types.ObjectId, ref: 'peserta' , required: false},
-    instruktur : {type: Schema.Types.ObjectId, ref: 'instruktur', required: false}, //refrensi ke schema user dengan role 2 atau instruktur
-    kodeNotaDinas: {type: String, required: false,unique: true}, //refrensi ke schema
+    instruktur : [{type: Schema.Types.ObjectId, ref: 'instruktur', required: false}], //refrensi ke schema user dengan role 2 atau instruktur
+    kodeNotaDinas: {type: String, required: false}, //refrensi ke schema
+    kelasType : {type: String, required: false}, // internal pdam atau eksternal pdam atau All
 },{timestamps: true});
 
 module.exports = moongose.model('Kelas', kelasSchema);

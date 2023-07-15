@@ -7,7 +7,7 @@ const userSchema = new Schema({
     username : {type: String, required: true},
     password : {type: String, required: true},
     role : {type: Number, required: false}, // 1 = admin, 2 = instruktur, 3 = user
-    UserType : {type: String, required: false}, // internal pdam atau eksternal pdam
+    UserType : {type: String, required: false},// internal pdam atau eksternal pdam atau All
     kelas : [{type: Schema.Types.ObjectId, ref: 'Kelas', required: false}], //refrensi ke schema kelas
     spesialis: {type: String, required: false},// spesialis, req false
     jabatan: {type: String, required: false},// jabatan, req false

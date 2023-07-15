@@ -19,7 +19,7 @@ module.exports = {
                 kelas,
                 jamMulai,
                 jamSelesai,
-                tanggal
+                tanggal,
             })
             const result = await jadwal.save();
             response(200, result, "created new jadwal",res)
