@@ -56,7 +56,7 @@ module.exports = {
         }
 
     },
-    adminAdnInstruktur: async (req, res, next) => {
+        adminAdnInstruktur: async (req, res, next) => {
         const authHeader = req.headers.authorization;
         const secret_key = process.env.secret_key
         
