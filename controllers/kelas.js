@@ -13,6 +13,7 @@ module.exports = {
             const data = await KelasModel.find()
             .skip((halaman - 1) * batas)
             .limit(batas)
+            .populate('materi instruktur peserta')
 
             result = {
                 data : data,
@@ -43,7 +44,7 @@ module.exports = {
     },
     createKelas: async (req, res) => {
         try {
-            const {kodeKelas, nama,harga,kapasitasPeserta, description, methods ,instruktur, peserta} = req.body;
+            const {kodeKelas, nama,harga,kapasitasPeserta, description, methods ,instruktur, peserta,materi} = req.body;
             
             const kelas = new KelasModel({
                 kodeKelas,
@@ -53,7 +54,8 @@ module.exports = {
                 description,
                 methods,
                 peserta,
-                instruktur
+                instruktur,
+                materi
             });
 
             const result = await kelas.save();
