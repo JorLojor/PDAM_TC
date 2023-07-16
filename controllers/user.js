@@ -8,13 +8,16 @@ const response = require("../respons/response");
 module.exports = {
     register:async (req, res) => {
         try{
+
             const {name, email, username, password} = req.body;
             const cekUser = await userModel.findOne({
                 $or: [{ username }, { email }],
             });
+
             if (cekUser) {
                 response(400, username, "Username atau email sudah terdaftar",res);
             }
+
             const passwordHash = bcrypt.hashSync(password, 10);
             const user = new userModel({
                 name,
@@ -22,8 +25,8 @@ module.exports = {
                 username,
                 password: passwordHash,
             })
-            console.log('test');
             await user.save();
+
             response(200, user, "Register berhasil",res);
         }catch(error){
             response(500, error, "Server error",res);
@@ -36,6 +39,7 @@ module.exports = {
             const user = await userModel.findOne({
                 $or: [{ username }, { email: username }],
             });
+
             if (user) {
                 const cekPassword = bcrypt.compareSync(password, user.password);
                 if (cekPassword) {
@@ -45,6 +49,7 @@ module.exports = {
                     response(400, username, "Password salah",res);
                 }
             }
+
         }catch(error){
             response(500, error, "Server error",res);
         }
@@ -52,22 +57,31 @@ module.exports = {
     getAllUser:async (req, res) => { // pake pagination
         try{
             const isPaginate = parseInt(req.query.paginate);
-            // const isPaginate = parseInt(req.body.paginate);
+
             if (isPaginate === 0) {
-                const result = await userModel.find();
+                const totalData = await userModel.countDocuments()
+                const data = await userModel.find();
+                result = {
+                    data : data,
+                    "total data" : totalData
+                }         
                 response(200, result, "get user",res);
                 return;
             }
+
             const page =  parseInt(req.query.page) || 1;
             const limit =  parseInt(req.query.limit) || 10;
             const totalData = await userModel.countDocuments() 
+
             const data = await userModel.find()
             .skip((page - 1) * limit)
             .limit(limit)
+
             result = {
                 data : data,
                 "total data" : totalData
             }         
+
             response(200, result, "Berhasil get all user",res);   
         }catch(error){
             response(500, error, "Server error",res);
@@ -77,11 +91,13 @@ module.exports = {
         try{
             const idUser = req.params.id;
             const user = await userModel.findById(idUser);
+
             if (user) {
                 response(200, user, "Berhasil get single user",res);
             } else {
                 response(400, idUser, "User tidak ditemukan",res);
             }
+
         }catch(error){
             response(500, error, "Server error",res);
         }
@@ -89,10 +105,12 @@ module.exports = {
     updateUser:async (req, res) => {
         const idUser = req.params.id;
         const updatedUser = req.body;
+
         try {
           const user = await userModel.findByIdAndUpdate(idUser, updatedUser, {
             new: true,
           });
+
           res.json(user);
         } catch (error) {
           res.status(500).json({ error: "Internal server error, coba lagi" });
@@ -100,6 +118,7 @@ module.exports = {
     },
     deleteUser:async (req, res) => {
         const idUser = req.params.id;
+
         try {
           const user = await userModel.findByIdAndRemove(idUser);
           res.json(user);

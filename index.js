@@ -19,7 +19,6 @@ mongoose.connect(process.env.mongodb)
 const jadwalRoutes = require('./routers/jadwal')
 const kelasRoutes = require('./routers/kelas')
 const materiRoutes = require('./routers/materi')
-const pesertaRoutes = require('./routers/peserta')
 const userRoutes = require('./routers/user')
 // routes
 
@@ -28,7 +27,6 @@ const userRoutes = require('./routers/user')
 app.use('/jadwal/',jadwalRoutes)
 app.use('/kelas/',kelasRoutes)
 app.use('/materi/',materiRoutes)
-app.use('/peserta/',pesertaRoutes)
 app.use('/user/',userRoutes)
 
 
