@@ -5,27 +5,38 @@ const response = require('../respons/response');
 module.exports = {
     getAllKelas: async (req, res) => { // make paginatiomm
         try {
-            const halaman = parseInt(req.query.halaman) || 1;
-            const batas = parseInt(req.query.batas) || 5; // 2 data per halaman untuk ujicoba
-            let totalData;
 
-            totalData = await KelasModel.countDocuments();
-            const result = await KelasModel.find()
+            const halaman = parseInt(req.query.halaman) || 1;
+            const batas = parseInt(req.query.batas) || 5;
+            const totalData = await KelasModel.countDocuments();
+
+            const data = await KelasModel.find()
             .skip((halaman - 1) * batas)
             .limit(batas)
-            response(200, result, 'Get all kelas success',res)
+
+            result = {
+                data : data,
+                "total data" : totalData
+            }   
+
+            response(200, result, 'berhasil Get all kelas',res)
+
         } catch (error) {
             response( 500,error, 'Server error',res)
         }
     },
     getOneKelas: async (req, res) => {
+
         const id = req.params.id;
+
         try{
             let kelas = await KelasModel.findById(id);
+
             if(!kelas){
-                response(404, id, 'Kelas not found',res)
+                response(404, id, 'Kelas tidak ditemukan',res)
             }
-            response(200, kelas, 'kelas di dapat',res)
+            
+            response(200, kelas, 'kelas ditemukan',res)
         }catch(error){
             response(500, error, 'Server error',res)
         }
@@ -33,6 +44,7 @@ module.exports = {
     createKelas: async (req, res) => {
         try {
             const {kodeKelas, nama,harga,kapasitasPeserta, description, methods ,instruktur, peserta} = req.body;
+            
             const kelas = new KelasModel({
                 kodeKelas,
                 nama,
@@ -43,18 +55,23 @@ module.exports = {
                 peserta,
                 instruktur
             });
+
             const result = await kelas.save();
-            response(200, result,'Kelas berhasil di buat',res)
+
+            response(200, result, 'Kelas berhasil di buat',res)
         } catch (error) {
             response(500, error, 'Server error',res)
         }
     },
     updateKelas: async (req, res) => {
         try {
+
             const id = req.params.id;
             const updated = req.body;
-            const result = await KelasModel.findByIdAndUpdate(id, updated);
+            const result = await KelasModel.findByIdAndUpdate(id, updated,{new : true});
+
             response(200, result, 'Kelas berhasil di update',res)
+
         } catch (error) {
             response(500, error, 'Server error',res)
         }
