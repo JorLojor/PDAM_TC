@@ -61,10 +61,14 @@ module.exports = {
             const page =  parseInt(req.query.page) || 1;
             const limit =  parseInt(req.query.limit) || 10;
             const totalData = await userModel.countDocuments() 
-            const result = await userModel.find()
+            const data = await userModel.find()
             .skip((page - 1) * limit)
             .limit(limit)
-            response(200, result, "Berhasil get all user",res);            
+            result = {
+                data : data,
+                "total data" : totalData
+            }         
+            response(200, result, "Berhasil get all user",res);   
         }catch(error){
             response(500, error, "Server error",res);
         }
