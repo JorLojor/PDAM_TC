@@ -20,6 +20,7 @@ const jadwalRoutes = require('./routers/jadwal')
 const kelasRoutes = require('./routers/kelas')
 const materiRoutes = require('./routers/materi')
 const userRoutes = require('./routers/user')
+const tugasRoutes = require('./routers/tugas')
 // routes
 
 
@@ -28,7 +29,7 @@ app.use('/jadwal/',jadwalRoutes)
 app.use('/kelas/',kelasRoutes)
 app.use('/materi/',materiRoutes)
 app.use('/user/',userRoutes)
-
+app.use('/tugas/',tugasRoutes)
 
 
 app.get('/', (req, res) => {

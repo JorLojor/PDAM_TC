@@ -12,9 +12,9 @@ module.exports = {
             const cekUser = await userModel.findOne({
                 $or: [{ username }, { email }],
             });
-
             if (cekUser) {
                 response(400, username, "Username atau email sudah terdaftar",res);
+                return;
             }
             const passwordHash = bcrypt.hashSync(password, 10);
             const user = new userModel({
