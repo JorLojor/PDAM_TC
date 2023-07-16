@@ -1,6 +1,10 @@
 const mongoose = require('mongoose');
 const tugasSchema = require('../models/tugas');
 
+const response = require('../respons/response');
+const upload = require('../middleware/filepath');
+const multer = require('multer');
+
 module.exports = {
     getTugas: async (req, res) => {
         try{
@@ -31,20 +35,33 @@ module.exports = {
 
     },
     createTugas: async (req, res) => {
-        const {description, dateStarted, dateFinished,fileTugas,pengumpulanTugas} = req.body;
-        try{
-            const tugas = await tugasSchema.create({
-                description,
-                dateStarted,
-                dateFinished,
-                fileTugas,
-                pengumpulanTugas
-            });
-            const result = await tugas.save();
-            response(200, result, "tugas berhasil di buat",res)
-        }catch(error){
-            response(500, error, "Server error failed to create",res);
-        }
+        upload(req, res, async (error) => {
+            if (error instanceof multer.MulterError) {
+                console.log(error.message);
+              response(500, error, 'internal server error \n gagal menambahkan file', res);
+            } else if (error) {
+                console.log(error.message);
+              response(500, error, 'internal server error \n gagal menambahkan file', res);
+            }else{
+                try{ 
+                    const {description, dateStarted, dateFinished} = req.body;
+                    const fileTugas = req.file.path;
+
+                    const tugas = new tugasSchema({
+                        description, 
+                        dateStarted, 
+                        dateFinished, 
+                        fileTugas
+                    });
+                    const result = await tugas.save();
+                    response(200, result, "tugas berhasil di tambahkan",res)
+                }catch(error){
+                    response(500, error, "Server error failed to add",res);
+                }
+            }
+        });
+    
+        
     },
     updateTugas: async (req, res) => {
         const id = req.params.id;
