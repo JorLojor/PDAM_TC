@@ -80,6 +80,7 @@ module.exports = {
         try{
             const id = req.params.id;
             const result = await KelasModel.findByIdAndDelete(id);
+
             response(200, result, 'Kelas berhasil di hapus',res)
         }catch(error){
             response(500, error, 'Server error',res)
@@ -89,12 +90,14 @@ module.exports = {
         try{
             const id = req.params.id;
             const result = await KelasModel.findById(id);
+
             if (result.kelasType === "All"){
                 const resultKelas = await KelasModel.findByIdAndUpdate(id, {$push: {peserta: req.user._id}});
                 const resultUser = await UserModel.findByIdAndUpdate(req.user._id, {$push: {kelas: id}});
                 const result = {resultKelas, resultUser}
                 response(200, result, 'User berhasil enrol kelas',res)
             }
+
             if(result.kelasType === req.user.userType){
                 const resultKelas = await KelasModel.findByIdAndUpdate(id, {$push: {peserta: req.user._id}});
                 const resultUser = await UserModel.findByIdAndUpdate(req.user._id, {$push: {kelas: id}});
@@ -103,6 +106,7 @@ module.exports = {
             }else{
                 response(400, result, 'User tidak bisa enrol kelas',res)
             }
+            
         }catch(error){
             response(500, error, 'Server error',res)
         }
