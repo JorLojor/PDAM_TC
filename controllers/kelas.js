@@ -32,15 +32,16 @@ module.exports = {
     },
     createKelas: async (req, res) => {
         try {
-            const {kodeKelas, nama,harga, kapasitasPeserta, deskription, methods,kodeNotaDinas } = req.body;
+            const {kodeKelas, nama,harga,kapasitasPeserta, description, methods ,instruktur, peserta} = req.body;
             const kelas = new KelasModel({
                 kodeKelas,
                 nama,
                 harga,
                 kapasitasPeserta,
-                deskription,
+                description,
                 methods,
-                kodeNotaDinas,
+                peserta,
+                instruktur
             });
             const result = await kelas.save();
             response(200, result,'Kelas berhasil di buat',res)

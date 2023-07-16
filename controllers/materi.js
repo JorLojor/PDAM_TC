@@ -36,10 +36,10 @@ module.exports = {
     },
     createMateri: async (req, res)=>{
         try{
-            const {kodeMateri, name, description, type, source} = req.body;
+            const {kodeMateri, nama, description, type, source} = req.body;
             const materi = new MateriModel({
                 kodeMateri,
-                name,
+                nama,
                 description,
                 type,
                 source
