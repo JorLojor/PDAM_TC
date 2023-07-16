@@ -4,12 +4,11 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const response = require("../respons/response");
 
-
 module.exports = {
     register:async (req, res) => {
         try{
 
-            const {name, email, username, password} = req.body;
+            const {name, email, username, password, role, userType, kelas} = req.body;
             const cekUser = await userModel.findOne({
                 $or: [{ username }, { email }],
             });
@@ -17,18 +16,21 @@ module.exports = {
             if (cekUser) {
                 response(400, username, "Username atau email sudah terdaftar",res);
             }
-
             const passwordHash = bcrypt.hashSync(password, 10);
             const user = new userModel({
                 name,
                 email,
                 username,
                 password: passwordHash,
+                role , // 1 = admin, 2 = instruktur, 3 = user
+                userType ,// 1 = internal pdam dan 0 = eksternal pdam atau All
+                kelas
             })
             await user.save();
 
             response(200, user, "Register berhasil",res);
         }catch(error){
+            console.log(error.message)
             response(500, error, "Server error",res);
         }
     },
@@ -60,7 +62,8 @@ module.exports = {
 
             if (isPaginate === 0) {
                 const totalData = await userModel.countDocuments()
-                const data = await userModel.find();
+                const data = await userModel.find()
+                .populate("kelas");
                 result = {
                     data : data,
                     "total data" : totalData
@@ -76,6 +79,7 @@ module.exports = {
             const data = await userModel.find()
             .skip((page - 1) * limit)
             .limit(limit)
+            .populate("kelas")
 
             result = {
                 data : data,

@@ -1,6 +1,6 @@
-const moongose = require('mongoose');
+const mongoose = require('mongoose');
 const user = require('./user');
-const {Schema} = moongose;
+const {Schema} = mongoose;
 
 const materi = require('./materi');
 const peserta = require('./pesertaKelas');
@@ -14,7 +14,7 @@ const kelasSchema = new Schema({
     kapasitasPeserta : {type: Number, required: true},
     description : {type: String, required: true},
     methods : {type: String, required: true}, //online,offline, onlineMeeting
-    materi : {type: Schema.Types.ObjectId, ref: 'materi', required: false}, //refrensi ke schema materi
+    materi : {type: mongoose.Schema.Types.ObjectId, ref: 'Materi', required: false}, //refrensi ke schema materi
     peserta : [peserta], //refrensi ke schema user dengan role 3 atau peserta hanya untuk 
     instruktur : [instruktur], //refrensi ke schema user dengan role 2 atau instruktur
     kodeNotaDinas: {type: String, required: false}, //refrensi ke schema
@@ -22,5 +22,5 @@ const kelasSchema = new Schema({
     classPermission : {type: String, required: false}
 });
 
-module.exports = moongose.model('Kelas', kelasSchema);
+module.exports = mongoose.model('Kelas', kelasSchema);
    
