@@ -41,17 +41,18 @@ module.exports = {
             const user = await userModel.findOne({
                 $or: [{ username }, { email: username }],
             });
-
+            console.log(user);
             if (user) {
                 const cekPassword = bcrypt.compareSync(password, user.password);
                 if (cekPassword) {
-                    const token = jwt.sign({id: user._id,},secret_key);
+                    const token = jwt.sign({id : user._id , role : user.role},secret_key);
                     response(200, token, "Login berhasil",res);
                 } else {
                     response(400, username, "Password salah",res);
                 }
+            }else{
+                response(400, username, "User tidak terdaftar",res);
             }
-
         }catch(error){
             response(500, error, "Server error",res);
         }
