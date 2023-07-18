@@ -14,7 +14,7 @@ module.exports = {
             jwt.verify(token, secret_key, (err, user) => {
                 if (err) return res.sendStatus(403);
                 req.user = user
-                if (req.user.role === 2) return res.json('you dont have permission').status(403);
+                if (req.user.role !== 1 && req.user.role !== 2 && req.user.role !== 3) return res.json('you dont have permission').status(403);
                 next();
             });
         }catch(error){ 
@@ -31,7 +31,7 @@ module.exports = {
             jwt.verify(token, secret_key, (err, user) => {
                 if (err) return res.sendStatus(403);
                 req.user = user
-                if (req.user.role === 3) return res.json('you dont have permission').status(403);
+                if (req.user.role !== 2 && req.user.role !== 1) return res.json('you dont have permission').status(403);
                 next();
             });
         }catch(error){
