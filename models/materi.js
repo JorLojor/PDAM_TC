@@ -8,7 +8,7 @@ const materiSchema = new Schema({
     type : {type: String, required: true}, //file / video
     source: {type: String, required: true}, // yputube gdrive
     tugas : {type: mongoose.Schema.Types.ObjectId, ref: 'tugas'}
-},{ timestamps: true })
+},{ timestamps: true });
 
 module.exports = mongoose.model('Materi', materiSchema);
 

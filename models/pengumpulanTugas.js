@@ -8,4 +8,4 @@ const pengumpulanTugasSchema =  new Schema({
     fileAnswer : {type: String, required : false}
 },{ timestamps: true })
 
-module.exports = mongoose.model('Nilai', pengumpulanTugasSchema)
+module.exports = mongoose.model('PengumpulanTugas', pengumpulanTugasSchema)

@@ -21,6 +21,7 @@ const kelasRoutes = require('./routers/kelas')
 const materiRoutes = require('./routers/materi')
 const userRoutes = require('./routers/user')
 const tugasRoutes = require('./routers/tugas')
+const pengumpulanTugasRoutes = require('./routers/pengumpulanTugas')
 // routes
 
 
@@ -30,7 +31,7 @@ app.use('/kelas/',kelasRoutes)
 app.use('/materi/',materiRoutes)
 app.use('/user/',userRoutes)
 app.use('/tugas/',tugasRoutes)
-
+app.use('/pengumpulanTugas/',pengumpulanTugasRoutes)
 
 app.get('/', (req, res) => {
     res.send('bismillah hirrohman nirrohim');

@@ -24,14 +24,16 @@ module.exports = {
             const data = await tugasSchema.find()
             .skip((page - 1) * limit)
             .limit(limit)
-            .populate("kelas")
+            
 
-            result = {data : data,"total data" : totalData}         
+            const result = {data : data,"total data" : totalData}         
 
-            response(200, result, "Berhasil get all user",res);   
+            response(200, result, "Berhasil get all tugas",res);   
         }catch(error){
+            console.log(error.message);
             response(500, error, "Server error",res);
         }
+
 
     },
     createTugas: async (req, res) => {
