@@ -21,7 +21,6 @@ const kelasRoutes = require('./routers/kelas')
 const materiRoutes = require('./routers/materi')
 const userRoutes = require('./routers/user')
 const tugasRoutes = require('./routers/tugas')
-const pengumpulanTugasRoutes = require('./routers/pengumpulanTugas')
 // routes
 
 

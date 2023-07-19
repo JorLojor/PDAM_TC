@@ -33,8 +33,7 @@ module.exports = {
             console.log(error.message);
             response(500, error, "Server error",res);
         }
-
-
+        
     },
     createTugas: async (req, res) => {
         upload(req, res, async (error) => {

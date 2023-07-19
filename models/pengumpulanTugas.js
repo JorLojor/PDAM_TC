@@ -6,6 +6,6 @@ const pengumpulanTugasSchema =  new Schema({
     file : {type: mongoose.Schema.Types.ObjectId, ref: 'Tugas'},
     textAnswer :{type : String , required: false},
     fileAnswer : {type: String, required : false}
-},{ timestamps: true })
+},{ timestamps: true , _id :false})
 
 module.exports = mongoose.model('PengumpulanTugas', pengumpulanTugasSchema)
