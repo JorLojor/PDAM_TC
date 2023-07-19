@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const KelasModel = require('../models/kelas');
 const response = require('../respons/response');
+const kelas = require('../models/kelas');
 
 module.exports = {
     getAllKelas: async (req, res) => { // make paginatiomm
@@ -65,7 +66,7 @@ module.exports = {
             response(500, error, 'Server error',res)
         }
     },
-    updateKelas: async (req, res) => {
+    updateKelasAdminSide: async (req, res) => {
         try {
 
             const id = req.params.id;
@@ -75,6 +76,28 @@ module.exports = {
             response(200, result, 'Kelas berhasil di update',res)
 
         } catch (error) {
+            response(500, error, 'Server error',res)
+        }
+    },
+    updateKelasInstrukturSide : async (req, res) => {
+        try {
+            const id = req.params.id;
+            const deskripsi = req.body.deskripsi;
+            const materi = req.body.materi;
+
+            const data = await KelasModel.findById(id);
+            let materiResult = data.materi;
+            if (materi !== null && materi !== undefined && materi !== "") {
+                data.materi.push(materi);
+                materiResult = data.materi;
+                console.log("test");
+            }
+
+            const result = await KelasModel.findByIdAndUpdate(id, {materi : materiResult, description : deskripsi } , {new : true})// $push: { materi: { $each: materi } 
+            console.log(result)
+            response(200, result, 'Kelas berhasil di update',res)
+        }catch (error){
+            console.log(error.messsage)
             response(500, error, 'Server error',res)
         }
     },
