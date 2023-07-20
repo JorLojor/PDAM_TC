@@ -59,7 +59,10 @@ module.exports = {
                 methods,
                 peserta,
                 instruktur,
-                materi
+                materi,
+                jamMulai,
+                jamSelesai,
+                tanggal
             });
 
             const result = await kelas.save();
