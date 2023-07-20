@@ -8,7 +8,7 @@ module.exports = {
     register:async (req, res) => {
         try{
 
-            const {name, email, username, password, role, userType, kelas} = req.body;
+            const {name, email, username, password, role, userType} = req.body;
             const cekUser = await userModel.findOne({
                 $or: [{ username }, { email }],
             });
@@ -24,7 +24,6 @@ module.exports = {
                 password: passwordHash,
                 role , // 1 = admin, 2 = instruktur, 3 = user
                 userType ,// 1 = internal pdam dan 0 = eksternal pdam atau All
-                kelas
             })
             await user.save();
 
@@ -64,7 +63,7 @@ module.exports = {
             if (isPaginate === 0) {
                 const totalData = await userModel.countDocuments()
                 const data = await userModel.find()
-                .populate("kelas");
+                // .populate("kelas");
                 result = {
                     data : data,
                     "total data" : totalData
@@ -80,7 +79,7 @@ module.exports = {
             const data = await userModel.find()
             .skip((page - 1) * limit)
             .limit(limit)
-            .populate("kelas")
+            // .populate("kelas")
 
             result = {
                 data : data,

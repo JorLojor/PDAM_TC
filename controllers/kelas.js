@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 const KelasModel = require('../models/kelas');
+const UserModel = require('../models/user');
 const response = require('../respons/response');
-const kelas = require('../models/kelas');
 
 module.exports = {
     getAllKelas: async (req, res) => { // make paginatiomm
@@ -14,7 +14,7 @@ module.exports = {
             const data = await KelasModel.find()
             .skip((halaman - 1) * batas)
             .limit(batas)
-            .populate('materi instruktur peserta')
+            // .populate('materi instruktur peserta')
 
             result = {
                 data : data,
@@ -32,7 +32,9 @@ module.exports = {
         const id = req.params.id;
 
         try{
-            let kelas = await KelasModel.findById(id);
+            let kelas = await KelasModel.findById(id)
+            .populate('materi instruktur peserta');
+
 
             if(!kelas){
                 response(404, id, 'Kelas tidak ditemukan',res)
@@ -40,6 +42,7 @@ module.exports = {
             
             response(200, kelas, 'kelas ditemukan',res)
         }catch(error){
+            console.log(error.message);
             response(500, error, 'Server error',res)
         }
     },
@@ -57,6 +60,30 @@ module.exports = {
                 peserta,
                 instruktur,
                 materi
+            });
+
+            const result = await kelas.save();
+
+            response(200, result, 'Kelas berhasil di buat',res)
+        } catch (error) {
+            response(500, error, 'Server error',res)
+        }
+    },
+    createKelasTest: async (req, res) => {
+        try {
+            const {kodeKelas, nama,harga,kapasitasPeserta, description, methods ,instruktur, peserta,materi,kelasType} = req.body;
+            
+            const kelas = new KelasModel({
+                kodeKelas,
+                nama,
+                harga,
+                kapasitasPeserta,
+                description,
+                methods,
+                peserta,
+                instruktur,
+                materi,
+                kelasType
             });
 
             const result = await kelas.save();
@@ -112,28 +139,40 @@ module.exports = {
         }
     },
     enrolKelas: async (req, res) => {
-        try{
-            const id = req.params.id;
-            const result = await KelasModel.findById(id);
+        try {
+          const id = req.params.id;
+          const idUser = req.body.idUser;
+          const resultkelas = await KelasModel.findById(id);
+          const resultUser = await UserModel.findById(idUser);
 
-            if (result.kelasType === "All"){
-                const resultKelas = await KelasModel.findByIdAndUpdate(id, {$push: {peserta: req.user._id}});
-                const resultUser = await UserModel.findByIdAndUpdate(req.user._id, {$push: {kelas: id}});
-                const result = {resultKelas, resultUser}
-                response(200, result, 'User berhasil enrol kelas',res)
-            }
+          if (!resultkelas.peserta.includes(idUser)) {
+           
+            if (resultkelas.kelasType === 1 && resultUser.userType === 1){
+                resultkelas.peserta.push(idUser);
+                const result = await resultkelas.save();
+                resultUser.kelas.push(id);
+                const resultUserSave = await resultUser.save();
+                const resultFix = { result, resultUserSave};
+                response(200, resultFix, 'Berhasil enrol', res);
 
-            if(result.kelasType === req.user.userType){
-                const resultKelas = await KelasModel.findByIdAndUpdate(id, {$push: {peserta: req.user._id}});
-                const resultUser = await UserModel.findByIdAndUpdate(req.user._id, {$push: {kelas: id}});
-                const result = {resultKelas, resultUser}
-                response(200, result, 'User berhasil enrol kelas',res)
+            }else if(resultkelas.kelasType === 0){
+                resultkelas.peserta.push(idUser);
+                const result = await resultkelas.save();
+                resultUser.kelas.push(id);
+                const resultUserSave = await resultUser.save();
+                const resultFix = { result, resultUserSave};
+                response(200, resultFix, 'Berhasil enrol', res);
             }else{
-                response(400, result, 'User tidak bisa enrol kelas',res)
+                response(401,resultkelas,'tidak bisa enrol', res);
             }
-            
-        }catch(error){
-            response(500, error, 'Server error',res)
+
+          } else {
+            response(400, {}, 'User sudah terdaftar di kelas', res);
+          }
+        } catch (error) {
+          console.log(error.message);
+          response(500, error, 'Server error', res);
         }
-    }
+      }
+      
 }
