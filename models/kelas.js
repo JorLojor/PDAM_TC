@@ -5,6 +5,7 @@ const {Schema} = mongoose;
 const materi = require('./materi');
 const peserta = require('./pesertaKelas');
 const instruktur  = require('./instruktur');
+const nilai = require('./nilai');
 
 
 const kelasSchema = new Schema({
@@ -19,6 +20,7 @@ const kelasSchema = new Schema({
     instruktur : [instruktur], //refrensi ke schema user dengan role 2 atau instruktur
     kodeNotaDinas: {type: String, required: false}, //refrensi ke schema
     classPermission : {type: String, required: false}
+    
 });
 
 module.exports = mongoose.model('Kelas', kelasSchema);

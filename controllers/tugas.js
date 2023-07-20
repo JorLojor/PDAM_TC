@@ -104,7 +104,7 @@ module.exports = {
         //     }
         // });
     },
-    creteTugasSecond: async (req, res) => {
+    creteTugasSecond: async (req, res) => { //pake ini aja
         try{
             const {description, dateStarted, dateFinished, fileText, pengumpulanTugas} = req.body;
 
@@ -173,7 +173,6 @@ module.exports = {
         // }catch(error) {
         //     response(500, error, 'Server error failed to add', res);
         // }
-       
     },
     updateTugas: async (req, res) => {
         const id = req.params.id;

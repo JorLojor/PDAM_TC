@@ -71,7 +71,7 @@ module.exports = {
     },
     createKelasTest: async (req, res) => {
         try {
-            const {kodeKelas, nama,harga,kapasitasPeserta, description, methods ,instruktur, peserta,materi,kelasType} = req.body;
+            const {kodeKelas, nama,harga,kapasitasPeserta, description, methods ,instruktur, peserta,materi,kelasType,kodeNotaDinas} = req.body;
             
             const kelas = new KelasModel({
                 kodeKelas,
@@ -83,13 +83,15 @@ module.exports = {
                 peserta,
                 instruktur,
                 materi,
-                kelasType
+                kelasType,
+                kodeNotaDinas
             });
 
             const result = await kelas.save();
 
             response(200, result, 'Kelas berhasil di buat',res)
         } catch (error) {
+            console.log(error.message);
             response(500, error, 'Server error',res)
         }
     },
@@ -147,7 +149,7 @@ module.exports = {
                 const resultFix = { result, resultUserSave};
                 response(200, resultFix, 'Berhasil enrol', res);
 
-            }else if(resultkelas.kelasType === 0){
+            }else if(resultkelas.kelasType === 0 || resultkelas.kelasType === 1){
                 resultkelas.peserta.push(idUser);
                 const result = await resultkelas.save();
                 resultUser.kelas.push(id);

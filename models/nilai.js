@@ -7,5 +7,3 @@ const nilaiSchema =  new Schema({
 },{ timestamps: true })
 
 module.exports = mongoose.model('Nilai', nilaiSchema)
-
-// Path: models/nilai.js
