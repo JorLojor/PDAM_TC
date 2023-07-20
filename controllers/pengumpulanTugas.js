@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const tugasSchema = require('../models/pengumpulanTugas');
+const UserModel = require('../models/user');
+
 
 const response = require('../respons/response');
 const upload = require('../middleware/filepath');
@@ -34,7 +36,7 @@ module.exports = {
             response(500, error, "Server error",res);
         }
     },
-    createTugas: async (req, res) => {
+    createTugas: async (req, res) => {//ngumpulin tugas
         upload(req, res, async (error) => {
             if (error instanceof multer.MulterError) {
               response(500, error, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
@@ -83,6 +85,48 @@ module.exports = {
             response(500, error, "Server error failed to update",res);
         }
     },
+    penilaian:async (req, res) => {
+        try{
+            const id = req.params._id;
+            const idUser = req.body._idUser;
+            const {nilai} = req.body;
+            const resultPengumpulan = await tugasSchema.findByIdAndUpdate(id, { nilai });
+            const resultUser = await UserModel.findById(idUser);
+            let nilaiuser = resultUser.nilai;
+            const nilaiAkhir = (nilaiuser + nilai);
+            const resultFix = {resultPengumpulan, resultUser, nilaiAkhir}   
+            response(200, resultFix, "tugas berhasil di update",res)
+
+        }catch(error){
+            response(500, error, "Server error failed to update",res);
+        }
+    },
+    penilaianSecondary:async (req, res) => {
+        try{
+            const id = req.params._id;
+            const idUser = req.body._idUser;
+            const {nilai} = req.body;
+
+            const session = await mongoose.startSession();
+            session.startTransaction();
+
+            const resultPengumpulan = await tugasSchema.findByIdAndUpdate(id, { nilai }, {session});
+
+            const resultUser = await UserModel.findById(idUser);
+            let nilaiuser = resultUser.nilai;
+            const nilaiAkhir = (nilaiuser + nilai);
+            const resultFix = {resultPengumpulan, resultUser, nilaiAkhir}
+
+            await session.commitTransaction();
+            session.endSession();
+            response(200, resultFix, "tugas berhasil di update",res)
+
+        }catch(error){
+            response(500, error, "Server error failed to update",res);
+        }finally{
+            await session.endSession();
+        }
+    },
     deleteTugas: async (req, res) => {
         const id = req.params._id;
         try{
@@ -92,7 +136,4 @@ module.exports = {
             response(500, error, "Server error failed to delete",res);
         }
     },
-
-
-
 }
