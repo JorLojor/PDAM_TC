@@ -6,13 +6,12 @@ const userSchema = new Schema({
     email : {type: String, required: true},
     username : {type: String, required: true},
     password : {type: String, required: true},
-    role : {type: Number, required: false}, // 1 = admin, 2 = instruktur, 3 = user
-    UserType : {type: String, required: false}, // internal pdam atau eksternal pdam
-    kelas : [{type: Schema.Types.ObjectId, ref: 'Kelas', required: false}], //refrensi ke schema kelas
-    spesialis: {type: String, required: false},// spesialis, req false
-    jabatan: {type: String, required: false},// jabatan, req false
-    nilai: {type: Schema.Types.ObjectId, required: false, ref: 'Nilai'},// nilai ref nilai
-});  
+    role : {type: Number, required: true, default : 3}, // penentuan user 1 = admin, 2 = instruktur, 3 = student 
+    UserType : {type: Number, required: true, default : 0},// 1 = internal pdam dan 0 = eksternal pdam atau All
+    kelas : [{type: mongoose.Schema.Types.ObjectId, ref: 'Kelas'}], //refrensi ke schema kelas
+    spesialis: {type: String},// spesialis, req false
+    nilai: [{type: mongoose.Schema.Types.ObjectId, required: false, ref: 'nilai'}],// nilai ref nilai
+},{ timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
 

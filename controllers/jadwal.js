@@ -19,7 +19,7 @@ module.exports = {
                 kelas,
                 jamMulai,
                 jamSelesai,
-                tanggal
+                tanggal,
             })
             const result = await jadwal.save();
             response(200, result, "created new jadwal",res)
@@ -31,7 +31,7 @@ module.exports = {
         const id = req.params.id;
         const update = req.body;
         try{
-            const jadwal = await jadwalModel.findByIdAndUpdate(id, update);
+            const jadwal = await jadwalModel.findByIdAndUpdate(id, update,{new:true});
             response(200, jadwal, "jadwal berhasil di update",res)
         }catch(error){
             response(500, error, "Server error failed to update",res);
