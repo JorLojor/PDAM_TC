@@ -9,8 +9,8 @@ const jadwalSchema = new Schema({
     jamMulai: { type: Date, required: true },
     jamSelesai: { type: Date, required: true },
     tanggal: { type: Date, required: false }
-}, { timestamps: true });
+}, { timestamps: true});
 
 
-module.exports = jadwalSchema
+module.exports = mongoose.model('Jadwal',jadwalSchema) 
 // yang bisa ngisi instruktur doang
