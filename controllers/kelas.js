@@ -162,6 +162,7 @@ module.exports = {
                 const resultUserSave = await resultUser.save();
                 const resultFix = { result, resultUserSave};
                 response(200, resultFix, 'Berhasil enrol', res);
+                
             }else{
                 response(401,resultkelas,'tidak bisa enrol', res);
             }
