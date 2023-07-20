@@ -1,7 +1,11 @@
 const mongoose = require('mongoose');
-const { Schema } = mongoose;
+const user = require('./user');
+const {Schema} = mongoose;
 
-// const peserta = require('./peserta');
+const materi = require('./materi');
+const peserta = require('./pesertaKelas');
+const instruktur  = require('./instruktur');
+
 
 const kelasSchema = new Schema({
   kodeKelas: { type: String, required: true, unique: true },
@@ -21,4 +25,4 @@ const kelasSchema = new Schema({
   tanggal: [{ type: Date, required: true }]
 });
 
-module.exports = mongoose.model('Kelas', kelasSchema);
+   
