@@ -115,7 +115,7 @@ module.exports = {
             new: true,
           });
 
-          res.json(user);
+          response(200, user, "Berhasil get all user",res); 
         } catch (error) {
           res.status(500).json({ error: "Internal server error, coba lagi" });
         }

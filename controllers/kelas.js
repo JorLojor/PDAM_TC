@@ -112,15 +112,7 @@ module.exports = {
             const deskripsi = req.body.deskripsi;
             const materi = req.body.materi;
 
-            const data = await KelasModel.findById(id);
-            let materiResult = data.materi;
-            if (materi !== null && materi !== undefined && materi !== "") {
-                data.materi.push(materi);
-                materiResult = data.materi;
-                console.log("test");
-            }
-
-            const result = await KelasModel.findByIdAndUpdate(id, {materi : materiResult, description : deskripsi } , {new : true})// $push: { materi: { $each: materi } 
+            const result = await KelasModel.findByIdAndUpdate(id, {materi : materi, description : deskripsi } , {new : true})// $push: { materi: { $each: materi } 
             console.log(result)
             response(200, result, 'Kelas berhasil di update',res)
         }catch (error){
