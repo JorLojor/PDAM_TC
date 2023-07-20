@@ -25,4 +25,5 @@ const kelasSchema = new Schema({
   tanggal: [{ type: Date, required: true }]
 });
 
-   
+module.exports = mongoose.model('Kelas', kelasSchema);
+ 
