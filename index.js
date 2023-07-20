@@ -30,7 +30,6 @@ app.use('/kelas/',kelasRoutes)
 app.use('/materi/',materiRoutes)
 app.use('/user/',userRoutes)
 app.use('/tugas/',tugasRoutes)
-app.use('/pengumpulanTugas/',pengumpulanTugasRoutes)
 
 app.get('/', (req, res) => {
     res.send('bismillah hirrohman nirrohim');
