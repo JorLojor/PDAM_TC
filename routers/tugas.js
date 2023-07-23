@@ -9,4 +9,6 @@ router.post('/test',Controller.createTugasThird);
 router.put('/:id',auth.instruktur ,Controller.updateTugas);
 router.delete('/:id',auth.instruktur ,Controller.deleteTugas);
 
+router.put('/pengumpulan/:id',auth.user,Controller.pengumpulanTugas);//test pengumpulan tugas
+
 module.exports = router;

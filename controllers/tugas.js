@@ -122,6 +122,77 @@ module.exports = {
             response(500, error.message, "Server error failed to add",res);
         }
     },
+    pengumpulanTugas: async (req, res) => { // fungsi put yang di gunakan user saat mengumpulkan tugas
+        try{
+            
+            const idTugas = req.params.id;
+            const tugas = await tugasSchema.findById(idTugas);
+            
+
+            const user = req.body.user; //id user yang mengumpulkan tugas
+            const answer = req.body.answer; //jawaban dari user
+            const file = req.body.path; //file dari user untuk di kumpulkan
+            
+
+            const pengumpulan = {
+                user,
+                answer,
+                file,
+            };
+            tugas.pengumpulanTugas.push(pengumpulan);
+            response(200, tugas, "pengumpulan berhasil di tambahkan",res)
+
+            
+
+        }catch(error){
+            console.log(error.message);
+            response(500, error, "Server error",res);
+        }
+    },
+    // test
+    penilaian:async (req, res) => {
+        try{
+            const id = req.params._id;
+            const idUser = req.body._idUser;
+            const {nilai} = req.body;
+            const resultPengumpulan = await tugasSchema.findByIdAndUpdate(id, { nilai });
+            const resultUser = await UserModel.findById(idUser);
+            let nilaiuser = resultUser.nilai;
+            const nilaiAkhir = (nilaiuser + nilai);
+            const resultFix = {resultPengumpulan, resultUser, nilaiAkhir}   
+            response(200, resultFix, "tugas berhasil di update",res)
+
+        }catch(error){
+            response(500, error, "Server error failed to update",res);
+        }
+    },
+    penilaianSecondary:async (req, res) => {
+        try{
+            const id = req.params._id;
+            const idUser = req.body._idUser;
+            const {nilai} = req.body;
+
+            const session = await mongoose.startSession();
+            session.startTransaction();
+
+            const resultPengumpulan = await tugasSchema.findByIdAndUpdate(id, { nilai }, {session});
+
+            const resultUser = await UserModel.findById(idUser);
+            let nilaiuser = resultUser.nilai;
+            const nilaiAkhir = (nilaiuser + nilai);
+            const resultFix = {resultPengumpulan, resultUser, nilaiAkhir}
+
+            await session.commitTransaction();
+            session.endSession();
+            response(200, resultFix, "tugas berhasil di update",res)
+
+        }catch(error){
+            response(500, error, "Server error failed to update",res);
+        }finally{
+            await session.endSession();
+        }
+    },
+    // test
     createTugasThird: async (req, res) => {
         try {
           uploadFile(req, res, async (error) => {
