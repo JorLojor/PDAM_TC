@@ -19,8 +19,8 @@ const kelasSchema = new Schema({
     peserta : [peserta], //refrensi ke schema user dengan role 3 atau peserta hanya untuk 
     instruktur : [instruktur], //refrensi ke schema user dengan role 2 atau instruktur
     kodeNotaDinas: {type: String, required: false}, //refrensi ke schema
-    classPermission : {type: String, required: false}
-    
+    classPermission : {type: String, required: false},
+    nilaiperkelas :{type: Number, required: false, default: 0}
 });
 
 module.exports = mongoose.model('Kelas', kelasSchema);

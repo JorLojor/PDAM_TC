@@ -122,32 +122,34 @@ module.exports = {
             response(500, error.message, "Server error failed to add",res);
         }
     },
-    pengumpulanTugas: async (req, res) => { // fungsi put yang di gunakan user saat mengumpulkan tugas
-        try{
-            
-            const idTugas = req.params.id;
+    pengumpulanTugas: async (req, res) => { // fungsi putgumpulin tugas
+        const idTugas = req.params.id;
+        try {
             const tugas = await tugasSchema.findById(idTugas);
-            
-
-            const user = req.body.user; //id user yang mengumpulkan tugas
-            const answer = req.body.answer; //jawaban dari user
-            const file = req.body.path; //file dari user untuk di kumpulkan
-            
-
+            if (!tugas) {
+                return response(404, null, "Tugas not found", res); // ini kalo nga menemukan tugas
+            }
+      
+            const user = new mongoose.Types.ObjectId(req.body.user);
+            const answer = req.body.answer;
+            const file = req.body.path;
+      
             const pengumpulan = {
                 user,
                 answer,
                 file,
             };
+      
             tugas.pengumpulanTugas.push(pengumpulan);
-            response(200, tugas, "pengumpulan berhasil di tambahkan",res)
 
-            
+            const savedTugas = await tugas.save();
 
-        }catch(error){
-            console.log(error.message);
-            response(500, error, "Server error",res);
+            response(200, savedTugas, "Pengumpulan berhasil ditambahkan", res);
+        } catch (error) {
+          console.log(error.message);
+          response(500, error, "Server error", res);
         }
+
     },
     // test
     penilaian:async (req, res) => {
@@ -190,6 +192,36 @@ module.exports = {
             response(500, error, "Server error failed to update",res);
         }finally{
             await session.endSession();
+        }
+    },
+    penilaianPrimary:async (req, res) => { // fungsi put yang di gunakan instruktur saat menilai tugas
+        try{
+            const id = req.params._id; // id tugas
+            const tugas = await tugasSchema.findById(id);
+            console.log('---- tugas -----',tugas,'---------------------------------- \n');
+            //2. cari tugas yang di kumpulkan
+            const penilaian = tugas.pengumpulanTugas;
+            console.log('---- sebelum penilaian -----',penilaian,'---------------------------------- \n');
+            //3. update nilai tugas
+            const nilai = req.body.nilai;
+            const resultTugas = await penilaian.updateOne({nilai}, {new:true});
+            console.log('---- sesudah penilaian -----',penilaian,'---------------------------------- \n');
+            //4. mencari materiSchema yang memiliki tugas yang sama dengan tugas yang di kumpulkan
+            const schemaMateri = await materiSchema.findById(tugas._id);
+            console.log('---- schema materi -----',schemaMateri,'---------------------------------- \n');
+            //5. mencari field nilaiPermateri
+            const nilaiMateri = schemaMateri.nilaiPermateri;
+            console.log('---- nilai materi -----',nilaiMateri,'---------------------------------- \n');
+            const nilaiAkhir = nilaiMateri + nilai;
+            //6. update nilaiPermateri
+            const resultMateri = await schemaMateri.updateOne({nilaiPermateri: + nilaiAkhir}, {new:true});
+            console.log('---- nilai akhir -----',nilaiAkhir,'---------------------------------- \n');
+
+            const finalResult = {"nilai tugas":resultTugas,"nilai materi":resultMateri}
+            response(200, finalResult, "tugas berhasil di update",res)
+        }catch(error){
+            console.log(error.message);
+            response(500, error, "Server error failed to update",res);
         }
     },
     // test
@@ -258,9 +290,10 @@ module.exports = {
     deleteTugas: async (req, res) => {
         const id = req.params.id;
         try{
-            const result = await tugas.findByIdAndDelete(id);
-            response(200, result, "tugas berhasil di hapus",res)
+            const tugas = await tugasSchema.findByIdAndDelete(id);
+            response(200, tugas, "tugas berhasil di hapus",res)
         }catch(error){
+            console.log(error.message);
             response(500, error, "Server error failed to delete",res);
         }
     },
