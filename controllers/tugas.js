@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const tugasSchema = require('../models/tugas');
+const materiSchema = require('../models/materi');
 
 const response = require('../respons/response');
 const upload = require('../middleware/filepath');
@@ -42,6 +43,7 @@ module.exports = {
             const data = await tugasSchema.find()
             .skip((page - 1) * limit)
             .limit(limit)
+            // .populate('materi')
             
 
             const result = {data : data,"total data" : totalData}         
@@ -106,14 +108,15 @@ module.exports = {
     },
     creteTugasSecond: async (req, res) => { //pake ini aja
         try{
-            const {description, dateStarted, dateFinished, fileText, pengumpulanTugas} = req.body;
+            const {description, dateStarted, dateFinished, fileText, pengumpulanTugas,materi} = req.body;
 
             const tugas = new tugasSchema({
                 description,
                 dateStarted,
                 dateFinished,
                 fileText,
-                pengumpulanTugas
+                pengumpulanTugas,
+                materi
             });
             console.log("test");
             const result = await tugas.save();
@@ -194,36 +197,45 @@ module.exports = {
             await session.endSession();
         }
     },
-    penilaianPrimary:async (req, res) => { // fungsi put yang di gunakan instruktur saat menilai tugas
-        try{
-            const id = req.params._id; // id tugas
-            const tugas = await tugasSchema.findById(id);
-            console.log('---- tugas -----',tugas,'---------------------------------- \n');
-            //2. cari tugas yang di kumpulkan
-            const penilaian = tugas.pengumpulanTugas;
-            console.log('---- sebelum penilaian -----',penilaian,'---------------------------------- \n');
-            //3. update nilai tugas
-            const nilai = req.body.nilai;
-            const resultTugas = await penilaian.updateOne({nilai}, {new:true});
-            console.log('---- sesudah penilaian -----',penilaian,'---------------------------------- \n');
-            //4. mencari materiSchema yang memiliki tugas yang sama dengan tugas yang di kumpulkan
-            const schemaMateri = await materiSchema.findById(tugas._id);
-            console.log('---- schema materi -----',schemaMateri,'---------------------------------- \n');
-            //5. mencari field nilaiPermateri
+    penilaianPrimary: async (req, res) => {
+        try {
+          const id = req.params.id; // id tugas
+          const tugas = await tugasSchema.findById(id);
+      
+          console.log('1 ---- tugas -----', tugas, '---------------------------------- \n');
+      
+          // Pastikan array pengumpulanTugas tidak kosong
+          if (tugas.pengumpulanTugas.length > 0) {
+            // Update nilai pada elemen pertama pengumpulanTugas
+            tugas.pengumpulanTugas[0].nilai = req.body.nilai;
+      
+            // Simpan perubahan pada model tugasSchema ke dalam basis data
+            await tugas.save();
+      
+            console.log('2 ---- sesudah penilaian -----', tugas.pengumpulanTugas, '---------------------------------- \n');
+      
+            // Menggunakan tugas.materi untuk mencari data materi yang terkait dengan tugas
+            const schemaMateri = await materiSchema.findById(tugas.materi).populate('tugas');
+            console.log('3 ---- schema materi -----', schemaMateri, '---------------------------------- \n');
+      
             const nilaiMateri = schemaMateri.nilaiPermateri;
-            console.log('---- nilai materi -----',nilaiMateri,'---------------------------------- \n');
-            const nilaiAkhir = nilaiMateri + nilai;
+            console.log('4 ---- nilai materi -----', nilaiMateri, '---------------------------------- \n');
+      
+            const nilaiAkhir = nilaiMateri + req.body.nilai;
             //6. update nilaiPermateri
-            const resultMateri = await schemaMateri.updateOne({nilaiPermateri: + nilaiAkhir}, {new:true});
-            console.log('---- nilai akhir -----',nilaiAkhir,'---------------------------------- \n');
-
-            const finalResult = {"nilai tugas":resultTugas,"nilai materi":resultMateri}
-            response(200, finalResult, "tugas berhasil di update",res)
-        }catch(error){
-            console.log(error.message);
-            response(500, error, "Server error failed to update",res);
+            const resultMateri = await schemaMateri.updateOne({ nilaiPermateri: +nilaiAkhir }, { new: true });
+            console.log('5 ---- nilai akhir -----', nilaiAkhir, '---------------------------------- \n');
+      
+            const finalResult = { "nilai tugas": tugas.pengumpulanTugas[0], "nilai materi": resultMateri }
+            response(200, finalResult, "Penilaian berhasil diupdate", res);
+          } else {
+            response(404, null, "Data pengumpulan tugas tidak ditemukan", res);
+          }
+        } catch (error) {
+          console.log(error.message);
+          response(500, error, "Server error failed to update", res);
         }
-    },
+      },
     // test
     createTugasThird: async (req, res) => {
         try {
@@ -278,12 +290,13 @@ module.exports = {
         // }
     },
     updateTugas: async (req, res) => {
-        const id = req.params.id;
-        const update = req.body;
         try{
-            const tugas = await tugas.findByIdAndUpdate(id, update,{new:true});
+            const id = req.params.id;
+            const update = req.body;
+            const tugas = await tugasSchema.findByIdAndUpdate(id, update,{new:true});
             response(200, tugas, "tugas berhasil di update",res)
         }catch(error){
+            console.log(error.message);
             response(500, error, "Server error failed to update",res);
         }
     },

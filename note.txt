@@ -1,5 +1,5 @@
-- tugas 
-- materi  
+- tugas (passed)
+- materi (passed)
 - kelas 
 - user
 
@@ -8,37 +8,3 @@
 -penilaian (test penilaian dilakukan oleh instruktur)
 - materi 
 - tugas 3
-
-format pengumpulan tugas 
-{
-    "description" :"Tugas CRUD express js",
-    "dateStarted" :"2023-07-20T00:00:00.00Z",
-    "dateFinished" :"2023-14-20T00:00:00.00Z",
-    "fileText": "buatlah crud dengan express js",
-    "pengumpulanTugas" :[
-        {
-        "user":"64b37a8ba531efc2e791e6ef",
-        "textAnswer": "test test test 1234 1234 1234"
-        }
-    ]
-}
-
-format tugas 
-{
-    "payload": {
-        "status": 200,
-        "data": {
-            "_id": "64bd6a7268b16cae411c40d4",
-            "description": "Tugas CRUD express js (test feat/tugas)",
-            "dateStarted": "2023-07-20T10:00:00.000Z",
-            "dateFinished": "2023-04-20T10:00:00.000Z",
-            "fileText": "buatlah crud dengan express js",
-            "fileTugas": "/kosong",
-            "pengumpulanTugas": [],
-            "createdAt": "2023-07-23T17:59:14.435Z",
-            "updatedAt": "2023-07-23T17:59:14.435Z",
-            "__v": 0
-        }
-    },
-    "message": "tugas berhasil di hapus"
-}

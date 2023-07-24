@@ -8,7 +8,8 @@ const tugasSchema =  new Schema({
     dateFinished: {type: Date,required: true},
     fileText : {type: String, required : true},//file text (soal)
     fileTugas: { type: String, required: false, default: '/kosong' },//file tugas (soal jadi attecment untuk memperlengkap soal)
-    pengumpulanTugas : {type:[pengumpulanTugasSchema], required: false} // udh ada nilainaya di dalam sini
+    pengumpulanTugas : {type:[pengumpulanTugasSchema], required: false}, // udh ada nilainaya di dalam sini
+    materi: {type: mongoose.Schema.Types.ObjectId, ref: 'Materi',required: true} // refrensi ke materi yang mana tugas ini berada
 },{ timestamps: true })
 
 module.exports = mongoose.model('Tugas', tugasSchema)
