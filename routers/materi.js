@@ -12,3 +12,4 @@ router.delete('/:id', auth.instruktur,Controller.deleteMateri);
 
 
 module.exports = router;
+    

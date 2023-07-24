@@ -1,7 +1,9 @@
 - tugas (passed)
 - materi (passed)
 - kelas 
+    :masing masing kelas memiliki materi (passed)
 - user
+    :masing masing user memiliki kelas (passed)
 
 
 

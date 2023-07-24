@@ -25,6 +25,7 @@ module.exports = {
             const data = await MateriModel.find()
             .skip((page - 1) * limits)
             .limit(limits)
+            .populate('tugas')
 
             result = {
                 data : data,

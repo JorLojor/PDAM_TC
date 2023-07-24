@@ -204,17 +204,13 @@ module.exports = {
       
           console.log('1 ---- tugas -----', tugas, '---------------------------------- \n');
       
-          // Pastikan array pengumpulanTugas tidak kosong
           if (tugas.pengumpulanTugas.length > 0) {
-            // Update nilai pada elemen pertama pengumpulanTugas
             tugas.pengumpulanTugas[0].nilai = req.body.nilai;
-      
-            // Simpan perubahan pada model tugasSchema ke dalam basis data
             await tugas.save();
       
             console.log('2 ---- sesudah penilaian -----', tugas.pengumpulanTugas, '---------------------------------- \n');
       
-            // Menggunakan tugas.materi untuk mencari data materi yang terkait dengan tugas
+            
             const schemaMateri = await materiSchema.findById(tugas.materi).populate('tugas');
             console.log('3 ---- schema materi -----', schemaMateri, '---------------------------------- \n');
       
@@ -222,7 +218,7 @@ module.exports = {
             console.log('4 ---- nilai materi -----', nilaiMateri, '---------------------------------- \n');
       
             const nilaiAkhir = nilaiMateri + req.body.nilai;
-            //6. update nilaiPermateri
+            
             const resultMateri = await schemaMateri.updateOne({ nilaiPermateri: +nilaiAkhir }, { new: true });
             console.log('5 ---- nilai akhir -----', nilaiAkhir, '---------------------------------- \n');
       

@@ -14,7 +14,7 @@ module.exports = {
             const data = await KelasModel.find()
             .skip((halaman - 1) * batas)
             .limit(batas)
-            // .populate('materi instruktur peserta')
+            .populate('materi instruktur peserta') // ini untuk uji 
 
             result = {
                 data : data,
@@ -27,6 +27,28 @@ module.exports = {
             response( 500,error, 'Server error',res)
         }
     },
+    nilaiPerKelas: async (req, res) => {
+        const kelasId = req.params.id;
+        try {
+            const kelas = await KelasModel.findById(kelasId).populate('materi');
+            if (!kelas) {
+                return response(404, null, 'Kelas tidak ditemukan', res);
+            }
+    
+            const nilaiPermateri = kelas.materi.map((materi) => materi.nilaiPermateri);
+            const totalNilai = nilaiPermateri.reduce((acc, curr) => acc + curr, 0);
+            const rataRata = totalNilai / nilaiPermateri.length;
+    
+            kelas.nilaiperkelas = rataRata;
+            await kelas.save();
+    
+            response(200, kelas, 'Nilai rata-rata kelas berhasil di update', res);
+        } catch (error) {
+            console.log(error.message);
+            response(500, error, 'Server error', res);
+        }
+    },
+    
     getOneKelas: async (req, res) => {
 
         const id = req.params.id;
@@ -113,8 +135,7 @@ module.exports = {
             const id = req.params.id;
             const deskripsi = req.body.deskripsi;
             const materi = req.body.materi;
-
-            const result = await KelasModel.findByIdAndUpdate(id, {materi : materi, description : deskripsi } , {new : true})// $push: { materi: { $each: materi } 
+            const result = await KelasModel.findByIdAndUpdate(id, {$push: {materi: materi}, description: deskripsi},{new : true});
             console.log(result)
             response(200, result, 'Kelas berhasil di update',res)
         }catch (error){
@@ -122,6 +143,7 @@ module.exports = {
             response(500, error, 'Server error',res)
         }
     },
+    updateNilaiRataRataKelas: async (req, res) => {},
     deleteKelas: async (req, res) => {
         try{
             const id = req.params.id;
@@ -138,36 +160,36 @@ module.exports = {
           const idUser = req.body.idUser;
           const resultkelas = await KelasModel.findById(id);
           const resultUser = await UserModel.findById(idUser);
-
-          if (!resultkelas.peserta.includes(idUser)) {
-           
-            if (resultkelas.kelasType === 1 && resultUser.userType === 1){
-                resultkelas.peserta.push(idUser);
-                const result = await resultkelas.save();
-                resultUser.kelas.push(id);
-                const resultUserSave = await resultUser.save();
-                const resultFix = { result, resultUserSave};
-                response(200, resultFix, 'Berhasil enrol', res);
-
-            }else if(resultkelas.kelasType === 0 || resultkelas.kelasType === 1){
-                resultkelas.peserta.push(idUser);
-                const result = await resultkelas.save();
-                resultUser.kelas.push(id);
-                const resultUserSave = await resultUser.save();
-                const resultFix = { result, resultUserSave};
-                response(200, resultFix, 'Berhasil enrol', res);
-                
+      
+          if (!resultkelas.peserta.find(peserta => peserta.user.toString() === idUser)) {
+            const newPeserta = { user: idUser, status: 'pending' }; 
+            
+            //ngecek kelas udh penuh apa belom
+        if (resultkelas.peserta.length >= resultkelas.kapasitasPeserta) {
+            response(400, {}, 'Kelas sudah penuh', res);
+        } else {
+            //pengondisian userType dan kelasType = 1 untuk internal dan 0 untuk eksternal
+            if(resultkelas.kelasType === 1 && resultUser.userType === 1){
+                newPeserta.status = 'approved as internal class';
+                resultkelas.peserta.push(newPeserta);
+                resultkelas.save();
+                response(200, resultkelas, 'User berhasil di enroll', res);
+            }else if(resultkelas.kelasType === 0 || resultUser.userType === 0){
+                newPeserta.status = 'approved as external class';
+                resultkelas.peserta.push(newPeserta);
+                resultkelas.save();
+                response(200, resultkelas, 'User berhasil di enroll', res);
             }else{
-                response(401,resultkelas,'tidak bisa enrol', res);
+                response(400, {}, 'User tidak bisa enroll kelas ini', res);
             }
-
-          } else {
+        }
+        } else {
             response(400, {}, 'User sudah terdaftar di kelas', res);
-          }
+        }
         } catch (error) {
           console.log(error.message);
           response(500, error, 'Server error', res);
         }
-      }
+    },
       
 }

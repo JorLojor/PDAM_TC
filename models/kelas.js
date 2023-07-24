@@ -20,8 +20,9 @@ const kelasSchema = new Schema({
     instruktur : [instruktur], //refrensi ke schema user dengan role 2 atau instruktur
     kodeNotaDinas: {type: String, required: false}, //refrensi ke schema
     classPermission : {type: String, required: false},
-    nilaiperkelas :{type: Number, required: false, default: 0}
-});
+    nilaiperkelas :{type: Number, required: false, default: 0},
+    kelasType:{type: Number, required: true} // 1 = internal pdam dan 0 = eksternal pdam atau All 
+},{ timestamps: true});
 
 module.exports = mongoose.model('Kelas', kelasSchema);
    
