@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const response = require("../respons/response");
 
+
 module.exports = {
   register: async (req, res) => {
     try {
@@ -128,4 +129,6 @@ module.exports = {
       res.status(500).json({ error: "Internal server error, coba lagi" });
     }
   },
+  
+
 };

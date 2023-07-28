@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const KelasModel = require('../models/kelas');
 const UserModel = require('../models/user');
+const calonPesertaSchema = require('../models/calonpeserta');
 const response = require('../respons/response');
 
 module.exports = {
@@ -188,6 +189,85 @@ module.exports = {
         } catch (error) {
           response(500, error, 'Server error', res);
         }
+    },
+    enrollmentKelas: async (req, res) => {
+        try{
+            const id = req.params.id;
+            const idUser = req.body.idUser;
+            const resultkelas = await KelasModel.findById(id);
+            const resultUser = await UserModel.findById(idUser);
+            //ngecek kalo kelas sudah penuh
+            if (resultkelas.peserta.length < resultkelas.kapasitasPeserta){
+                //ngecek kalo user sudah terdaftar di kelas
+                if (!resultkelas.peserta.includes(idUser)) {
+                    //ngecek kalo user internal atau eksternal
+                    if (resultkelas.kelasType === 1 && resultUser.userType === 1){
+                        
+                        const calonPeserta = new calonPesertaSchema({
+                            kelas : id,
+                            idUser : idUser,
+                        });
+                        //masukin si user ke field calonPeserta di kelas
+                        resultkelas.calonPeserta.push(calonPeserta);
+                        const result = await resultkelas.save();
+                        response(200, result, 'Berhasil enrol harap tunggu di setujui', res);   
+
+                    }else if(resultkelas.kelasType === 0 && resultUser.userType === 0){
+                        const calonPeserta = new calonPesertaSchema({
+                            kelas : id,
+                            idUser : idUser,
+                        });
+                        //masukin si user ke field calonPeserta di kelas
+                        resultkelas.calonPeserta.push(calonPeserta);
+                        const result = await resultkelas.save();
+                        response(200, result, 'Berhasil enrol harap tunggu di setujui', res);
+                    }else if(resultkelas.kelasType === 0 || resultUser.userType === 1){
+                    
+                        const calonPeserta = new calonPesertaSchema({
+                            kelas : id,
+                            idUser : idUser,
+                        })
+                        //masukin si user ke field calonPeserta di kelas
+                        resultkelas.calonPeserta.push(calonPeserta);
+                        const result = await resultkelas.save();
+                        response(200, result, 'Berhasil enrol harap tunggu di setujui', res);
+                
+                    }else{
+                        response(401,resultkelas,'tidak bisa enrol', res);
+                    }
+                }else{
+                    response(400, idUser, 'User sudah terdaftar di kelas', res);
+                }
+            }else{
+                response(400, resultkelas, 'Kelas sudah penuh', res);
+            }
+        }catch(error){
+            console.log(error.message)
+            response(500, error, 'Server error',res)
+        }
+    },
+    approvePeserta: async (req, res) => {
+        try{
+          //seleksi id kelas dan id peserta
+          const {idKelas, idPeserta} = req.body;
+          //nyari kelas berdasarkan id kelas
+          const kelas = await KelasModel.findById(idKelas);
+          //nyari peserta berdasarkan id peserta di field calonPeserta
+          const calonPeserta = await KelasModel.findOne({'calonPeserta._id' : idPeserta});
+            //nyari user berdasarkan id peserta
+            const user = await UserModel.findById(calonPeserta.idUser);
+            //ngecek kalo kelas sudah penuh
+            if (kelas.peserta.length < kelas.kapasitasPeserta){
+                response(400, kelas, 'Kelas sudah penuh', res);
+            }
+            //masukin user ke field peserta di kelas
+            kelas.peserta.push(calonPeserta.idUser);
+            //ngehapus user di field calonPeserta di kelas
+            kelas.calonPeserta.pull(idPeserta);
+            response(200, kelas, 'Berhasil approve peserta', res);
+        }catch(error){
+            console.log(error.message)
+            response(500, error, 'Server error',res)
+        }
       }
-      
 }

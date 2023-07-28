@@ -22,10 +22,13 @@ const kelasSchema = new Schema({
   classPermission: { type: String, required: false },
   kelasType: { type: Number, required: false }, // 1 = internal pdam dan 0 = eksternal pdam atau All
   jadwal : [jadwal],
+  kelasStatus : {type: Number, required: true, default : 0},// 1 = pending 2 = declined 3 = approved
   // jamMulai: { type: Date, required: true },
   // jamSelesai: { type: Date, required: true },
   // tanggal: [{ type: Date, required: true }]
+  calonPeserta : [{type: mongoose.Schema.Types.ObjectId, ref: 'calonPeserta'}],
 },{ timestamps: true });
 
 module.exports = mongoose.model('Kelas', kelasSchema);
  
+//compare this snippet from models/kelas.js:

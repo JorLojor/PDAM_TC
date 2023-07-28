@@ -101,7 +101,7 @@ module.exports = {
         //     }
         // });
     },
-    creteTugasSecond: async (req, res) => {
+    creteTugasSecond: async (req, res) => {// yang di gunakan
         try{
             const {description, dateStarted, dateFinished, fileText, pengumpulanTugas} = req.body;
 
@@ -109,7 +109,7 @@ module.exports = {
                 description,
                 dateStarted,
                 dateFinished,
-                fileText,
+                tugasTexts,
                 pengumpulanTugas
             });
             const result = await tugas.save();
