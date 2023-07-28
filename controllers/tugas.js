@@ -46,7 +46,7 @@ module.exports = {
                 description,
                 dateStarted,
                 dateFinished,
-                fileText,
+                tugasTexts,
                 pengumpulanTugas
             });
             const result = await tugas.save();
