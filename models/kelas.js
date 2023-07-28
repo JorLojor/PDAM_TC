@@ -20,10 +20,11 @@ const kelasSchema = new Schema({
   kodeNotaDinas: { type: String, required: false }, // referensi ke schema
   classPermission: { type: String, required: false },
   kelasType: { type: Number, required: false }, // 1 = internal pdam dan 0 = eksternal pdam atau All
-  jamMulai: { type: Date, required: true },
-  jamSelesai: { type: Date, required: true },
-  tanggal: [{ type: Date, required: true }]
-});
+  jadwal : [{type: Object, required: true}],
+  // jamMulai: { type: Date, required: true },
+  // jamSelesai: { type: Date, required: true },
+  // tanggal: [{ type: Date, required: true }]
+},{ timestamps: true });
 
 module.exports = mongoose.model('Kelas', kelasSchema);
  

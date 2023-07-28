@@ -48,7 +48,7 @@ module.exports = {
     },
     createKelas: async (req, res) => {
         try {
-            const {kodeKelas, nama,harga,kapasitasPeserta, description, methods ,instruktur, peserta,materi} = req.body;
+            const {kodeKelas, nama,harga,kapasitasPeserta, description, methods ,instruktur, peserta,materi,jadwal} = req.body;
             
             const kelas = new KelasModel({
                 kodeKelas,
@@ -60,15 +60,14 @@ module.exports = {
                 peserta,
                 instruktur,
                 materi,
-                jamMulai,
-                jamSelesai,
-                tanggal
+                jadwal
             });
 
             const result = await kelas.save();
 
             response(200, result, 'Kelas berhasil di buat',res)
         } catch (error) {
+            console.log(error.message);
             response(500, error, 'Server error',res)
         }
     },

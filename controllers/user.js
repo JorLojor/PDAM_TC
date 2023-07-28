@@ -89,6 +89,7 @@ module.exports = {
 
       response(200, result, "Berhasil get all user", res);
     } catch (error) {
+      console.log(error.message);
       response(500, error, "Server error", res);
     }
   },
