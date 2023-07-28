@@ -42,7 +42,6 @@ module.exports = {
             
             response(200, kelas, 'kelas ditemukan',res)
         }catch(error){
-            console.log(error.message);
             response(500, error, 'Server error',res)
         }
     },
@@ -67,7 +66,6 @@ module.exports = {
 
             response(200, result, 'Kelas berhasil di buat',res)
         } catch (error) {
-            console.log(error.message);
             response(500, error, 'Server error',res)
         }
     },
@@ -115,10 +113,9 @@ module.exports = {
             const materi = req.body.materi;
 
             const result = await KelasModel.findByIdAndUpdate(id, {materi : materi, description : deskripsi } , {new : true})// $push: { materi: { $each: materi } 
-            console.log(result)
+
             response(200, result, 'Kelas berhasil di update',res)
         }catch (error){
-            console.log(error.messsage)
             response(500, error, 'Server error',res)
         }
     },
@@ -165,7 +162,6 @@ module.exports = {
             response(400, {}, 'User sudah terdaftar di kelas', res);
           }
         } catch (error) {
-          console.log(error.message);
           response(500, error, 'Server error', res);
         }
       }

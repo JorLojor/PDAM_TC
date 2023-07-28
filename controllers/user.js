@@ -28,7 +28,6 @@ module.exports = {
 
       response(200, user, "Register berhasil", res);
     } catch (error) {
-      console.log(error.message);
       response(500, error, "Server error", res);
     }
   },
@@ -39,7 +38,6 @@ module.exports = {
       const user = await userModel.findOne({
         $or: [{ username }, { email: username }],
       });
-      console.log(user);
       if (user) {
         const cekPassword = bcrypt.compareSync(password, user.password);
         if (cekPassword) {
@@ -89,7 +87,6 @@ module.exports = {
 
       response(200, result, "Berhasil get all user", res);
     } catch (error) {
-      console.log(error.message);
       response(500, error, "Server error", res);
     }
   },

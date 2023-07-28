@@ -33,7 +33,6 @@ module.exports = {
 
             response(200, result, 'Get all materi',res)
         }catch(error){
-            console.log(error.message);
             response(500, error, 'Server error',res)
         }
     },
