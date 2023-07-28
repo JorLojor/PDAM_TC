@@ -21,7 +21,7 @@ module.exports = {
             }
 
             page = parseInt(page) || 1;
-            limits = parseInt(limits) || 5;
+            limits = parseInt(limits) || 6;
             const data = await MateriModel.find()
             .skip((page - 1) * limits)
             .limit(limits)

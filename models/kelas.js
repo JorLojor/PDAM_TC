@@ -5,6 +5,7 @@ const {Schema} = mongoose;
 const materi = require('./materi');
 const peserta = require('./pesertaKelas');
 const instruktur  = require('./instruktur');
+const jadwal = require('./jadwal');
 
 
 const kelasSchema = new Schema({
@@ -16,11 +17,11 @@ const kelasSchema = new Schema({
   methods: { type: String, required: true }, //online,offline, onlineMeeting
   materi: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Materi' }], // referensi ke schema materi
   peserta: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // referensi ke schema user dengan role 3 atau peserta hanya untuk
-  instruktur: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }], // referensi ke schema user dengan role 2 atau instruktur
+  instruktur: [instruktur], // referensi ke schema user dengan role 2 atau instruktur
   kodeNotaDinas: { type: String, required: false }, // referensi ke schema
   classPermission: { type: String, required: false },
   kelasType: { type: Number, required: false }, // 1 = internal pdam dan 0 = eksternal pdam atau All
-  jadwal : [{type: Object, required: true}],
+  jadwal : [jadwal],
   // jamMulai: { type: Date, required: true },
   // jamSelesai: { type: Date, required: true },
   // tanggal: [{ type: Date, required: true }]

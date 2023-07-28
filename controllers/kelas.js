@@ -27,6 +27,28 @@ module.exports = {
             response( 500,error, 'Server error',res)
         }
     },
+    nilaiPerKelas: async (req, res) => {
+        const kelasId = req.params.id;
+        try {
+            const kelas = await KelasModel.findById(kelasId).populate('materi');
+            if (!kelas) {
+                return response(404, null, 'Kelas tidak ditemukan', res);
+            }
+    
+            const nilaiPermateri = kelas.materi.map((materi) => materi.nilaiPermateri);
+            const totalNilai = nilaiPermateri.reduce((acc, curr) => acc + curr, 0);
+            const rataRata = totalNilai / nilaiPermateri.length;
+    
+            kelas.nilaiperkelas = rataRata;
+            await kelas.save();
+    
+            response(200, kelas, 'Nilai rata-rata kelas berhasil di update', res);
+        } catch (error) {
+            console.log(error.message);
+            response(500, error, 'Server error', res);
+        }
+    },
+    
     getOneKelas: async (req, res) => {
 
         const id = req.params.id;
@@ -47,7 +69,7 @@ module.exports = {
     },
     createKelas: async (req, res) => {
         try {
-            const {kodeKelas, nama,harga,kapasitasPeserta, description, methods ,instruktur, peserta,materi,jadwal} = req.body;
+            const {kodeKelas, nama,harga,kapasitasPeserta, description, methods ,instruktur, peserta,materi,jadwal,kodeNotaDinas} = req.body;
             
             const kelas = new KelasModel({
                 kodeKelas,
@@ -59,13 +81,15 @@ module.exports = {
                 peserta,
                 instruktur,
                 materi,
-                jadwal
+                jadwal,
+                kodeNotaDinas
             });
 
             const result = await kelas.save();
 
             response(200, result, 'Kelas berhasil di buat',res)
         } catch (error) {
+            console.log(error)
             response(500, error, 'Server error',res)
         }
     },

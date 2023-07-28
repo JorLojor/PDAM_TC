@@ -11,7 +11,7 @@ router.put('/admin/:id', auth.admin,Controller.updateKelasAdminSide);
 router.put('/instruktur/:id', auth.instruktur,Controller.updateKelasInstrukturSide);
 router.put('/:id', auth.student,Controller.enrolKelas)
 router.put('/test/:id',auth.user,Controller.enrolKelas) // testing
-router.post('/test',Controller.createKelasTest); // testing
+router.post('/test',Controller.createKelas); // testing
 router.delete('/:id', auth.admin,Controller.deleteKelas);
 
 
