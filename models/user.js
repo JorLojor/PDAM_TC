@@ -11,6 +11,7 @@ const userSchema = new Schema({
     kelas : [{type: mongoose.Schema.Types.ObjectId, ref: 'Kelas'}], //refrensi ke schema kelas
     spesialis: {type: String},// spesialis, req false
     nilai: [{type: mongoose.Schema.Types.ObjectId, required: false, ref: 'nilai'}],// nilai ref nilai
+    status : {type : String, required : true, default : 'pending'}// status registrasi -> pending,declined,accepted
 },{ timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);
