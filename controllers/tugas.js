@@ -71,18 +71,22 @@ module.exports = {
 
             const user = req.body.user; //id user yang mengumpulkan tugas
             const answer = req.body.answer; //jawaban dari user
-            const file = req.body.path; //file dari user untuk di kumpulkan
             
 
             const pengumpulan = {
                 user,
-                answer,
-                file,
+                answer
             };
-            tugas.pengumpulanTugas.push(pengumpulan);
-            response(200, tugas, "pengumpulan berhasil di tambahkan",res)
+
+            let data = tugas.pengumpulanTugas
+            data.push(pengumpulan)
+
+            const result = await tugasSchema.findByIdAndUpdate(idTugas, {pengumpulanTugas : data}, {new : true} )
+
+            response(200, result, "pengumpulan berhasil di tambahkan",res)
 
         }catch(error){
+            console.log(error.message)
             response(500, error, "Server error",res);
         }
     },

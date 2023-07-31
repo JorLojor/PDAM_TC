@@ -6,6 +6,7 @@ const pengumpulanTugasSchema =  new Schema({
     answer : {type : String, required: true},
     nilai : {type: Number, required : false, default : 0},
     tugasStatus : {type: String,required: false, default : 'not submitted'},//submitted, not submitted, grading, late 
+    dateSubmitted : {type: Date, required: true, default : new Date()},
 },{ timestamps: true })
 
 module.exports = pengumpulanTugasSchema
