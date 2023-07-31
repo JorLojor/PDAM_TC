@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const {Schema} = mongoose;
-const pengumpulanTugas = require('./pengumpulanTugas')
+const pengumpulanTugasSchema = require('./pengumpulanTugas');
+
 const tugasSchema =  new Schema({
     description : {type: String, required : true},
     dateStarted : {type: Date,required: true},
