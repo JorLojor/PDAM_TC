@@ -12,6 +12,7 @@ router.put('/instruktur/:id', auth.instruktur,Controller.updateKelasInstrukturSi
 router.put('/:id', auth.student,Controller.enrolKelas)
 router.put('/test/:id',auth.user,Controller.enrolKelas) //testing
 router.post('/test',Controller.createKelasTest); // testing
+
 router.delete('/:id', auth.admin,Controller.deleteKelas);
 
 
