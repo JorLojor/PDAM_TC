@@ -6,6 +6,7 @@ const response = require("../respons/response");
 const user = require("../models/user");
 
 
+
 module.exports = {
   //pendafataran user oleh admin
   createUser: async (req, res) => {
