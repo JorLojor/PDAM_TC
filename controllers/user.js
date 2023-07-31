@@ -3,6 +3,7 @@ const userModel = require("../models/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const response = require("../respons/response");
+const user = require("../models/user");
 
 module.exports = {
   //pendafataran user oleh admin
@@ -168,20 +169,18 @@ module.exports = {
   },
   updateStatusUser: async(req,res)=>{//admin dapat setuju atau menolak registrasi user
     const id = req.params.id; //idUser yang ingin dirubah
-    const status = Boolean(req.params.id);
+    const status = parseInt(req.body.status); //status yang ingin dirubah
     try{
-      let newStatus = ''
-      user = await userModel.findById(id);
-
-      if (status){
-        newStatus = 'accepted';
-      }else{
-        newStatus = 'declined';
+      let setStatus ='accepted';
+      if (status === 0){
+        setStatus = 'declined';
       }
-
-      const result = await userModel.findOneAndUpdate({_id:id},{status : newStatus}, {new:true})
+      
+     
+      const result = await userModel.findOneAndUpdate({_id:id},{status : setStatus}, {new:true})
       response(200, result, "Berhasil get status pending user", res);
     }catch (error){
+      console.log(error.message);
       res.status(500).json({ error: "Internal server error, coba lagi" });
     }
   }
