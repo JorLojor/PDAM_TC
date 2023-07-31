@@ -3,12 +3,15 @@ const userModel = require("../models/user");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const response = require("../respons/response");
+const user = require("../models/user");
+
 
 
 module.exports = {
-  register: async (req, res) => {
+  //pendafataran user oleh admin
+  createUser: async (req, res) => {
     try {
-      const { name, email, username, password, role, userType } = req.body;
+      const { name, email, username, password, role, userType} = req.body;
       const cekUser = await userModel.findOne({
         $or: [{ username }, { email }],
       });
@@ -22,8 +25,34 @@ module.exports = {
         email,
         username,
         password: passwordHash,
-        role, // 1 = admin, 2 = instruktur, 3 = user
-        userType, // 1 = internal pdam dan 0 = eksternal pdam atau All
+        role,
+        userType,
+        status : 'approved'
+      });
+      await user.save();
+
+      response(200, user, "Register berhasil", res);
+    } catch (error) {
+      response(500, error, "Server error", res);
+    }
+  },
+  //registrasi untuk pendafataran peserta diluar PDAM (eksternal)
+  register: async (req, res) => {
+    try {
+      const { name, email, username, password } = req.body;
+      const cekUser = await userModel.findOne({
+        $or: [{ username }, { email }],
+      });
+      if (cekUser) {
+        response(400, username, "Username atau email sudah terdaftar", res);
+        return;
+      }
+      const passwordHash = bcrypt.hashSync(password, 10);
+      const user = new userModel({
+        name,
+        email,
+        username,
+        password: passwordHash
       });
       await user.save();
 
@@ -113,8 +142,7 @@ module.exports = {
       const user = await userModel.findByIdAndUpdate(idUser, updatedUser, {
         new: true,
       });
-
-      res.json(user);
+      response(200, user, "Berhasil update user", res);
     } catch (error) {
       res.status(500).json({ error: "Internal server error, coba lagi" });
     }
@@ -124,11 +152,38 @@ module.exports = {
 
     try {
       const user = await userModel.findByIdAndRemove(idUser);
-      res.json(user);
+      response(200, user, "Berhasil delete user", res);
     } catch (error) {
       res.status(500).json({ error: "Internal server error, coba lagi" });
     }
   },
-  
-
+  getStatusPendingUser: async (req, res) => {//admin dapat melihat list orang yang baru registrasi
+    try {
+      const user = await userModel.find();
+      console.log(user);
+      const filtered = user.filter((val)=>{
+        return val.status === 'pending';
+      });
+      response(200, filtered, "Berhasil get status pending user", res);
+    }catch (error){
+      res.status(500).json({ error: "Internal server error, coba lagi" });
+    }
+  },
+  updateStatusUser: async(req,res)=>{//admin dapat setuju atau menolak registrasi user
+    const id = req.params.id; //idUser yang ingin dirubah
+    const status = parseInt(req.body.status); //status yang ingin dirubah
+    try{
+      let setStatus ='accepted';
+      if (status === 0){
+        setStatus = 'declined';
+      }
+      
+     
+      const result = await userModel.findOneAndUpdate({_id:id},{status : setStatus}, {new:true})
+      response(200, result, "Berhasil get status pending user", res);
+    }catch (error){
+      console.log(error.message);
+      res.status(500).json({ error: "Internal server error, coba lagi" });
+    }
+  }
 };

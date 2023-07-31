@@ -36,7 +36,7 @@ module.exports = {
         }
 
     },
-    creteTugas: async (req, res) => {// yang di gunakan
+    creteTugas: async (req, res) => {
         try{
             const {description, dateStarted, dateFinished, tugasTexts, pengumpulanTugas} = req.body;
 
@@ -49,6 +49,7 @@ module.exports = {
             });
             const result = await tugas.save();
             response(200, result, "tugas berhasil di tambahkan",res)
+
         }catch(error){
             response(500, error.message, "Server error failed to add",res);
         }
@@ -73,14 +74,11 @@ module.exports = {
             tugas.pengumpulanTugas.push(pengumpulan);
             response(200, tugas, "pengumpulan berhasil di tambahkan",res)
 
-            
-
         }catch(error){
             console.log(error.message);
             response(500, error, "Server error",res);
         }
     },
-    // test
     penilaian:async (req, res) => {
         try{
             const id = req.params._id;
