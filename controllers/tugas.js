@@ -36,9 +36,9 @@ module.exports = {
         }
 
     },
-    creteTugasSecond: async (req, res) => {// yang di gunakan
+    creteTugas: async (req, res) => {// yang di gunakan
         try{
-            const {description, dateStarted, dateFinished, fileText, pengumpulanTugas} = req.body;
+            const {description, dateStarted, dateFinished, tugasTexts, pengumpulanTugas} = req.body;
 
             const tugas = new tugasSchema({
                 description,
