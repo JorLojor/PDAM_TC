@@ -48,7 +48,6 @@ module.exports = {
 
             response(200, result, "Berhasil get all tugas",res);   
         }catch(error){
-            console.log(error.message);
             response(500, error, "Server error",res);
         }
 
@@ -80,10 +79,8 @@ module.exports = {
         }
         // upload(req, res, async (error) => {
         //     if (error instanceof multer.MulterError) {
-        //         console.log(error.message);
         //       response(500, error, 'internal server error \n gagal menambahkan file', res);
         //     } else if (error) {
-        //         console.log(error.message);
         //       response(500, error, 'internal server error \n gagal menambahkan file', res);
         //     }else{
         //         try{ 
@@ -104,7 +101,7 @@ module.exports = {
         //     }
         // });
     },
-    creteTugasSecond: async (req, res) => {
+    creteTugasSecond: async (req, res) => {// yang di gunakan
         try{
             const {description, dateStarted, dateFinished, fileText, pengumpulanTugas} = req.body;
 
@@ -112,10 +109,9 @@ module.exports = {
                 description,
                 dateStarted,
                 dateFinished,
-                fileText,
+                tugasTexts,
                 pengumpulanTugas
             });
-            console.log("test");
             const result = await tugas.save();
             response(200, result, "tugas berhasil di tambahkan",res)
         }catch(error){

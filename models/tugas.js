@@ -5,9 +5,10 @@ const tugasSchema =  new Schema({
     description : {type: String, required : true},
     dateStarted : {type: Date,required: true},
     dateFinished: {type: Date,required: true},
-    fileText : {type: String, required : true},//file text (soal)
-    fileTugas : {type: String,required: false, default : '/kosong'},//file tugas (soal jadi attecment untuk memperlengkap soal)
-    pengumpulanTugas : {type:[pengumpulanTugas], required: false}
+    tugasText : {type: String, required : true},//tugas text (soal) 
+    tugasFile : {type: String,required: false, default : '/kosong'},//file tugas (soal jadi attecment untuk memperlengkap soal)
+    pengumpulanTugas : {type:[pengumpulanTugas], required: false},
+    tugasStatus : {type: String,required: false, default : 'not submitted'},//submitted, not submitted, grading, late 
 },{ timestamps: true })
 
 module.exports = mongoose.model('Tugas', tugasSchema)

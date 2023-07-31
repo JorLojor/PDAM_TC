@@ -37,10 +37,8 @@ module.exports = {
     createTugas: async (req, res) => {
         upload(req, res, async (error) => {
             if (error instanceof multer.MulterError) {
-                console.log(error.message);
               response(500, error, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
             }else if(error){
-                console.log(error.message);
               response(500, error, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
             }else{
                 try{

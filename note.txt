@@ -1,0 +1,31 @@
+example 
+
+
+{
+            "_id": "64c3905e2cfd459aac685362",
+            "kodeND": "001/SSP/0723",
+            "unit_kerja": "SSP",
+            "penyetuju": [
+                {
+                    "user": {
+                        "_id": "649dce6986d6bf358b2c827f",
+                        "name": "Nurul Widodo",
+                        "username": "nurulwidodo",
+                        "password": "$2b$10$czShZaexmI6.0woNEMW3QeO5KGyGfOsMVLPxYnvL6kF5EuTok0sYG",
+                        "email": "nurul@mail.com",
+                        "divisi": "Office",
+                        "role": 0,
+                        "jabatan": "Kepala Divisi",
+                        "level": 2,
+                        "createdAt": "2023-06-29T18:33:13.871Z",
+                        "updatedAt": "2023-06-29T18:33:13.871Z",
+                        "__v": 0
+                    },
+                    "level": 2,
+                    "roleInND": "mengetahui",
+                    "isApproved": false,
+                    "createdAt": "2023-07-28T09:55:40.701Z",
+                    "updatedAt": "2023-07-28T09:55:40.701Z"
+                }
+            ],
+}

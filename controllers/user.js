@@ -4,6 +4,7 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const response = require("../respons/response");
 
+
 module.exports = {
   register: async (req, res) => {
     try {
@@ -28,7 +29,6 @@ module.exports = {
 
       response(200, user, "Register berhasil", res);
     } catch (error) {
-      console.log(error.message);
       response(500, error, "Server error", res);
     }
   },
@@ -39,7 +39,6 @@ module.exports = {
       const user = await userModel.findOne({
         $or: [{ username }, { email: username }],
       });
-      console.log(user);
       if (user) {
         const cekPassword = bcrypt.compareSync(password, user.password);
         if (cekPassword) {
@@ -130,4 +129,6 @@ module.exports = {
       res.status(500).json({ error: "Internal server error, coba lagi" });
     }
   },
+  
+
 };
