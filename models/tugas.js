@@ -1,12 +1,12 @@
 const mongoose = require('mongoose');
 const {Schema} = mongoose;
-
+// const pengumpulanTugas = require('./pengumpulanTugas')
 const tugasSchema =  new Schema({
     description : {type: String, required : true},
-    dateStarted : {type: Date,required: false},
-    dateFinished: {type: Date,required: false},
-    fileTugas : {type: String,required: false},//file tugas (soal jadi attecment untuk memperlengkap soal)
-    // pengumpulanTugas : [{Type : mongoose.Schema.Types.ObjectId, ref:'PengumpulanTugas'}],
+    dateStarted : {type: Date,required: true},
+    dateFinished: {type: Date,required: true},
+    fileTugas : {type: String,required: false, default : '/kosong'},//file tugas (soal jadi attecment untuk memperlengkap soal)
+    pengumpulanTugas : {type: mongoose.Schema.Types.ObjectId, ref: 'PengumpulanTugas', required: false}
 },{ timestamps: true })
 
 module.exports = mongoose.model('Tugas', tugasSchema)
