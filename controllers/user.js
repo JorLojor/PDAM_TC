@@ -222,5 +222,47 @@ module.exports = {
     } catch (error) {
       response(500,[],error.message,res)
     }
+  },
+  getWithFilter:async(req,res)=>{
+    try {
+      const isPaginate = parseInt(req.query.paginate);
+      let totalData;
+
+      if (isPaginate === 0) {
+        const data = await userModel.find({...req.body});
+        if (data) {
+          totalData = data.length;
+        }
+        result = {
+          data: data,
+          "total data": totalData,
+        };
+        response(200, result, "get user", res);
+        return;
+      }
+
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+
+      const data = await userModel
+        .find({...req.body})
+        .skip((page - 1) * limit)
+        .limit(limit);
+      // .populate("kelas")
+
+      if (data) {
+      totalData = data.length;
+      }
+
+      result = {
+        data: data,
+        "total data": totalData,
+      };
+
+      response(200, result, "Berhasil get filtered user", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
   }
 };

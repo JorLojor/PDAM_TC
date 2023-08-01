@@ -4,6 +4,7 @@ const UserModel = require("../models/user");
 const calonPesertaSchema = require("../models/calonpeserta");
 const response = require("../respons/response");
 const uploadImage = require("../middleware/imagepath");
+const multer = require("multer");
 
 module.exports = {
      getAllKelas: async (req, res) => {
@@ -16,7 +17,7 @@ module.exports = {
                const data = await KelasModel.find()
                     .skip((halaman - 1) * batas)
                     .limit(batas)
-                    .populate("materi");
+                    .populate("materi instruktur");
 
                for (const kelas of data) {
                     for (let i = 0; i < kelas.peserta.length; i++) {
@@ -29,6 +30,9 @@ module.exports = {
                          }
                     }
 
+                }
+                
+                for (const kelas of data) {
                     for (let i = 0; i < kelas.instruktur.length; i++) {
                          const instruktur = kelas.instruktur[i];
                          const userData = await UserModel.findOne({
@@ -38,7 +42,7 @@ module.exports = {
                               kelas.instruktur[i].user = userData;
                          }
                     }
-               }
+                }
 
                result = {
                     data: data,
@@ -156,16 +160,19 @@ module.exports = {
                               methods,
                               kategori,
                               instruktur,
-                              peserta,
-                              materi,
+                              peserta = [],
+                              materi = [],
                               jadwal,
-                              link,
                               kelasType,
-                              kodeNotaDinas,
-
-                              linkPelatihan,
+                              kodeNd,
+                              link,
                          } = req.body;
-                         const imageKelas = req.file.path;
+                         
+                         let imageKelas = null
+
+                         if (req.file) {
+                            imageKelas = req.file.path;
+                         }
 
                          const kelas = new KelasModel({
                               kodeKelas,
@@ -178,18 +185,17 @@ module.exports = {
                               peserta,
                               instruktur,
                               materi,
-                              link,
                               jadwal,
                               kelasType,
-                              kodeNotaDinas,
+                              kodeNotaDinas:kodeNd,
                               image: imageKelas,
-                              linkPelatihan,
+                              linkPelatihan:link,
                          });
 
                          const result = kelas.save();
                          response(200, result, "Kelas berhasil di buat", res);
                     } catch (error) {
-                         response(500, error, "Server error", res);
+                         response(500, error, error.message, res);
                     }
                }
           });

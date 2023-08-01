@@ -10,6 +10,7 @@ router.get('/:id' ,userController.getSingleUser);
 
 router.get('/',auth.admin,userController.getStatusPendingUser); // get status pending userå
 router.get('/role/:role',auth.admin,userController.getByRole); // get status pending userå
+router.post('/filtered',auth.admin,userController.getWithFilter); // get with filter
 
 router.post('/create', auth.admin ,userController.createUser);
 router.post('/register', userController.register);

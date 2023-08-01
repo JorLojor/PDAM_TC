@@ -1,6 +1,6 @@
 const mongoose = require('mongoose')
 const {Schema} = mongoose;
-const itemsMateri = require('./itemsMateri');
+const itemsMateri = require('./itemsMateri.js');
 
 const materiSchema = new Schema({
     kodeMateri: {type: String, required: true},
