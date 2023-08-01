@@ -99,7 +99,6 @@ module.exports = {
         response(200, result, "get user", res);
         return;
       }
-
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const totalData = await userModel.countDocuments();
@@ -117,6 +116,7 @@ module.exports = {
 
       response(200, result, "Berhasil get all user", res);
     } catch (error) {
+      console.log(error.message);
       response(500, error, "Server error", res);
     }
   },
