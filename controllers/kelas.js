@@ -240,6 +240,20 @@ module.exports = {
                response(500, error, "Server error", res);
           }
      },
+     deactivatedKelas: async (req, res) => { // menonaktifkan kelas
+          try {
+               const id = req.params.id;
+               const result = await KelasModel.findByIdAndUpdate(
+                    id,
+                    { isActive: false },
+                    { new: true }
+               );
+
+               response(200, result, "Kelas berhasil di nonaktifkan", res);
+          } catch (error) {
+               response(500, error, "Server error", res);
+          }
+     },
      enrolKelas: async (req, res) => {
           const id = req.params.id;
           const idUser = req.body.idUser;
