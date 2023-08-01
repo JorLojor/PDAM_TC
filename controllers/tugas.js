@@ -44,8 +44,7 @@ module.exports = {
                 } else if (err) {
                     return res.status(500).json({ error: 'Something went wrong' });
                 }
-                const {materi,kelas} = req.params
-                const {title, instruction, deadline} = req.body;
+                const {title, instruction, deadline, materi, kelas} = req.body;
                 const attachment = req.file.path           
                 const tugas = new tugasSchema({
                     title,
