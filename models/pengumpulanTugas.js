@@ -7,6 +7,7 @@ const pengumpulanTugasSchema =  new Schema({
     answerFile : {type : String, required: false, default: '/kosong'}, // by file
     nilai : {type: Number, required : false},
     dateSubmitted : {type: Date, required: true, default : new Date()},
+    status : {type: String, required : true}//menunggu penilaian, telat mengumpulkan, sudah dinilai
 },{ timestamps: true })
 
 module.exports = pengumpulanTugasSchema
