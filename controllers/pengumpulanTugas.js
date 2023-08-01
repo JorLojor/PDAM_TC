@@ -71,33 +71,7 @@ module.exports = {
             response(500, error, "Server error failed to add",res);
         }
     },
-    updatePengumpulanTugas: async (req, res) => {
-        try{
-            const id = req.params._id;
-            const {answer} = req.body;
-            const {answerFile} = req.file.path;
-            if(error instanceof multer.MulterError){
-                console.log(error.message);
-                response(500, error, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
-            }else if(error){
-                console.log(error.message);
-                response(500, error, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
-            }else{
-
-                const user = await pengumpulanTugasSchema.findById(id);
-                const today = new Date();
-                let status = 'menunggu penilaian'
-                if (user.dateSubmitted > today){
-                    status = 'telat mengumpulkan'
-                }
-                const result = await pengumpulanTugasSchema.findByIdAndUpdate(id,{answer,answerFile,status}, {new:true})
-                response(200, result, "tugas berhasil di update",res)
-            }
-        }catch(error){
-            console.log(error.message);
-            response(500, error, "Server error failed to update",res);
-        }
-    },
+   
     deleteTugas: async (req, res) => {
         const id = req.params._id;
         try{
