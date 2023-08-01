@@ -185,5 +185,42 @@ module.exports = {
       console.log(error.message);
       res.status(500).json({ error: "Internal server error, coba lagi" });
     }
+  },
+  getByRole:async(req,res)=>{
+    const {role} = req.params
+
+    try {
+      const isPaginate = parseInt(req.query.paginate);
+
+      if (isPaginate === 0) {
+        const totalData = await userModel.countDocuments();
+        const data = await userModel.find({role:parseInt(role)});
+        // .populate("kelas");
+        result = {
+          data: data,
+          "total data": totalData,
+        };
+        response(200, result, "get user", res);
+        return;
+      }
+
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+      const totalData = await userModel.countDocuments();
+
+      const data = await userModel
+        .find({role:parseInt(role)})
+        .skip((page - 1) * limit)
+        .limit(limit);
+      // .populate("kelas")
+
+      result = {
+        data: data,
+        "total data": totalData,
+      };
+      response(200,result,'Data per role ditemukkan',res)
+    } catch (error) {
+      response(500,[],error.message,res)
+    }
   }
 };

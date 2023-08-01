@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const kelasInUserSchema = require('./kelasInUser');
 const {Schema} = mongoose;
 
 const userSchema = new Schema({
@@ -9,7 +10,7 @@ const userSchema = new Schema({
     role : {type: Number, required: true, default : 3}, // penentuan user 1 = admin, 2 = instruktur, 3 = student 
     userType : {type: Number, required: true, default : 0},// 1 = internal pdam dan 0 = eksternal pdam atau All
     userStatus : {type: Number, required: true, default : 0},// 1 = pending 2 = declined 3 = registered
-    kelas : [{type: mongoose.Schema.Types.ObjectId, ref: 'Kelas'}], //refrensi ke schema kelas
+    kelas : [{type: kelasInUserSchema, required:false}],
     spesialis: {type: String},// spesialis, req false
     nilai: [{type: mongoose.Schema.Types.ObjectId, required: false, ref: 'nilai'}],// nilai ref nilai
     status : {type : String, required : true, default : 'pending'}// status registrasi -> pending,declined,accepted
