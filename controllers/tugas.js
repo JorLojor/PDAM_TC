@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const tugasSchema = require('../models/tugas');
-
+const userModel = require('../models/user');
 const response = require('../respons/response');
 const upload = require('../middleware/filepath');
 const uploadFile = require('../middleware/filepath');
@@ -64,23 +64,25 @@ module.exports = {
     },
     pengumpulanTugas: async (req, res) => { // fungsi put yang di gunakan user saat mengumpulkan tugas
         try{
-            
             const idTugas = req.params.id;
-            const tugas = await tugasSchema.findById(idTugas);
             
-
+            
             const user = req.body.user; //id user yang mengumpulkan tugas
             const answer = req.body.answer; //jawaban dari user
             
-
+            const cekUser = await tugasSchema.findOne({user})
+            if (cekUser) {
+                response(400, username, "anda sudah mengumpulkan", res);
+            }
             const pengumpulan = {
                 user,
                 answer
             };
-
+            
+            const tugas = await tugasSchema.findById(idTugas);
             let data = tugas.pengumpulanTugas
             data.push(pengumpulan)
-
+            
             const result = await tugasSchema.findByIdAndUpdate(idTugas, {pengumpulanTugas : data}, {new : true} )
 
             response(200, result, "pengumpulan berhasil di tambahkan",res)

@@ -48,21 +48,23 @@ module.exports = {
             //     console.log(error.message);
             //     response(500, error, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
             // }else{
-                const tugas = await tugasSchema.findById(idTugas);
                 const today = new Date();
                 let status = 'menunggu penilaian'
                 if (tugas.dateFinished < today){
                     status = 'telat mengumpulkan'
                 }
-
+                
                 const pengumpulanTugas = new pengumpulanTugasSchema({
                     user,
                     answer,
                     status : status
                 });
                 const newData = await pengumpulanTugas.save();
+                
+                const tugas = await tugasSchema.findById(idTugas);
+                let newArray = tugas.pengumpulanTugas.push(newData);
 
-                const result = await tugasSchema.findByIdAndUpdate(idTugas,{pengumpulanTugas : newData}, {new:true})
+                const result = await tugasSchema.findByIdAndUpdate(idTugas,{pengumpulanTugas : newArray}, {new:true})
                 response(200, newData, "tugas berhasil di tambahkan",res)
             // }
         }catch(error){
