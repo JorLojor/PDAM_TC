@@ -72,7 +72,8 @@ module.exports = {
                 }
                 const idTugas = req.params.id;
                 const user = req.body.user; //id user yang mengumpulkan tugas
-                const answer = req.file.path; //jawaban dari user
+                const answerFile = req.file.path; //jawaban dari user
+                const answer = req.body.answer; //jawaban dalam bentuk text
 
                 const tugas = await tugasSchema.findById(idTugas);
                 let cekUser = false;
@@ -95,6 +96,7 @@ module.exports = {
     
                 const pengumpulan = {
                     user,
+                    answerFile,
                     answer,
                     status : status
                 };
@@ -108,17 +110,33 @@ module.exports = {
             response(500, error, "Server error",res);
         }
     },
-    // updatePengumpulanTugas: async (req, res) => {
-    //     const tugas = req.params.id;
-    //     const user = req.body.id;
-    //     const update = req.body.file;
-    //     try{
-    //         const tugas = await tugas.findByIdAndUpdate(id, update,{new:true});
-    //         response(200, tugas, "tugas berhasil di update",res)
-    //     }catch(error){
-    //         response(500, error, "Server error failed to update",res);
-    //     }
-    // },
+    updatePengumpulanTugas: async (req, res) => {
+        try{
+            const id = req.params._id;
+            const {answer} = req.body;
+            const {answerFile} = req.file.path;
+            if(error instanceof multer.MulterError){
+                console.log(error.message);
+                response(500, error, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
+            }else if(error){
+                console.log(error.message);
+                response(500, error, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
+            }else{
+
+                const user = await pengumpulanTugasSchema.findById(id);
+                const today = new Date();
+                let status = 'menunggu penilaian'
+                if (user.dateSubmitted < today){
+                    status = 'telat mengumpulkan'
+                }
+                const result = await pengumpulanTugasSchema.findByIdAndUpdate(id,{answer,answerFile,status}, {new:true})
+                response(200, result, "tugas berhasil di update",res)
+            }
+        }catch(error){
+            console.log(error.message);
+            response(500, error, "Server error failed to update",res);
+        }
+    },
     penilaianTesting:async (req, res) => {
         try{
             const id = req.params._id;
@@ -172,33 +190,6 @@ module.exports = {
             response(500, error, "Server error failed to update",res);
         }
     },
-    updatePengumpulanTugas: async (req, res) => {
-        try{
-            const id = req.params._id;
-            const {answer} = req.body;
-            const {answerFile} = req.file.path;
-            if(error instanceof multer.MulterError){
-                console.log(error.message);
-                response(500, error, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
-            }else if(error){
-                console.log(error.message);
-                response(500, error, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
-            }else{
-
-                const user = await pengumpulanTugasSchema.findById(id);
-                const today = new Date();
-                let status = 'menunggu penilaian'
-                if (user.dateSubmitted > today){
-                    status = 'telat mengumpulkan'
-                }
-                const result = await pengumpulanTugasSchema.findByIdAndUpdate(id,{answer,answerFile,status}, {new:true})
-                response(200, result, "tugas berhasil di update",res)
-            }
-        }catch(error){
-            console.log(error.message);
-            response(500, error, "Server error failed to update",res);
-        }
-    },
     deleteTugas: async (req, res) => {
         const id = req.params.id;
         try{
@@ -207,5 +198,5 @@ module.exports = {
         }catch(error){
             response(500, error, "Server error failed to delete",res);
         }
-    },
+    }
 }
