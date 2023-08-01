@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 const tugasSchema = require('../models/tugas');
-
+const userModel = require('../models/user');
 const response = require('../respons/response');
 const upload = require('../middleware/filepath');
 const uploadFile = require('../middleware/filepath');
@@ -63,29 +63,80 @@ module.exports = {
     },
     pengumpulanTugas: async (req, res) => { // fungsi put yang di gunakan user saat mengumpulkan tugas
         try{
-            
-            const idTugas = req.params.id;
-            const tugas = await tugasSchema.findById(idTugas);
-            
+            uploadFile.single('answer')(req, res, async function (err) {
+                if (err instanceof multer.MulterError) {
+                    return res.status(400).json({ error: 'File upload error' });
+                } else if (err) {
+                    return res.status(500).json({ error: 'Something went wrong' });
+                }
+                const idTugas = req.params.id;
+                const user = req.body.user; //id user yang mengumpulkan tugas
+                const answerFile = req.file.path; //jawaban dari user
+                const answer = req.body.answer; //jawaban dalam bentuk text
 
-            const user = req.body.user; //id user yang mengumpulkan tugas
-            const answer = req.body.answer; //jawaban dari user
-            const file = req.body.path; //file dari user untuk di kumpulkan
-            
+                const tugas = await tugasSchema.findById(idTugas);
+                let cekUser = false;
 
-            const pengumpulan = {
-                user,
-                answer,
-                file,
-            };
-            tugas.pengumpulanTugas.push(pengumpulan);
-            response(200, tugas, "pengumpulan berhasil di tambahkan",res)
+                tugas.pengumpulanTugas.forEach((e) =>{
+                    if (user == e.user){
+                        cekUser = true;
+                    }
+                });
 
+                if (cekUser) {
+                    response(400, user, "anda sudah mengumpulkan", res);
+                }
+                const today = new Date();
+                let status = 'menunggu penilaian';
+    
+                if (tugas.deadline < today){
+                    status = 'telat mengumpulkan';
+                }
+    
+                const pengumpulan = {
+                    user,
+                    answerFile,
+                    answer,
+                    status : status
+                };
+                let data = tugas.pengumpulanTugas
+                data.push(pengumpulan)
+                
+                const result = await tugasSchema.findByIdAndUpdate(idTugas, {pengumpulanTugas : data}, {new : true} )
+                response(200, result, "pengumpulan berhasil di tambahkan",res)
+            });
         }catch(error){
             response(500, error, "Server error",res);
         }
     },
-    penilaian:async (req, res) => {
+    updatePengumpulanTugas: async (req, res) => {
+        try{
+            const id = req.params._id;
+            const {answer} = req.body;
+            const {answerFile} = req.file.path;
+            if(error instanceof multer.MulterError){
+                console.log(error.message);
+                response(500, error, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
+            }else if(error){
+                console.log(error.message);
+                response(500, error, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
+            }else{
+
+                const user = await pengumpulanTugasSchema.findById(id);
+                const today = new Date();
+                let status = 'menunggu penilaian'
+                if (user.dateSubmitted < today){
+                    status = 'telat mengumpulkan'
+                }
+                const result = await pengumpulanTugasSchema.findByIdAndUpdate(id,{answer,answerFile,status}, {new:true})
+                response(200, result, "tugas berhasil di update",res)
+            }
+        }catch(error){
+            console.log(error.message);
+            response(500, error, "Server error failed to update",res);
+        }
+    },
+    penilaianTesting:async (req, res) => {
         try{
             const id = req.params._id;
             const idUser = req.body._idUser;
@@ -101,7 +152,7 @@ module.exports = {
             response(500, error, "Server error failed to update",res);
         }
     },
-    penilaianSecondary:async (req, res) => {
+    penilaian:async (req, res) => {
         try{
             const id = req.params._id;
             const idUser = req.body._idUser;
@@ -146,5 +197,5 @@ module.exports = {
         }catch(error){
             response(500, error, "Server error failed to delete",res);
         }
-    },
+    }
 }
