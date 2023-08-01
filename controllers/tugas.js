@@ -109,10 +109,11 @@ module.exports = {
             response(500, error, "Server error",res);
         }
     },
-    updatePengumpulanTugas: async (req, res) => {
+    updatePengumpulanTugas1: async (req, res) => {
         try{
             uploadFile.single('answerFile')(req, res, async function (err) {
             const id = req.params._id;
+            const idUser = req.body.user;
             const {answer} = req.body;
             const {answerFile} = req.file.path;
             if(err instanceof multer.MulterError){
@@ -126,10 +127,59 @@ module.exports = {
                 const tugas = await tugasSchema.findById(id);
                 const today = new Date();
                 let status = 'menunggu penilaian'
-                if (tugas.dateSubmitted < today){
+                if (tugas.deadline < today && tugas.deadline + 1 < today){ 
+                    status = 'telat mengumpulkan';
+                    data.status = status;
+                }
+                const pengumpulan = {
+                    idUser,
+                    answer,
+                    answerFile,
+                    status : status
+                };
+                response(200, result, "tugas berhasil di update",res)
+            }
+        });
+        }catch(error){
+            console.log(error.message);
+            response(500, error, "Server error failed to update",res);
+        }
+    },
+    updatePengumpulanTugas: async (req, res) => {
+        try{
+            uploadFile.single('answerFile')(req, res, async function (err) {
+            const id = req.params.id;
+            const {answer,user} = req.body;
+            if(err instanceof multer.MulterError){
+                console.log(err.message);
+                response(500, err, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
+            }else if(err){
+                console.log(err.message);
+                response(500, err, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
+            }else{
+                const answerFile = req.file.path;
+                const tugas = await tugasSchema.findById(id);
+                const today = new Date();
+                
+                const filter = tugas.pengumpulanTugas
+                const index = filter.findIndex((v)=>{
+                    return v.user == user
+                });
+                let status = 'menunggu penilaian'
+                if (tugas.pengumpulanTugas[index].dateSubmitted < today){
                     status = 'telat mengumpulkan'
                 }
-                const result = await tugasSchema.findByIdAndUpdate(id,{answer,answerFile,status}, {new:true})
+                
+                const data = {
+                    user,
+                    answer,
+                    status : status,
+                    answerFile : answerFile
+                }
+                tugas.pengumpulanTugas[index] = data
+
+                const newData = tugas.pengumpulanTugas
+                const result = await tugasSchema.findByIdAndUpdate(id,{pengumpulanTugas : newData}, {new:true})
                 response(200, result, "tugas berhasil di update",res)
             }
         });
@@ -156,8 +206,8 @@ module.exports = {
     },
     penilaian:async (req, res) => {
         try{
-            const id = req.params._id;
-            const idUser = req.body._idUser;
+            const id = req.params.id;
+            const idUser = req.body.idUser;
             const {nilai} = req.body;
 
             const session = await mongoose.startSession();
