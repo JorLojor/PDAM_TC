@@ -27,6 +27,7 @@ const kelasSchema = new Schema({
   kelasStatus : {type: Number, required: true, default : 0},// 1 = pending 2 = declined 3 = approved
   image : {type:String,required:false},
   linkPelatihan : {type:String,required:false},
+  isActive :{type:Boolean,required:false,default:true},
   // jamMulai: { type: Date, required: true },
   // jamSelesai: { type: Date, required: true },
   // tanggal: [{ type: Date, required: true }]
@@ -35,4 +36,4 @@ const kelasSchema = new Schema({
 
 module.exports = mongoose.model('Kelas', kelasSchema);
  
-//compare this snippet from models/kelas.js:
+//compare this snippet from models/kelas.js to controllers/kelas.js:
