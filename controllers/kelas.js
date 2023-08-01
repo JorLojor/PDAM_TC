@@ -140,7 +140,7 @@ module.exports = {
           }
      },
      createKelasTest: async (req, res) => {
-          uploadImage(req, res, (err) => {
+          uploadImage.single('image')(req, res, (err) => {
                if (err instanceof multer.MulterError) {
                     response(500, err, "Server error", res);
                } else if (err) {
