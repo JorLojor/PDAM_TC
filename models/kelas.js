@@ -26,6 +26,8 @@ const kelasSchema = new Schema({
   link:{type:String,required:false},
   kategori:{type:String,required:false},
   kelasStatus : {type: Number, required: true, default : 0},// 1 = pending 2 = declined 3 = approved
+  image : {type:String,required:false},
+  linkPelatihan : {type:String,required:false},
   // jamMulai: { type: Date, required: true },
   // jamSelesai: { type: Date, required: true },
   // tanggal: [{ type: Date, required: true }]
