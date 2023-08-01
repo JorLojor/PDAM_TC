@@ -28,6 +28,6 @@ const fileFilter = (req, file, next) => {
   const uploadFile = multer({
     storage: fileStorage,
     fileFilter: fileFilter,
-  }).single('fileTugas');
+  });
   
   module.exports = uploadFile;

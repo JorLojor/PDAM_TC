@@ -4,7 +4,7 @@ const auth = require('../middleware/auth');
 const Controller = require('../controllers/tugas');
 
 router.get('/',auth.user ,Controller.getTugas);
-router.post('/',auth.instruktur ,Controller.creteTugas);
+router.post('/:kelas/:materi',auth.instruktur ,Controller.creteTugas);
 router.put('/:id',auth.instruktur ,Controller.updateTugas);
 router.delete('/:id',auth.instruktur ,Controller.deleteTugas);
 

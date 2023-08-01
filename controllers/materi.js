@@ -1,5 +1,7 @@
 const mongoose = require('mongoose');
 const MateriModel = require('../models/materi');
+const uploadFile = require('../middleware/filepath');
+const multer = require('multer');
 const response = require('../respons/response');
 
 module.exports = {
@@ -53,18 +55,30 @@ module.exports = {
     },
     createMateri: async (req, res)=>{
         try{
-            const {kodeMateri, nama, description, type, source} = req.body;
-            
-            const materi = new MateriModel({
-                kodeMateri,
-                nama,
-                description,
-                type,
-                source
-            })
+            uploadFile.single('attachment')(req,res,async function(err){
+                if (err instanceof multer.MulterError) {
+                    return res.status(400).json({ error: 'File upload error' });
+                } else if (err) {
+                    return res.status(500).json({ error: 'Something went wrong' });
+                }
 
-            const result = await materi.save();
-            response(200, result, 'Materi berhasil di buat',res)
+                const {kodeMateri, section, description} = req.body;
+                const attachment = req.file.path;
+                const item = {
+                    title : req.body.titleItem,
+                    description : req.body.descriptionItem,
+                    attachment
+                }
+                const materi = new MateriModel({
+                    kodeMateri,
+                    section,
+                    description,    
+                    items : item
+                })
+
+                const result = await materi.save();
+                response(200, result, 'Materi berhasil di buat',res)
+            });
         }catch(error){
             response(500, error, 'Server error',res)
         }  

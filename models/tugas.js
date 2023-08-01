@@ -3,13 +3,13 @@ const {Schema} = mongoose;
 const pengumpulanTugasSchema = require('./pengumpulanTugas');
 
 const tugasSchema =  new Schema({
-    description : {type: String, required : true},
-    dateStarted : {type: Date,required: true},
-    dateFinished: {type: Date,required: true},
-    tugasText : {type: String, required : true},//tugas text (soal) 
-    tugasFile : {type: String,required: false, default : '/kosong'},//file tugas (soal jadi attecment untuk memperlengkap soal)
-    pengumpulanTugas : {type:[pengumpulanTugasSchema], required: false},
-    tugasStatus : {type: String,required: false, default : 'not submitted'},//submitted, not submitted, grading, late 
+    materi : {type : mongoose.Schema.Types.ObjectId, ref: 'Materi' },
+    kelas : {type : mongoose.Schema.Types.ObjectId, ref: 'kelas'},
+    title : {type: String, required : true},
+    instruction : {type: String, required : true},
+    deadline: {type: Date,required: true},
+    attachment :  {type: String , required : true},//file tugas (soal jadi attecment untuk memperlengkap soal)
+    pengumpulanTugas : {type:[pengumpulanTugasSchema], required: false}
 },{ timestamps: true })
 
 module.exports = mongoose.model('Tugas', tugasSchema)

@@ -36,20 +36,28 @@ module.exports = {
         }
 
     },
-    creteTugas: async (req, res) => {
+    creteTugas:async (req, res) => {
         try{
-            const {description, dateStarted, dateFinished, tugasTexts, pengumpulanTugas} = req.body;
-
-            const tugas = new tugasSchema({
-                description,
-                dateStarted,
-                dateFinished,
-                tugasTexts,
-                pengumpulanTugas
+            uploadFile.single('attachment')(req, res, async function (err) {
+                if (err instanceof multer.MulterError) {
+                    return res.status(400).json({ error: 'File upload error' });
+                } else if (err) {
+                    return res.status(500).json({ error: 'Something went wrong' });
+                }
+                const {materi,kelas} = req.params
+                const {title, instruction, deadline} = req.body;
+                const attachment = req.file.path           
+                const tugas = new tugasSchema({
+                    title,
+                    instruction,
+                    deadline,
+                    attachment,
+                    kelas,
+                    materi
+                });
+                const result = await tugas.save();
+                response(200, result, "tugas berhasil di tambahkan",res)
             });
-            const result = await tugas.save();
-            response(200, result, "tugas berhasil di tambahkan",res)
-
         }catch(error){
             response(500, error.message, "Server error failed to add",res);
         }
@@ -75,7 +83,6 @@ module.exports = {
             response(200, tugas, "pengumpulan berhasil di tambahkan",res)
 
         }catch(error){
-            console.log(error.message);
             response(500, error, "Server error",res);
         }
     },
@@ -135,7 +142,7 @@ module.exports = {
     deleteTugas: async (req, res) => {
         const id = req.params.id;
         try{
-            const result = await tugas.findByIdAndDelete(id);
+            const result = await tugasSchema.findByIdAndDelete(id);
             response(200, result, "tugas berhasil di hapus",res)
         }catch(error){
             response(500, error, "Server error failed to delete",res);
