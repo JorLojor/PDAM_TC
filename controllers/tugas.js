@@ -64,35 +64,62 @@ module.exports = {
     },
     pengumpulanTugas: async (req, res) => { // fungsi put yang di gunakan user saat mengumpulkan tugas
         try{
-            const idTugas = req.params.id;
-            
-            
-            const user = req.body.user; //id user yang mengumpulkan tugas
-            const answer = req.body.answer; //jawaban dari user
-            
-            const cekUser = await tugasSchema.findOne({user})
-            if (cekUser) {
-                response(400, username, "anda sudah mengumpulkan", res);
-            }
-            const pengumpulan = {
-                user,
-                answer
-            };
-            
-            const tugas = await tugasSchema.findById(idTugas);
-            let data = tugas.pengumpulanTugas
-            data.push(pengumpulan)
-            
-            const result = await tugasSchema.findByIdAndUpdate(idTugas, {pengumpulanTugas : data}, {new : true} )
+            uploadFile.single('answer')(req, res, async function (err) {
+                if (err instanceof multer.MulterError) {
+                    return res.status(400).json({ error: 'File upload error' });
+                } else if (err) {
+                    return res.status(500).json({ error: 'Something went wrong' });
+                }
+                const idTugas = req.params.id;
+                const user = req.body.user; //id user yang mengumpulkan tugas
+                const answer = req.file.path; //jawaban dari user
 
-            response(200, result, "pengumpulan berhasil di tambahkan",res)
+                const tugas = await tugasSchema.findById(idTugas);
+                let cekUser = false;
 
+                tugas.pengumpulanTugas.forEach((e) =>{
+                    if (user == e.user){
+                        cekUser = true;
+                    }
+                });
+
+                if (cekUser) {
+                    response(400, user, "anda sudah mengumpulkan", res);
+                }
+                const today = new Date();
+                let status = 'menunggu penilaian';
+    
+                if (tugas.deadline < today){
+                    status = 'telat mengumpulkan';
+                }
+    
+                const pengumpulan = {
+                    user,
+                    answer,
+                    status : status
+                };
+                let data = tugas.pengumpulanTugas
+                data.push(pengumpulan)
+                
+                const result = await tugasSchema.findByIdAndUpdate(idTugas, {pengumpulanTugas : data}, {new : true} )
+                response(200, result, "pengumpulan berhasil di tambahkan",res)
+            });
         }catch(error){
-            console.log(error.message)
             response(500, error, "Server error",res);
         }
     },
-    penilaian:async (req, res) => {
+    // updatePengumpulanTugas: async (req, res) => {
+    //     const tugas = req.params.id;
+    //     const user = req.body.id;
+    //     const update = req.body.file;
+    //     try{
+    //         const tugas = await tugas.findByIdAndUpdate(id, update,{new:true});
+    //         response(200, tugas, "tugas berhasil di update",res)
+    //     }catch(error){
+    //         response(500, error, "Server error failed to update",res);
+    //     }
+    // },
+    penilaianTesting:async (req, res) => {
         try{
             const id = req.params._id;
             const idUser = req.body._idUser;
@@ -108,7 +135,7 @@ module.exports = {
             response(500, error, "Server error failed to update",res);
         }
     },
-    penilaianSecondary:async (req, res) => {
+    penilaian:async (req, res) => {
         try{
             const id = req.params._id;
             const idUser = req.body._idUser;
