@@ -63,7 +63,7 @@ module.exports = {
     },
     pengumpulanTugas: async (req, res) => { // fungsi put yang di gunakan user saat mengumpulkan tugas
         try{
-            uploadFile.single('answer')(req, res, async function (err) {
+            uploadFile.single('answerFile')(req, res, async function (err) {
                 if (err instanceof multer.MulterError) {
                     return res.status(400).json({ error: 'File upload error' });
                 } else if (err) {
@@ -111,26 +111,28 @@ module.exports = {
     },
     updatePengumpulanTugas: async (req, res) => {
         try{
+            uploadFile.single('answerFile')(req, res, async function (err) {
             const id = req.params._id;
             const {answer} = req.body;
             const {answerFile} = req.file.path;
-            if(error instanceof multer.MulterError){
-                console.log(error.message);
-                response(500, error, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
-            }else if(error){
-                console.log(error.message);
-                response(500, error, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
+            if(err instanceof multer.MulterError){
+                console.log(err.message);
+                response(500, err, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
+            }else if(err){
+                console.log(err.message);
+                response(500, err, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
             }else{
 
-                const user = await pengumpulanTugasSchema.findById(id);
+                const tugas = await tugasSchema.findById(id);
                 const today = new Date();
                 let status = 'menunggu penilaian'
-                if (user.dateSubmitted < today){
+                if (tugas.dateSubmitted < today){
                     status = 'telat mengumpulkan'
                 }
-                const result = await pengumpulanTugasSchema.findByIdAndUpdate(id,{answer,answerFile,status}, {new:true})
+                const result = await tugasSchema.findByIdAndUpdate(id,{answer,answerFile,status}, {new:true})
                 response(200, result, "tugas berhasil di update",res)
             }
+        });
         }catch(error){
             console.log(error.message);
             response(500, error, "Server error failed to update",res);
@@ -142,7 +144,7 @@ module.exports = {
             const idUser = req.body._idUser;
             const {nilai} = req.body;
             const resultPengumpulan = await tugasSchema.findByIdAndUpdate(id, { nilai });
-            const resultUser = await UserModel.findById(idUser);
+            const resultUser = await userModel.findById(idUser);
             let nilaiuser = resultUser.nilai;
             const nilaiAkhir = (nilaiuser + nilai);
             const resultFix = {resultPengumpulan, resultUser, nilaiAkhir}   
@@ -163,7 +165,7 @@ module.exports = {
 
             const resultPengumpulan = await tugasSchema.findByIdAndUpdate(id, { nilai }, {session});
 
-            const resultUser = await UserModel.findById(idUser);
+            const resultUser = await userModel.findById(idUser);
             let nilaiuser = resultUser.nilai;
             const nilaiAkhir = (nilaiuser + nilai);
             const resultFix = {resultPengumpulan, resultUser, nilaiAkhir}
