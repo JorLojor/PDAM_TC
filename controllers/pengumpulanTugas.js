@@ -4,7 +4,8 @@ const tugasSchema = require('../models/tugas');
 const response = require('../respons/response');
 const upload = require('../middleware/filepath');
 const multer = require('multer');
-const fileSystem = require('fs')
+const fileSystem = require('fs');
+const { error } = require('console');
 
 module.exports = {
     getPengumpulanTugas: async (req, res) => {//whit populate pagination
@@ -74,19 +75,24 @@ module.exports = {
         try{
             const id = req.params._id;
             const {answer} = req.body;
-            // let newFile;
-            // if(req.file){
-            //     const oldFile = await pengumpulanTugasSchema.findById(id);
-            //     if (oldFile.fileTugas) {
-            //         fileSystem.unlinkSync(oldFile.newFile);
-            //     }
-            //     newFile = req.file.path;
-            // }
-            
-            const result = await pengumpulanTugasSchema.findByIdAndUpdate(id, {
-                answer
-            });
-            response(200, result, "tugas berhasil di update",res)
+            const {answerFile} = req.file.path;
+            if(error instanceof multer.MulterError){
+                console.log(error.message);
+                response(500, error, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
+            }else if(error){
+                console.log(error.message);
+                response(500, error, 'internal server error \n gagal menambahkan file pengumpulan tugas', res);
+            }else{
+
+                const user = await pengumpulanTugasSchema.findById(id);
+                const today = new Date();
+                let status = 'menunggu penilaian'
+                if (user.dateSubmitted > today){
+                    status = 'telat mengumpulkan'
+                }
+                const result = await pengumpulanTugasSchema.findByIdAndUpdate(id,{answer,answerFile,status}, {new:true})
+                response(200, result, "tugas berhasil di update",res)
+            }
         }catch(error){
             console.log(error.message);
             response(500, error, "Server error failed to update",res);

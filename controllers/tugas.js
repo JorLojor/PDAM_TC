@@ -46,11 +46,13 @@ module.exports = {
               response(500, error, 'internal server error \n gagal menambahkan file', res);
             }else{
                 try{ 
-                    const {description, dateStarted, dateFinished} = req.body;
+                    const {description, dateStarted, dateFinished, instruksi} = req.body;
                     const fileTugas = req.file.path;
 
                     const tugas = new tugasSchema({
                         description, 
+                        instruksi,
+                        slug: description.toLowerCase().split(' ').join('-'),
                         dateStarted, 
                         dateFinished, 
                         fileTugas
@@ -62,8 +64,6 @@ module.exports = {
                 }
             }
         });
-    
-        
     },
     updateTugas: async (req, res) => {
         const id = req.params.id;
