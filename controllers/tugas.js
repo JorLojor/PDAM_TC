@@ -235,7 +235,7 @@ module.exports = {
         const id = req.params.id;
         const update = req.body;
         try{
-            const tugas = await tugas.findByIdAndUpdate(id, update,{new:true});
+            const tugas = await tugasSchema.findByIdAndUpdate(id, update,{new:true});
             response(200, tugas, "tugas berhasil di update",res)
         }catch(error){
             response(500, error, "Server error failed to update",res);
