@@ -8,7 +8,7 @@ const tugasSchema =  new Schema({
     title : {type: String, required : true},
     instruction : {type: String, required : true},
     deadline: {type: Date,required: true},
-    attachment :  {type: String , required : true},//file tugas (soal jadi attecment untuk memperlengkap soal)
+    attachment :  {type: String , required : false},//file tugas (soal jadi attecment untuk memperlengkap soal)
     pengumpulanTugas : {type:[pengumpulanTugasSchema], required: false}
 },{ timestamps: true })
 

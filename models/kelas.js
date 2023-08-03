@@ -23,15 +23,14 @@ const kelasSchema = new Schema({
   classPermission: { type: String, required: false },
   kelasType: { type: Number, required: false ,default:1}, // 1 = internal pdam dan 0 = eksternal pdam atau All
   jadwal : [jadwal],
-  kategori:{type:String,required:false},
+  kategori:{ type: mongoose.Schema.Types.ObjectId, ref: 'Kategori' },
   kelasStatus : {type: Number, required: true, default : 0},// 1 = pending 2 = declined 3 = approved
   image : {type:String,required:false},
   linkPelatihan : {type:String,required:false},
   isActive :{type:Boolean,required:false,default:true},
-  // jamMulai: { type: Date, required: true },
-  // jamSelesai: { type: Date, required: true },
-  // tanggal: [{ type: Date, required: true }]
-  // calonPeserta : [{type: mongoose.Schema.Types.ObjectId, ref: 'calonPeserta'}],
+  status:{type:String,required:false,default:'pending'}, // pending, draft, publish, ended
+  linkEvaluasi:{type:String,required:false},
+  slug:{type:String,required:true}
 },{ timestamps: true });
 
 module.exports = mongoose.model('Kelas', kelasSchema);

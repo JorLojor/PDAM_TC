@@ -1,0 +1,22 @@
+[
+    {
+      "sampul": "https://contoh.com/gambar-sampul-matematika.jpg",
+      "icon": "https://contoh.com/gambar-icon-matematika.jpg",
+      "name": "Matematika"
+    },
+    {
+      "sampul": "https://contoh.com/gambar-sampul-bahasa-inggris.jpg",
+      "icon": "https://contoh.com/gambar-icon-bahasa-inggris.jpg",
+      "name": "Bahasa Inggris"
+    },
+    {
+      "sampul": "https://contoh.com/gambar-sampul-sejarah.jpg",
+      "icon": "https://contoh.com/gambar-icon-sejarah.jpg",
+      "name": "Sejarah"
+    },
+    {
+      "sampul": "https://contoh.com/gambar-sampul-sains.jpg",
+      "icon": "https://contoh.com/gambar-icon-sains.jpg",
+      "name": "Sains"
+    }
+  ]

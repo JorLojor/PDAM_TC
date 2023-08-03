@@ -3,6 +3,9 @@ const mongoose = require('mongoose');
 const app = express();
 const cors = require('cors');
 
+const fs = require('fs')
+const path = require('path')
+
 require('dotenv').config();
 
 app.use(cors())
@@ -11,7 +14,7 @@ app.use(express.json())
 app.use(express.urlencoded({extended:true}))
 
 // database connection
-mongoose.connect(process.env.mongodb)
+mongoose.connect(process.env.mongodb2)
 // database connection
 
 // routes
@@ -33,6 +36,10 @@ app.use('/user/',userRoutes)
 app.use('/tugas/',tugasRoutes)
 app.use('/sertifikat/',sertifikatRoutes)
 app.use('/kategori/',kategoriRoutes)
+
+const uploadsDirectory = path.join(__dirname, 'upload');
+
+app.use('/upload', express.static(uploadsDirectory));
 
 app.get('/', (req, res) => {
     res.send('bismillah hirrohman nirrohim');

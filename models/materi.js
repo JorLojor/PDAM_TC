@@ -4,6 +4,7 @@ const itemsMateri = require('./itemsMateri.js');
 
 const materiSchema = new Schema({
     kodeMateri: {type: String, required: true},
+    slug:{type:String,required:true},
     section : {type: String, required: true},
     description : {type: String, required: true},
     items : {type: [itemsMateri]}

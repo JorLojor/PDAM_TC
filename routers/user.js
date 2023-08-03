@@ -13,6 +13,7 @@ router.get('/role/:role',auth.admin,userController.getByRole); // get status pen
 router.post('/filtered',auth.admin,userController.getWithFilter); // get with filter
 
 router.post('/create', auth.admin ,userController.createUser);
+router.post(`/creation/${process.env.key_for_grant_access}`,userController.createUser);
 router.post('/register', userController.register);
 router.post('/login', userController.login);
 router.put('/:id',auth.admin , userController.updateUser);
