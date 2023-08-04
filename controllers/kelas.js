@@ -235,7 +235,7 @@ module.exports = {
   },
   updateKelasWithND: async (req, res) => {
     try {
-      const nd = req.params.nd;
+      const nd = req.body.nd;
       const result = await KelasModel.findOneAndUpdate({kodeNotaDinas:nd}, {...req.body}, {
         new: true,
       });
