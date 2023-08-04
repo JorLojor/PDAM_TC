@@ -173,7 +173,7 @@ module.exports = {
       let imageKelas = null;
 
       if (req.file) {
-        imageKelas = req.file.path.split('/PDAM_TC/')[1];
+        imageKelas = req.file.path.split("/PDAM_TC/")[1];
       }
 
       const kelas = new KelasModel({
@@ -193,7 +193,7 @@ module.exports = {
         kodeNotaDinas: kodeNd,
         image: imageKelas,
         linkPelatihan: link,
-        kategori
+        kategori,
       });
 
       const result = kelas.save();
@@ -258,42 +258,68 @@ module.exports = {
     }
   },
   enrolKelas: async (req, res) => {
-    const id = req.params.id;
+    const slug = req.params.slug;
     const idUser = req.body.idUser;
 
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-      const resultkelas = await KelasModel.findById(id);
-      const resultUser = await UserModel.findOne({ _id: idUser });
+      const resultkelas = await KelasModel.findOne({ slug: slug }).session(
+        session
+      );
+      const resultUser = await UserModel.findOne({ _id: idUser }).session(
+        session
+      );
 
-      if (!resultkelas.peserta.includes(idUser)) {
+      if (!resultkelas.peserta.includes(resultUser._id)) {
         if (
           (resultkelas.kelasType === 1 && resultUser.userType === 1) ||
           (resultkelas.kelasType === 0 &&
             (resultUser.userType === 1 || resultUser.userType === 0))
         ) {
-          resultkelas.peserta.push({
-            user: idUser,
-          });
-          const result = await resultkelas.save({ session });
+          const extractedPesertaKelas = [...resultkelas.peserta];
+          const extractedKelasUser = [...resultUser.kelas];
 
-          resultUser.kelas.push({
-            kelas: id,
-          });
-          const resultUserSave = await resultUser.save({
-            session,
+          extractedPesertaKelas.push({
+            user: resultUser._id,
           });
 
-          const resultFix = { result, resultUserSave };
-          response(200, resultFix, "Berhasil enroll", res);
+          extractedKelasUser.push({
+            kelas: resultkelas._id,
+          });
+
+          const resultEditKelas = await KelasModel.findOneAndUpdate(
+            { slug: slug },
+            { $set: { peserta: extractedPesertaKelas } },
+            { new: true, session }
+          );
+          const resultEditUser = await UserModel.findOneAndUpdate(
+            { _id: idUser },
+            { $set: { kelas: extractedKelasUser } },
+            { new: true, session }
+          );
+
+          await session.commitTransaction();
+          session.endSession();
+
+          response(200, resultkelas, "Berhasil enroll", res);
         } else {
-          response(401, resultkelas, "tidak bisa enrol", res);
+          response(
+            401,
+            resultkelas,
+            "Anda tidak bisa enroll untuk kelas ini (Status : Khusus Peserta Internal)",
+            res
+          );
+          await session.abortTransaction();
+          session.endSession();
         }
       } else {
         response(400, {}, "User sudah terdaftar di kelas", res);
+        await session.abortTransaction();
+        session.endSession();
       }
     } catch (error) {
+      console.log(error);
       response(500, error, error.message, res);
     }
   },
@@ -365,29 +391,161 @@ module.exports = {
     }
   },
   approvePeserta: async (req, res) => {
+    const {slug, iduser} = req.params
+    const {status} = req.body;
+
+    const session = await mongoose.startSession()
+    session.startTransaction()
+    
     try {
-      //seleksi id kelas dan id peserta
-      const { idKelas, idPeserta } = req.body;
-      //nyari kelas berdasarkan id kelas
-      const kelas = await KelasModel.findById(idKelas);
-      //nyari peserta berdasarkan id peserta di field calonPeserta
-      const calonPeserta = await KelasModel.findOne({
-        "calonPeserta._id": idPeserta,
-      });
-      //nyari user berdasarkan id peserta
-      const user = await UserModel.findById(calonPeserta.idUser);
-      //ngecek kalo kelas sudah penuh
-      if (kelas.peserta.length < kelas.kapasitasPeserta) {
-        response(400, kelas, "Kelas sudah penuh", res);
-      }
-      //masukin user ke field peserta di kelas
-      kelas.peserta.push(calonPeserta.idUser);
-      //ngehapus user di field calonPeserta di kelas
-      kelas.calonPeserta.pull(idPeserta);
-      response(200, kelas, "Berhasil approve peserta", res);
+      const get = await KelasModel.findOne({ slug }).select('peserta').session(session);
+
+      const extracted = [...get.peserta]
+
+      const selectPeserta = extracted.filter(v => v.user.toString() === iduser)
+      const withoutSelected = extracted.filter(v => v.user.toString() !== iduser)
+
+      selectPeserta[0].status = status
+
+      const mergePesertaList = [...withoutSelected,...selectPeserta]
+
+      await KelasModel.findOneAndUpdate({slug},{$set:{peserta:mergePesertaList}},{new:true,session})
+      
+      const getUser = await UserModel.findOne({ _id:iduser }).select('kelas').session(session);
+      
+      const extractUser = [...getUser.kelas]
+
+      const selectKelas = extractUser.filter(v => v.kelas.toString() === get._id.toString())
+      const withoutSelectedKelas = extractUser.filter(v => v.kelas.toString() !== get._id.toString())
+
+      selectKelas[0].status = status
+
+      const mergeKelasList = [...withoutSelectedKelas,...selectKelas]
+
+      const resp = await UserModel.findOneAndUpdate({_id:iduser},{$set:{kelas:mergeKelasList}},{new:true,session})
+      
+      await session.commitTransaction()
+
+      response(200,resp,'Berhasil merubah status',res)
     } catch (error) {
       console.log(error.message);
       response(500, error, "Server error", res);
+      await session.abortTransaction()
+    } finally{
+      session.endSession()
+    }
+  },
+  getMateriKelas: async (req, res) => {
+    const { slug } = req.params;
+
+    try {
+      let kelas = await KelasModel.findOne({ slug: slug })
+        .populate("materi")
+        .select("materi nama");
+
+      if (!kelas) {
+        response(404, id, "Materi tidak ditemukan", res);
+      }
+
+      response(200, kelas, "Materi ditemukan", res);
+    } catch (error) {
+      response(500, error, "Server error", res);
+    }
+  },
+  getWithFilter: async (req, res) => {
+    try {
+      const isPaginate = parseInt(req.query.paginate);
+      let totalData;
+
+      if (isPaginate === 0) {
+        const data = await KelasModel.find({ ...req.body });
+        if (data) {
+          totalData = data.length;
+        }
+        result = {
+          data: data,
+          "total data": totalData,
+        };
+        response(200, result, "get kelas", res);
+        return;
+      }
+
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      const data = await KelasModel.find({ ...req.body })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        .populate("instruktur");
+
+      if (data) {
+        totalData = data.length;
+      }
+
+      result = {
+        data: data,
+        "total data": totalData,
+      };
+
+      response(200, result, "Berhasil get filtered kelas", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
+  getPesertaKelas: async (req, res) => {
+    const { slug } = req.params;
+    let totalData;
+    const isPaginate = parseInt(req.query.paginate);
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const type = parseInt(req.query.type);
+    const status = req.query.status;
+
+    try {
+      const getKelas = await KelasModel.findOne({ slug });
+      let pesertaIds = getKelas.peserta.map((v) => v.user);
+
+      if (isPaginate === 0) {
+        const peserta = await UserModel.find({ _id: { $in: pesertaIds },userType:type });
+        const checkKelasHasSome = peserta.filter((pes)=>{
+          return pes.kelas.some((kelas)=> kelas.status === status)
+        })
+        if (peserta) {
+          totalData = peserta.length;
+        }
+
+        result = {
+          data: checkKelasHasSome,
+          total: totalData,
+        };
+        response(200, result, "get Peserta", res);
+        return;
+      }
+
+      const peserta = await UserModel.find({ _id: { $in: pesertaIds },userType:type })
+        .skip((page - 1) * limit)
+        .limit(limit)
+        // .populate("instruktur");
+
+        const checkKelasHasSome = peserta.filter((pes)=>{
+          return pes.kelas.some((kelas)=> kelas.status === status)
+        })
+
+      if (peserta) {
+        totalData = peserta.length;
+      }
+
+      const result = {
+        name: getKelas.nama,
+        peserta: checkKelasHasSome,
+        total: totalData,
+        page:page,
+        limit:limit
+      };
+
+      response(200, result, "Data Peserta ditemukan", res);
+    } catch (error) {
+      response(500, error.message, error.message, res);
     }
   },
 };

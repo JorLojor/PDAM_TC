@@ -264,5 +264,15 @@ module.exports = {
     } catch (error) {
       response(500, error, error.message, res);
     }
+  },
+  getUserClass:async(req,res)=>{
+    const {id} = req.params;
+
+    try {
+      const get = await userModel.findOne({_id:id}).populate('kelas.kelas').select('kelas')
+      response(200,get,'Data ditemukan',res)
+    } catch (error) {
+      response(500,error,error.message,res)
+    }
   }
 };

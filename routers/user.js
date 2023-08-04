@@ -11,6 +11,7 @@ router.get('/:id' ,userController.getSingleUser);
 router.get('/',auth.admin,userController.getStatusPendingUser); // get status pending userå
 router.get('/role/:role',auth.admin,userController.getByRole); // get status pending userå
 router.post('/filtered',auth.admin,userController.getWithFilter); // get with filter
+router.get('/classes/:id',auth.student,userController.getUserClass); // get only user's class
 
 router.post('/create', auth.admin ,userController.createUser);
 router.post(`/creation/${process.env.key_for_grant_access}`,userController.createUser);
