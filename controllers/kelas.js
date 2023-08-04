@@ -111,6 +111,24 @@ module.exports = {
       response(500, error, "Server error", res);
     }
   },
+  getOneKelasByND: async (req, res) => {
+    const kodeNotaDinas = req.body.kodeNotaDinas;
+
+    try {
+      let kelas = await KelasModel.findOne({ kodeNotaDinas: kodeNotaDinas }).populate(
+        "materi instruktur peserta kategori status"
+      );
+
+      if (!kelas) {
+        res.status(404).json(kelas)
+        return;
+      }
+
+      res.json(kelas)
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
   createKelas: async (req, res) => {
     try {
       const {
@@ -213,6 +231,18 @@ module.exports = {
       response(200, result, "Kelas berhasil di update", res);
     } catch (error) {
       response(500, error, "Server error", res);
+    }
+  },
+  updateKelasWithND: async (req, res) => {
+    try {
+      const nd = req.params.nd;
+      const result = await KelasModel.findOneAndUpdate({kodeNotaDinas:nd}, {...req.body}, {
+        new: true,
+      });
+
+      response(200, result, "Kelas berhasil di update", res);
+    } catch (error) {
+      response(500, error, error.message, res);
     }
   },
   updateKelasInstrukturSide: async (req, res) => {
@@ -548,4 +578,5 @@ module.exports = {
       response(500, error.message, error.message, res);
     }
   },
+
 };

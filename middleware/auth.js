@@ -74,5 +74,27 @@ module.exports = {
             res.sendStatus(401);
         }
 
+    },
+    server:async(req,res,next)=>{
+        const authHeader = req.headers.authorization;
+        
+        try{
+            const token = authHeader.split(' ')[1];
+            console.log(authHeader);
+
+            if (!token || token === undefined) {
+                res.status(401).send('Not Authorize')
+                return;
+            }
+
+            if (token !== process.env.key_for_grant_access) {
+                res.status(403).send('Forbidden')
+                return;
+            }
+            
+            next();
+        }catch(error){
+            res.sendStatus(401);
+        }
     }
 }

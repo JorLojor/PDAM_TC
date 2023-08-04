@@ -23,6 +23,7 @@ router.get('/',auth.user ,Controller.getAllKelas);
 router.get('/',Controller.getAllKelas);//testing
 router.get('/:id',auth.user ,Controller.getOneKelas);
 router.get('/slug/:slug',auth.user ,Controller.getOneKelasBySlug);
+router.post('/nd/',auth.server ,Controller.getOneKelasByND);
 router.get('/materi/:slug',auth.user ,Controller.getMateriKelas);
 router.post('/peserta/:slug',auth.admin ,Controller.getPesertaKelas);
 router.post('/filtered',auth.admin ,Controller.getWithFilter);
