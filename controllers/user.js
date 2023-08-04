@@ -5,13 +5,11 @@ const jwt = require("jsonwebtoken");
 const response = require("../respons/response");
 const user = require("../models/user");
 
-
-
 module.exports = {
   //pendafataran user oleh admin
   createUser: async (req, res) => {
     try {
-      const { name, email, username, password, role, userType} = req.body;
+      const { name, email, username, password, role, userType } = req.body;
       const cekUser = await userModel.findOne({
         $or: [{ username }, { email }],
       });
@@ -27,7 +25,7 @@ module.exports = {
         password: passwordHash,
         role,
         userType,
-        status : 'approved'
+        status: "approved",
       });
       await user.save();
 
@@ -52,7 +50,7 @@ module.exports = {
         name,
         email,
         username,
-        password: passwordHash
+        password: passwordHash,
       });
       await user.save();
 
@@ -122,24 +120,46 @@ module.exports = {
   },
   getSingleUser: async (req, res) => {
     try {
-      const idUser = req.params.id;
-      const user = await userModel.findById(idUser);
+      const id = req.body._id;
+      const user = await userModel.findOne({ _id: id }, "-password").populate({
+        path: "kelas.kelas",
+        populate: {
+          path: "kategori",
+        },
+      });
 
       if (user) {
         response(200, user, "Berhasil get single user", res);
       } else {
-        response(400, idUser, "User tidak ditemukan", res);
+        response(400, user, "User tidak ditemukan", res);
       }
     } catch (error) {
-      response(500, error, "Server error", res);
+      response(500, error, error.message, res);
     }
   },
   updateUser: async (req, res) => {
     const idUser = req.params.id;
     const updatedUser = req.body;
 
+    console.log(req.file);
+    console.log(req.body);
+
+    let body;
+
+    body = {
+      ...req.body,
+    };
+
+    if (req.file) {
+      const imageProfile = req.file.path.split("/PDAM_TC/")[1];
+      body = {
+        ...req.body,
+        userImage: imageProfile,
+      };
+    }
+
     try {
-      const user = await userModel.findByIdAndUpdate(idUser, updatedUser, {
+      const user = await userModel.findByIdAndUpdate(idUser, body, {
         new: true,
       });
       response(200, user, "Berhasil update user", res);
@@ -157,44 +177,49 @@ module.exports = {
       res.status(500).json({ error: "Internal server error, coba lagi" });
     }
   },
-  getStatusPendingUser: async (req, res) => {//admin dapat melihat list orang yang baru registrasi
+  getStatusPendingUser: async (req, res) => {
+    //admin dapat melihat list orang yang baru registrasi
     try {
       const user = await userModel.find();
       console.log(user);
-      const filtered = user.filter((val)=>{
-        return val.status === 'pending';
+      const filtered = user.filter((val) => {
+        return val.status === "pending";
       });
       response(200, filtered, "Berhasil get status pending user", res);
-    }catch (error){
+    } catch (error) {
       res.status(500).json({ error: "Internal server error, coba lagi" });
     }
   },
-  updateStatusUser: async(req,res)=>{//admin dapat setuju atau menolak registrasi user
+  updateStatusUser: async (req, res) => {
+    //admin dapat setuju atau menolak registrasi user
     const id = req.params.id; //idUser yang ingin dirubah
     const status = parseInt(req.body.status); //status yang ingin dirubah
-    try{
-      let setStatus ='accepted';
-      if (status === 0){
-        setStatus = 'declined';
+    try {
+      let setStatus = "accepted";
+      if (status === 0) {
+        setStatus = "declined";
       }
-      
-     
-      const result = await userModel.findOneAndUpdate({_id:id},{status : setStatus}, {new:true})
+
+      const result = await userModel.findOneAndUpdate(
+        { _id: id },
+        { status: setStatus },
+        { new: true }
+      );
       response(200, result, "Berhasil get status pending user", res);
-    }catch (error){
+    } catch (error) {
       console.log(error.message);
       res.status(500).json({ error: "Internal server error, coba lagi" });
     }
   },
-  getByRole:async(req,res)=>{
-    const {role} = req.params
+  getByRole: async (req, res) => {
+    const { role } = req.params;
 
     try {
       const isPaginate = parseInt(req.query.paginate);
 
       if (isPaginate === 0) {
         const totalData = await userModel.countDocuments();
-        const data = await userModel.find({role:parseInt(role)});
+        const data = await userModel.find({ role: parseInt(role) });
         // .populate("kelas");
         result = {
           data: data,
@@ -209,7 +234,7 @@ module.exports = {
       const totalData = await userModel.countDocuments();
 
       const data = await userModel
-        .find({role:parseInt(role)})
+        .find({ role: parseInt(role) })
         .skip((page - 1) * limit)
         .limit(limit);
       // .populate("kelas")
@@ -218,18 +243,18 @@ module.exports = {
         data: data,
         "total data": totalData,
       };
-      response(200,result,'Data per role ditemukkan',res)
+      response(200, result, "Data per role ditemukkan", res);
     } catch (error) {
-      response(500,[],error.message,res)
+      response(500, [], error.message, res);
     }
   },
-  getWithFilter:async(req,res)=>{
+  getWithFilter: async (req, res) => {
     try {
       const isPaginate = parseInt(req.query.paginate);
       let totalData;
 
       if (isPaginate === 0) {
-        const data = await userModel.find({...req.body});
+        const data = await userModel.find({ ...req.body });
         if (data) {
           totalData = data.length;
         }
@@ -244,15 +269,14 @@ module.exports = {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
 
-
       const data = await userModel
-        .find({...req.body})
+        .find({ ...req.body })
         .skip((page - 1) * limit)
         .limit(limit);
       // .populate("kelas")
 
       if (data) {
-      totalData = data.length;
+        totalData = data.length;
       }
 
       result = {
@@ -265,14 +289,39 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
-  getUserClass:async(req,res)=>{
+  getUserClass: async (req, res) => {
+    const { id } = req.params;
+
+    try {
+      const get = await userModel
+        .findOne({ _id: id })
+        .populate("kelas.kelas")
+        .select("kelas");
+      response(200, get, "Data ditemukan", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
+  updatePassword:async(req,res)=>{
     const {id} = req.params;
 
     try {
-      const get = await userModel.findOne({_id:id}).populate('kelas.kelas').select('kelas')
-      response(200,get,'Data ditemukan',res)
+      const getUser = await userModel.findOne({_id:id}).select('password')
+      const cekPassword = bcrypt.compareSync(req.body.old,getUser.password);
+      if (!cekPassword) {
+        response(400,null,'Password lama salah!',res)
+        return;
+      }
+
+      const passwordHash = bcrypt.hashSync(req.body.new, 10);
+      const user = await userModel.findByIdAndUpdate(id, {password:passwordHash}, {
+        new: true,
+      });
+
+      response(200,user,'Berhasil merubah password!',res)
     } catch (error) {
       response(500,error,error.message,res)
+      console.log(error);
     }
   }
 };
