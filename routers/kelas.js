@@ -29,6 +29,7 @@ router.post('/peserta/:slug',auth.admin ,Controller.getPesertaKelas);
 router.post('/filtered',auth.admin ,Controller.getWithFilter);
 router.post('/', auth.admin,Controller.createKelas);
 router.put('/admin/:id', auth.admin,Controller.updateKelasAdminSide);
+router.put('/status/nd',auth.server,Controller.updateKelasWithND);
 router.put('/approval/:slug/:iduser',auth.admin,Controller.approvePeserta)
 router.put('/instruktur/:id', auth.instruktur,Controller.updateKelasInstrukturSide);
 router.put('/enroll/:slug', auth.student,Controller.enrolKelas)

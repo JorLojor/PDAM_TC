@@ -6,6 +6,7 @@ const response = require("../respons/response");
 const uploadImage = require("../middleware/imagepath");
 const multer = require("multer");
 const _ = require("lodash");
+const { default: axios } = require("axios");
 
 module.exports = {
   getAllKelas: async (req, res) => {
@@ -170,6 +171,9 @@ module.exports = {
     }
   },
   createKelasTest: async (req, res) => {
+    const session = await mongoose.startSession()
+    session.startTransaction()
+
     try {
       const {
         kodeKelas,
@@ -184,15 +188,38 @@ module.exports = {
         materi = [],
         jadwal,
         kelasType,
-        kodeNd,
+        kodeNotaDinas,
         link,
       } = req.body;
 
       let imageKelas = null;
+      let status = 'pending'
 
       if (req.file) {
         imageKelas = req.file.path.split("/PDAM_TC/")[1];
       }
+
+      const checkKelas = await KelasModel.findOne({kodeNotaDinas}).session(session)
+
+      if (checkKelas) {
+        response(403,checkKelas,`Kode Nota Dinas sudah terdaftar di kelas lain! (${checkKelas.nama})`,res)
+        await session.abortTransaction()
+        return;
+      }
+      
+      const getND = await axios.post(process.env.url_rab+'nd/global/check',{},{
+        headers:{
+          Authorization:`Bearer ${process.env.key_for_grant_access}`
+        }
+      })
+
+      if (getND.data) {
+        const filtered = getND.data.filter(v => v.kodeND === kodeNotaDinas)
+        if (filtered.length !== 0) {
+          status = filtered[0].status === 'pending' ? 'pending' : filtered[0].status === 'Approved' ? 'draft' : 'declined'
+        }
+      }
+
 
       const kelas = new KelasModel({
         kodeKelas,
@@ -208,16 +235,22 @@ module.exports = {
         materi,
         jadwal,
         kelasType,
-        kodeNotaDinas: kodeNd,
+        kodeNotaDinas,
         image: imageKelas,
         linkPelatihan: link,
         kategori,
+        status
       });
 
-      const result = kelas.save();
+      const result = await kelas.save({session});
+
+      await session.commitTransaction()
       response(200, kelas, "Kelas berhasil di buat", res);
     } catch (error) {
       response(500, error, error.message, res);
+      await session.abortTransaction()
+    } finally{
+      session.endSession()
     }
   },
   updateKelasAdminSide: async (req, res) => {
@@ -235,10 +268,12 @@ module.exports = {
   },
   updateKelasWithND: async (req, res) => {
     try {
-      const nd = req.body.nd;
-      const result = await KelasModel.findOneAndUpdate({kodeNotaDinas:nd}, {...req.body}, {
+      const {nd,...rest} = req.body
+      const result = await KelasModel.findOneAndUpdate({kodeNotaDinas:nd}, {$set:{...rest}}, {
         new: true,
       });
+
+      console.log(result);
 
       response(200, result, "Kelas berhasil di update", res);
     } catch (error) {
