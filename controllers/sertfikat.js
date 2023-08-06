@@ -35,7 +35,7 @@ module.exports = {
       
             response(200, result, "Berhasil get all sertifikat", res);
         } catch (error) {
-            response(500, error, "Server error", res);
+            response(500, error,error.message, res);
         }
         
     },
@@ -54,16 +54,25 @@ module.exports = {
         }
       },
     createSeritifikat : async (req, res) => {
+        const {nama,namePosition} = req.body;
+
+        if (!req.file) {
+            response(400,null,'Gambar desain harus diupload!',res)
+            return;
+        }
+        
+        let desain = req.file.path.split("/PDAM_TC/")[1];
+
         try {
-            const {kelas,desain} = req.body;
             const sertifikat = new sertifikatModel({
-                kelas,
-                desain
+                nama,
+                desain,
+                namePosition:JSON.parse(namePosition)
             });
 
             const result = await sertifikat.save();
 
-            response(200, result, "sertifikat berhasil di buat", res);
+            response(200, result, "Desain Sertifikat berhasil di buat", res);
         } catch (error) {
             response(500, error, "Server error", res);
         }
