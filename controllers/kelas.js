@@ -298,13 +298,27 @@ module.exports = {
     }
   },
   deleteKelas: async (req, res) => {
+    const id = req.params.id;
+    const session = await mongoose.startSession()
+    session.startTransaction()
     try {
-      const id = req.params.id;
-      const result = await KelasModel.findByIdAndDelete(id);
 
+      const checkKelas = await KelasModel.findOne({_id:id}).session(session)
+      if (checkKelas.peserta.length !== 0) {
+        response(500,checkKelas,'Kelas ini sudah memiliki peserta , tidak bisa dihapus!',res)
+      await session.abortTransaction()
+        return;
+      }
+      const result = await KelasModel.findByIdAndDelete(id,{session});
+
+      await session.commitTransaction()
       response(200, result, "Kelas berhasil di hapus", res);
     } catch (error) {
-      response(500, error, "Server error", res);
+      response(500, error, error.message, res);
+      await session.abortTransaction()
+
+    } finally{
+    session.endSession()
     }
   },
   deactivatedKelas: async (req, res) => {
@@ -319,7 +333,22 @@ module.exports = {
 
       response(200, result, "Kelas berhasil di nonaktifkan", res);
     } catch (error) {
-      response(500, error, "Server error", res);
+      response(500, error, error.message, res);
+    }
+  },
+  activateKelas: async (req, res) => {
+    // menonaktifkan kelas
+    try {
+      const id = req.params.id;
+      const result = await KelasModel.findByIdAndUpdate(
+        id,
+        { isActive: true },
+        { new: true }
+      );
+
+      response(200, result, "Kelas berhasil di aktifkan", res);
+    } catch (error) {
+      response(500, error, error.message, res);
     }
   },
   enrolKelas: async (req, res) => {

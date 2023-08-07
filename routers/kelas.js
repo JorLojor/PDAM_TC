@@ -37,7 +37,8 @@ router.put('/test/:id',auth.user,Controller.enrolKelas) //testing
 router.post('/test',auth.admin,upload.single('featured_image'),Controller.createKelasTest); // testing
 
 router.delete('/:id', auth.admin,Controller.deleteKelas);
-router.put('/:id', auth.admin,Controller.deactivatedKelas);// deactive kelas
+router.put('/deactivate/:id', auth.admin,Controller.deactivatedKelas);// deactive kelas
+router.put('/activate/:id', auth.admin,Controller.activateKelas);// deactive kelas
 
 
 module.exports = router;
