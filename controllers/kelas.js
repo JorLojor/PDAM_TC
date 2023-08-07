@@ -101,7 +101,14 @@ module.exports = {
     try {
       let kelas = await KelasModel.findOne({ slug: slug }).populate(
         "materi instruktur peserta kategori"
-      );
+      ).populate({
+        path: 'desainSertifikat.peserta',
+        model: 'Sertifikat', // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
+      })
+      .populate({
+        path: 'desainSertifikat.instruktur',
+        model: 'Sertifikat', // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+      });;
 
       if (!kelas) {
         response(404, id, "Kelas tidak ditemukan", res);
@@ -266,6 +273,19 @@ module.exports = {
       response(500, error, "Server error", res);
     }
   },
+  updateKelasAdminSlug: async (req, res) => {
+    try {
+      const slug = req.params.slug;
+      const updated = req.body;
+      const result = await KelasModel.findOneAndUpdate({slug:slug}, updated, {
+        new: true,
+      });
+
+      response(200, result, "Kelas berhasil di update", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
   updateKelasWithND: async (req, res) => {
     try {
       const {nd,...rest} = req.body
@@ -417,6 +437,74 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+  assignPesertaKelas: async (req, res) => {
+    const slug = req.params.slug;
+    const idUser = req.body.idUser;
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const resultkelas = await KelasModel.findOne({ slug: slug }).session(
+        session
+      );
+      const resultUser = await UserModel.findOne({ _id: idUser }).session(
+        session
+      );
+
+      if (!resultkelas.peserta.includes(resultUser._id)) {
+        if (
+          (resultkelas.kelasType === 1 && resultUser.userType === 1) ||
+          (resultkelas.kelasType === 0 &&
+            (resultUser.userType === 1 || resultUser.userType === 0))
+        ) {
+          const extractedPesertaKelas = [...resultkelas.peserta];
+          const extractedKelasUser = [...resultUser.kelas];
+
+          extractedPesertaKelas.push({
+            user: resultUser._id,
+            status:'approved'
+          });
+
+          extractedKelasUser.push({
+            kelas: resultkelas._id,
+            status:'approved'
+          });
+
+          const resultEditKelas = await KelasModel.findOneAndUpdate(
+            { slug: slug },
+            { $set: { peserta: extractedPesertaKelas } },
+            { new: true, session }
+          );
+          const resultEditUser = await UserModel.findOneAndUpdate(
+            { _id: idUser },
+            { $set: { kelas: extractedKelasUser } },
+            { new: true, session }
+          );
+
+          await session.commitTransaction();
+          session.endSession();
+
+          response(200, resultkelas, "Berhasil ditambahkan", res);
+        } else {
+          response(
+            401,
+            resultkelas,
+            "Peserta ini tidak bisa ditambahkan (Status Peserta: Eksternal)",
+            res
+          );
+          await session.abortTransaction();
+          session.endSession();
+        }
+      } else {
+        response(400, {}, "Peserta sudah terdaftar di kelas", res);
+        await session.abortTransaction();
+        session.endSession();
+      }
+    } catch (error) {
+      console.log(error);
+      response(500, error, error.message, res);
+    }
+  },
   enrollmentKelas: async (req, res) => {
     try {
       const id = req.params.id;
@@ -552,7 +640,14 @@ module.exports = {
       let totalData;
 
       if (isPaginate === 0) {
-        const data = await KelasModel.find({ ...req.body });
+        const data = await KelasModel.find({ ...req.body }).populate('instruktur').populate({
+          path: 'desainSertifikat.peserta',
+          model: 'Sertifikat', // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
+        })
+        .populate({
+          path: 'desainSertifikat.instruktur',
+          model: 'Sertifikat', // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+        });
         if (data) {
           totalData = data.length;
         }
@@ -570,7 +665,14 @@ module.exports = {
       const data = await KelasModel.find({ ...req.body })
         .skip((page - 1) * limit)
         .limit(limit)
-        .populate("instruktur");
+        .populate("instruktur").populate({
+          path: 'desainSertifikat.peserta',
+          model: 'Sertifikat', // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
+        })
+        .populate({
+          path: 'desainSertifikat.instruktur',
+          model: 'Sertifikat', // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+        });
 
       if (data) {
         totalData = data.length;
@@ -600,7 +702,12 @@ module.exports = {
       let pesertaIds = getKelas.peserta.map((v) => v.user);
 
       if (isPaginate === 0) {
-        const peserta = await UserModel.find({ _id: { $in: pesertaIds },userType:type });
+        let peserta
+
+        peserta = await UserModel.find({ _id: { $in: pesertaIds } });
+        if (type) {
+          peserta = await UserModel.find({ _id: { $in: pesertaIds },userType:type });
+        }
         const checkKelasHasSome = peserta.filter((pes)=>{
           return pes.kelas.some((kelas)=> kelas.status === status)
         })
@@ -616,14 +723,29 @@ module.exports = {
         return;
       }
 
-      const peserta = await UserModel.find({ _id: { $in: pesertaIds },userType:type })
-        .skip((page - 1) * limit)
-        .limit(limit)
+      let peserta;
+
+      peserta = await UserModel.find({ _id: { $in: pesertaIds } })
+          .skip((page - 1) * limit)
+          .limit(limit)
+
+      if (type) {
+        peserta = await UserModel.find({ _id: { $in: pesertaIds },userType:type })
+          .skip((page - 1) * limit)
+          .limit(limit)
+      }
         // .populate("instruktur");
 
-        const checkKelasHasSome = peserta.filter((pes)=>{
-          return pes.kelas.some((kelas)=> kelas.status === status)
-        })
+        let checkKelasHasSome
+
+        checkKelasHasSome = peserta
+
+        if (status) {
+          checkKelasHasSome = peserta.filter((pes)=>{
+            return pes.kelas.some((kelas)=> kelas.status === status)
+          })
+        }
+
 
       if (peserta) {
         totalData = peserta.length;

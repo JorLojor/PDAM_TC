@@ -9,7 +9,7 @@ module.exports = {
   //pendafataran user oleh admin
   createUser: async (req, res) => {
     try {
-      const { name, email, username, password, role, userType } = req.body;
+      const { name, email, username, password, role, userType,instansi,nipp } = req.body;
       const cekUser = await userModel.findOne({
         $or: [{ username }, { email }],
       });
@@ -26,12 +26,14 @@ module.exports = {
         role,
         userType,
         status: "approved",
+        instansi,
+        nipp
       });
       await user.save();
 
       response(200, user, "Register berhasil", res);
     } catch (error) {
-      response(500, error, "Server error", res);
+      response(500, error, error.message, res);
     }
   },
   //registrasi untuk pendafataran peserta diluar PDAM (eksternal)
@@ -242,6 +244,32 @@ module.exports = {
       result = {
         data: data,
         "total data": totalData,
+      };
+      response(200, result, "Data per role ditemukkan", res);
+    } catch (error) {
+      response(500, [], error.message, res);
+    }
+  },
+  getByRoleReactSelect: async (req, res) => {
+    const { role } = req.params;
+
+    try {
+
+      const data = await userModel
+        .find({ role: parseInt(role) })
+      // .populate("kelas")
+
+      let user = data.map((val,idx)=>{
+        return {
+          value:val._id,
+          label:`${val.name} (${val.username})`
+        }
+      })
+      
+
+      result = {
+        data: user,
+        "total data": user.length,
       };
       response(200, result, "Data per role ditemukkan", res);
     } catch (error) {

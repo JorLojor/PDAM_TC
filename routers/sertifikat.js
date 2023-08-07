@@ -21,6 +21,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage })
 
 router.get('/',auth.user,Controller.getSertifikat);
+router.get('/mode/react-select',auth.user,Controller.getSertifikatReactSelect);
 router.get('/:id',auth.user,Controller.getSinglesertifikat);
 router.post('/',auth.user,upload.single('desain'),Controller.createSeritifikat);
 router.put('/:id',auth.user,Controller.updateSertifikat);

@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const kategoriModel = require("../models/kategori");
 
 const response =  require("../respons/response");
+const kelas = require("../models/kelas");
 
 module.exports = {
     getKategori: async (req, res) => {
@@ -54,11 +55,18 @@ module.exports = {
         }
       },
     createKategori : async (req, res) => {
+
+        if (!req.files) {
+            response(400,null,'Gambar wajib diupload!',res)
+            return;
+        }
+
+        
         try {
-            const {sampul,icon,name} = req.body;
+            const {name} = req.body;
             const kategori = new kategoriModel({
-                sampul,
-                icon,
+                sampul: req.files[0].path.split("/PDAM_TC/")[1],
+                icon: req.files[1].path.split("/PDAM_TC/")[1],
                 name
             });
 
@@ -66,14 +74,26 @@ module.exports = {
 
             response(200, result, "kategori berhasil di buat", res);
         } catch (error) {
-            response(500, error, "Server error", res);
+            response(500, error, error.message, res);
         }
     },
     updateKategori: async (req, res) => {
         const id = req.params.id;
-        const update = req.body;
+        const {name} = req.body;
+
+        if (!req.files) {
+            response(400,null,'Gambar wajib diupload!',res)
+            return;
+        }
+
+        const body = {
+            sampul: req.files[0].path.split("/PDAM_TC/")[1],
+            icon: req.files[1].path.split("/PDAM_TC/")[1],
+            name
+        }
+
         try{
-            const kategori = await kategoriModel.findByIdAndUpdate(id, update,{new:true});
+            const kategori = await kategoriModel.findByIdAndUpdate(id, body,{new:true});
             response(200, kategori, "kategori berhasil di update",res)
         }catch(error){
             response(500, error, "Server error failed to update",res);
@@ -82,7 +102,15 @@ module.exports = {
     deleteKategori: async (req, res) => {
         const id = req.params.id;
         try{
+            const check = await kelas.find({kategori:id})
+
+            console.log(check);
+            if (check.length !== 0) {
+                response(403,null,`Kategori sudah di daftarkan dengan ${check.length} Kelas!`,res)
+                return;
+            }
             const result = await kategoriModel.findByIdAndDelete(id);
+
             response(200, result, "kategori berhasil di hapus",res)
         }catch(error){
             response(500, error, "Server error failed to delete",res);

@@ -7,6 +7,7 @@ const peserta = require('./pesertaKelas');
 const instruktur  = require('./instruktur');
 const jadwal = require('./jadwal');
 const pesertaKelasSchema = require('./pesertaKelas');
+const desainSertifikat = require('./desainSertifikat');
 
 
 const kelasSchema = new Schema({
@@ -30,7 +31,8 @@ const kelasSchema = new Schema({
   isActive :{type:Boolean,required:false,default:true},
   status:{type:String,required:false,default:'pending'}, // pending, draft, publish, ended
   linkEvaluasi:{type:String,required:false},
-  slug:{type:String,required:true}
+  slug:{type:String,required:true},
+  desainSertifikat:{type:desainSertifikat,required:false}
 },{ timestamps: true });
 
 module.exports = mongoose.model('Kelas', kelasSchema);

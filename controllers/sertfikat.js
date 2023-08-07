@@ -39,6 +39,30 @@ module.exports = {
         }
         
     },
+    getSertifikatReactSelect: async (req, res) => {
+        try {
+      
+            const data = await sertifikatModel.find();
+
+            const mapped = data.map((val,idx)=>{
+                return {
+                    value:val._id,
+                    label:val.nama,
+                    src:val.desain,
+                    namePosition:val.namePosition
+                }
+            })
+
+            result = {
+                data: mapped,
+            };
+      
+            response(200, result, "Berhasil get all sertifikat", res);
+        } catch (error) {
+            response(500, error,error.message, res);
+        }
+        
+    },
     getSinglesertifikat: async (req, res) => {
         try {
           const idsertifikat = req.params.id;
