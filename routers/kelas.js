@@ -32,10 +32,12 @@ router.put('/admin/:id', auth.admin,Controller.updateKelasAdminSide);
 router.put('/adminSlug/:slug', auth.admin,Controller.updateKelasAdminSlug);
 router.put('/status/nd',auth.server,Controller.updateKelasWithND);
 router.put('/approval/:slug/:iduser',auth.admin,Controller.approvePeserta)
+router.get('/instruktur/:instruktur',auth.instruktur,Controller.getKelasByInstruktur)
 router.put('/instruktur/:id', auth.instruktur,Controller.updateKelasInstrukturSide);
 router.put('/enroll/:slug', auth.student,Controller.enrolKelas)
 router.put('/assign/:slug', auth.user,Controller.assignPesertaKelas)
 router.put('/test/:id',auth.user,Controller.enrolKelas) //testing
+router.put('/kick',auth.admin,Controller.kickPeserta) //testing
 router.post('/test',auth.admin,upload.single('featured_image'),Controller.createKelasTest); // testing
 
 router.delete('/:id', auth.admin,Controller.deleteKelas);

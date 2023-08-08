@@ -137,6 +137,16 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+  getKelasByInstruktur:async(req,res)=>{
+    const {instruktur} = req.params;
+
+    try {
+      const get = await KelasModel.find({instruktur}).populate("materi instruktur kategori");
+      response(200,get,'Kelas berhasil ditemukkan',res)
+    } catch (error) {
+      response(500,null,error.message,res)
+    }
+  },
   createKelas: async (req, res) => {
     try {
       const {
@@ -764,5 +774,29 @@ module.exports = {
       response(500, error.message, error.message, res);
     }
   },
+  kickPeserta:async (req,res) =>{
+    const {slug,id} = req.body
 
+    const session = await mongoose.startSession()
+    session.startTransaction()
+    try {
+
+      const getKelas = await KelasModel.findOne({slug}).session(session)
+      const getUser = await UserModel.findOne({_id:id}).session(session)
+
+      const kelasWithoutUser = getKelas.peserta.filter(v => v.user.toString() !== getUser._id.toString())
+      const updateKelas = await KelasModel.findOneAndUpdate({slug},{$set:{peserta:kelasWithoutUser}},{new:true,session})
+      
+      const userWithoutKelas = getUser.kelas.filter(v => v.kelas.toString() !== getKelas._id.toString())
+      const updateUser = await UserModel.findOneAndUpdate({_id:id},{$set:{kelas:userWithoutKelas}},{new:true,session})
+
+      await session.commitTransaction()
+      response(200,updateKelas,'Berhasil mengeluarkan user dari kelas',res)
+    } catch (error) {
+      response(500,error,error.message,res)
+      await session.abortTransaction()
+    } finally {
+      session.endSession()
+    }
+  }
 };

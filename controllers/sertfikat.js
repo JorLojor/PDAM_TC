@@ -113,11 +113,28 @@ module.exports = {
     },
     deleteSertifikat: async (req, res) => {
         const id = req.params.id;
+        const session = await mongoose.startSession()
+        session.startTransaction()
         try{
+            const check = await KelasModel.find().session(session)
+            
+            const kelasHasSameCertificate = check.filter((v)=>(v.desainSertifikat && v.desainSertifikat.peserta.toString() === id) || (v.desainSertifikat && v.desainSertifikat.instruktur.toString() === id))
+            
+            if (kelasHasSameCertificate.length !== 0) {
+                const selectedIds = kelasHasSameCertificate.map((v)=>{
+                    return v._id
+                })
+                await KelasModel.updateMany({_id:{$in:selectedIds}},{$set:{desainSertifikat:null}},{new:true,session})
+            }
+            
             const result = await sertifikatModel.findByIdAndDelete(id);
+            await session.commitTransaction()
             response(200, result, "sertifikat berhasil di hapus",res)
         }catch(error){
-            response(500, error, "Server error failed to delete",res);
+            response(500, error, error.message,res);
+            await session.abortTransaction()
+        } finally {
+            session.endSession()
         }
     }
 }

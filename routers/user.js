@@ -38,6 +38,9 @@ router.put('/:id',auth.user,upload.single('userImage'), userController.updateUse
 router.put('/status/:id', auth.admin,userController.updateStatusUser);
 router.put('/password/:id', auth.user,userController.updatePassword);
 router.delete('/:id',auth.admin , userController.deleteUser);
+router.put('/forgot/pass' , userController.forgotPassword);
+router.get('/reset-password/:code' , userController.checkUserResetPassword);
+router.put('/reset/:id/:code', userController.resetPassword);
 
 
 

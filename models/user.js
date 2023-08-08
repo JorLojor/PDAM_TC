@@ -4,7 +4,7 @@ const {Schema} = mongoose;
 
 const userSchema = new Schema({
     name : {type: String, required: true},
-    email : {type: String, required: true},
+    email : {type: String, required: true,unique:true},
     username : {type: String, required: true},
     password : {type: String, required: true},
     instansi:{type:String,required:false},
@@ -15,7 +15,8 @@ const userSchema = new Schema({
     kelas : [{type: kelasInUserSchema, required:false}],
     spesialis: {type: String},// spesialis, req false
     nilai: [{type: mongoose.Schema.Types.ObjectId, required: false, ref: 'nilai'}],// nilai ref nilai
-    status : {type : String, required : true, default : 'pending'}// status registrasi -> pending,declined,accepted
+    status : {type : String, required : true, default : 'pending'},// status registrasi -> pending,declined,accepted
+    access_token:{type:String,required:false}
 },{ timestamps: true });
 
 

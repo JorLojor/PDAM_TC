@@ -4,12 +4,23 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const response = require("../respons/response");
 const user = require("../models/user");
+const tokenGenerator = require("../service/mail/tokenGenerator");
+const sendConfirmationEmail = require("../service/mail/config");
 
 module.exports = {
   //pendafataran user oleh admin
   createUser: async (req, res) => {
     try {
-      const { name, email, username, password, role, userType,instansi,nipp } = req.body;
+      const {
+        name,
+        email,
+        username,
+        password,
+        role,
+        userType,
+        instansi,
+        nipp,
+      } = req.body;
       const cekUser = await userModel.findOne({
         $or: [{ username }, { email }],
       });
@@ -27,7 +38,7 @@ module.exports = {
         userType,
         status: "approved",
         instansi,
-        nipp
+        nipp,
       });
       await user.save();
 
@@ -254,18 +265,17 @@ module.exports = {
     const { role } = req.params;
 
     try {
-
-      const data = await userModel
-        .find({ role: parseInt(role) })
+      const data = await userModel.find({ role: parseInt(role) });
       // .populate("kelas")
 
-      let user = data.map((val,idx)=>{
+      let user = data.map((val, idx) => {
         return {
-          value:val._id,
-          label:`${val.name} (${val.username})`
-        }
-      })
-      
+          value: val._id,
+          label: `${val.name} (${val.username}) - ${
+            val.userType === 1 ? "Internal" : "Eksternal"
+          }`,
+        };
+      });
 
       result = {
         data: user,
@@ -330,26 +340,108 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
-  updatePassword:async(req,res)=>{
-    const {id} = req.params;
+  updatePassword: async (req, res) => {
+    const { id } = req.params;
 
     try {
-      const getUser = await userModel.findOne({_id:id}).select('password')
-      const cekPassword = bcrypt.compareSync(req.body.old,getUser.password);
-      if (!cekPassword) {
-        response(400,null,'Password lama salah!',res)
+      const getUser = await userModel.findOne({ _id: id }).select("password");
+      
+      if (req.body.old) {
+        const cekPassword = bcrypt.compareSync(req.body.old, getUser.password);
+        if (!cekPassword) {
+          response(400, null, "Password lama salah!", res);
+          return;
+        }
+      }
+
+      const passwordHash = bcrypt.hashSync(req.body.new, 10);
+      const user = await userModel.findByIdAndUpdate(
+        id,
+        { password: passwordHash },
+        {
+          new: true,
+        }
+      );
+
+      response(200, user, "Berhasil merubah password!", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+      console.log(error);
+    }
+  },
+  resetPassword: async (req, res) => {
+    const { id,code } = req.params;
+
+    try {
+      const getUser = await userModel.findOne({ _id: id,access_token:code }).select("password");
+      
+      if (!getUser) {
+        response(403,null,'Invalid Key or Invalid ID')
         return;
       }
 
       const passwordHash = bcrypt.hashSync(req.body.new, 10);
-      const user = await userModel.findByIdAndUpdate(id, {password:passwordHash}, {
-        new: true,
-      });
+      const user = await userModel.findByIdAndUpdate(
+        id,
+        { $set:{password: passwordHash,access_token:null} },
+        {
+          new: true,
+        }
+      );
 
-      response(200,user,'Berhasil merubah password!',res)
+      response(200, user, "Berhasil merubah password!", res);
     } catch (error) {
-      response(500,error,error.message,res)
+      response(500, error, error.message, res);
       console.log(error);
     }
-  }
+  },
+  forgotPassword: async (req, res) => {
+    const { email } = req.body;
+
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
+    try {
+      const check = await userModel.findOne({ email }).session(session);
+
+      if (!check) {
+        response(400, check, `User dengan email ${email} tidak ada!`, res);
+        await session.abortTransaction();
+        return;
+      }
+
+      const token = tokenGenerator();
+
+      const update = await userModel.findOneAndUpdate(
+        { _id: check._id },
+        { $set: { access_token: token } },
+        { new: true, session }
+      );
+      await sendConfirmationEmail(email, update.access_token,update.username);
+      await session.commitTransaction();
+
+      response(200, update, "Berhasil mengirim konfirmasi reset password", res);
+    } catch (error) {
+      response(500, null, error.message, res);
+      await session.abortTransaction();
+    } finally {
+      session.endSession();
+    }
+  },
+  checkUserResetPassword: async (req, res) => {
+    const { code } = req.params;
+
+    try {
+      const check = await userModel.findOne({ access_token: code });
+      
+      if (!check) {
+        response(403,null,'Invalid Code!')
+        return;
+      }
+
+      response(200,check,'User berhasil ditemukan',res)
+    } catch (error) {
+      response(500,null,error.message,res)
+    }
+  },
 };
