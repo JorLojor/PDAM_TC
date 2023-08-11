@@ -4,9 +4,12 @@ const positionSertifikatSchema = new Schema(
   {
     x: { type: Number, required: true },
     y: { type: Number, required: true },
-    weight: { type: Number, required: true },
-    size: { type: Number, required: true },
-    color: { type: String, required: true },
+    weight: { type: Number, required: false },
+    size: { type: Number, required: false },
+    color: { type: String, required: false },
+    width: { type: Number, required: false },
+    height: { type: Number, required: false },
+    radius: { type: Number, required: false },
   },
   { timestamps: false,_id:false }
 );

@@ -78,7 +78,7 @@ module.exports = {
         }
       },
     createSeritifikat : async (req, res) => {
-        const {nama,namePosition} = req.body;
+        const {nama,namePosition,kelasPosition,fotoPosition} = req.body;
 
         if (!req.file) {
             response(400,null,'Gambar desain harus diupload!',res)
@@ -91,14 +91,16 @@ module.exports = {
             const sertifikat = new sertifikatModel({
                 nama,
                 desain,
-                namePosition:JSON.parse(namePosition)
+                namePosition:JSON.parse(namePosition),
+                kelasPosition:JSON.parse(kelasPosition),
+                fotoPosition:JSON.parse(fotoPosition),
             });
 
             const result = await sertifikat.save();
 
             response(200, result, "Desain Sertifikat berhasil di buat", res);
         } catch (error) {
-            response(500, error, "Server error", res);
+            response(500, error, error.message, res);
         }
     },
     updateSertifikat: async (req, res) => {

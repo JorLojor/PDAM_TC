@@ -4,7 +4,7 @@ const pengumpulanTugasSchema = require('./pengumpulanTugas');
 
 const tugasSchema =  new Schema({
     materi : {type : mongoose.Schema.Types.ObjectId, ref: 'Materi' },
-    kelas : {type : mongoose.Schema.Types.ObjectId, ref: 'kelas'},
+    kelas : {type : mongoose.Schema.Types.ObjectId, ref: 'Kelas'},
     title : {type: String, required : true},
     instruction : {type: String, required : true},
     deadline: {type: Date,required: true},

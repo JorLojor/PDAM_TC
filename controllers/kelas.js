@@ -141,10 +141,16 @@ module.exports = {
     const {instruktur} = req.params;
 
     try {
-      const get = await KelasModel.find({instruktur}).populate("materi instruktur kategori");
-      response(200,get,'Kelas berhasil ditemukkan',res)
+      const get = await KelasModel.find({ instruktur })
+        .populate("materi instruktur kategori")
+        .populate({
+          path: 'materi.items.tugas',
+          model: 'Tugas',
+        }).lean()
+        .exec();
+      response(200, get, 'Kelas berhasil ditemukan', res);
     } catch (error) {
-      response(500,null,error.message,res)
+      response(500, null, error.message, res);
     }
   },
   createKelas: async (req, res) => {
@@ -632,8 +638,8 @@ module.exports = {
 
     try {
       let kelas = await KelasModel.findOne({ slug: slug })
-        .populate("materi")
-        .select("materi nama");
+        .populate("materi instruktur")
+        .select("materi nama instruktur");
 
       if (!kelas) {
         response(404, id, "Materi tidak ditemukan", res);
