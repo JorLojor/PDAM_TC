@@ -8,7 +8,6 @@ const tokenGenerator = require("../service/mail/tokenGenerator");
 const sendConfirmationEmail = require("../service/mail/config");
 
 module.exports = {
-  //pendafataran user oleh admin
   createUser: async (req, res) => {
     try {
       const {
@@ -191,7 +190,6 @@ module.exports = {
     }
   },
   getStatusPendingUser: async (req, res) => {
-    //admin dapat melihat list orang yang baru registrasi
     try {
       const user = await userModel.find();
       console.log(user);
@@ -200,22 +198,18 @@ module.exports = {
       });
       response(200, filtered, "Berhasil get status pending user", res);
     } catch (error) {
-      res.status(500).json({ error: "Internal server error, coba lagi" });
+      response(500,error.message,error.message,res)
     }
   },
   updateStatusUser: async (req, res) => {
     //admin dapat setuju atau menolak registrasi user
     const id = req.params.id; //idUser yang ingin dirubah
-    const status = parseInt(req.body.status); //status yang ingin dirubah
+    const status = req.body.status //status yang ingin dirubah
     try {
-      let setStatus = "accepted";
-      if (status === 0) {
-        setStatus = "declined";
-      }
 
       const result = await userModel.findOneAndUpdate(
         { _id: id },
-        { status: setStatus },
+        { status: status },
         { new: true }
       );
       response(200, result, "Berhasil get status pending user", res);
@@ -444,4 +438,7 @@ module.exports = {
       response(500,null,error.message,res)
     }
   },
+  checkPesertaNeedVerification: async(req,res)=>{
+
+  }
 };

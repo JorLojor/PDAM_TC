@@ -14,7 +14,8 @@ const userSchema = new Schema({
     userType : {type: Number, required: true, default : 0},// 1 = internal pdam dan 0 = eksternal pdam atau All
     kelas : [{type: kelasInUserSchema, required:false}],
     spesialis: {type: String},// spesialis, req false
-    nilai: [{type: mongoose.Schema.Types.ObjectId, required: false, ref: 'nilai'}],// nilai ref nilai
+    nilai: [{type: mongoose.Schema.Types.ObjectId, required: false, ref: 'nilai'}],// nilai ref nilai,
+    rating:{type:Number,required:true,default:0},
     status : {type : String, required : true, default : 'pending'},// status registrasi -> pending,declined,accepted
     access_token:{type:String,required:false}
 },{ timestamps: true });

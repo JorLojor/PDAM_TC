@@ -25,8 +25,9 @@ const Controller = require('../controllers/materi');
 
 router.get('/',auth.user ,Controller.getAllMateri);
 router.get('/:id',auth.user ,Controller.getOneMateri);
-router.post('/', auth.instruktur,upload.array('attachments',10),Controller.createMateri);
-router.put('/:id', auth.instruktur,Controller.updateMateri);
+router.get('/slug/:slug',auth.user ,Controller.getBySlugMateri);
+router.post('/',upload.array('attachments',10),Controller.createMateri);
+router.put('/:id', auth.instruktur,upload.array('attachments',10),Controller.updateMateri);
 router.delete('/:id', auth.instruktur,Controller.deleteMateri);
 
 

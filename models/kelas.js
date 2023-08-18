@@ -1,14 +1,10 @@
 const mongoose = require('mongoose');
-const user = require('./user');
-const {Schema} = mongoose;
+const { Schema } = mongoose;
 
-const materi = require('./materi');
-const peserta = require('./pesertaKelas');
-const instruktur  = require('./instruktur');
-const jadwal = require('./jadwal');
+const materiSchema = require('./materi');
 const pesertaKelasSchema = require('./pesertaKelas');
-const desainSertifikat = require('./desainSertifikat');
-
+const jadwalSchema = require('./jadwal');
+const desainSertifikatSchema = require('./desainSertifikat');
 
 const kelasSchema = new Schema({
   kodeKelas: { type: String, required: true, unique: true },
@@ -16,25 +12,31 @@ const kelasSchema = new Schema({
   harga: { type: Number, required: false },
   kapasitasPeserta: { type: Number, required: true },
   description: { type: String, required: true },
-  methods: { type: String, required: true }, //online,offline, onlineMeeting
-  materi: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Materi' }], // referensi ke schema materi
-  peserta: [{type:pesertaKelasSchema,required:false}], // referensi ke schema user dengan role 3 atau peserta hanya untuk
-  instruktur: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, // referensi ke schema user dengan role 2 atau instruktur
-  kodeNotaDinas: { type: String, required: false }, // referensi ke schema
+  methods: {
+    type: String,
+    enum: ['online', 'offline', 'onlineMeeting'],
+    required: true
+  },
+  materi: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Materi' }],
+  peserta: [{ type: pesertaKelasSchema, required: false }],
+  kodeNotaDinas: { type: String, required: false },
   classPermission: { type: String, required: false },
-  kelasType: { type: Number, required: false ,default:1}, // 1 = internal pdam dan 0 = eksternal pdam atau All
-  jadwal : [jadwal],
-  kategori:{ type: mongoose.Schema.Types.ObjectId, ref: 'Kategori' },
-  kelasStatus : {type: Number, required: true, default : 0},// 1 = pending 2 = declined 3 = approved
-  image : {type:String,required:false},
-  linkPelatihan : {type:String,required:false},
-  isActive :{type:Boolean,required:false,default:true},
-  status:{type:String,required:false,default:'pending'}, // pending, draft, publish, ended
-  linkEvaluasi:{type:String,required:false},
-  slug:{type:String,required:true},
-  desainSertifikat:{type:desainSertifikat,required:false}
-},{ timestamps: true });
+  kelasType: { type: Number, required: false, enum: [0, 1], default: 1 },
+  jadwal: [jadwalSchema],
+  kategori: { type: mongoose.Schema.Types.ObjectId, ref: 'Kategori' },
+  kelasStatus: { type: Number, required: true, default: 0 },
+  image: { type: String, required: false },
+  linkPelatihan: { type: String, required: false },
+  isActive: { type: Boolean, required: false, default: true },
+  status: {
+    type: String,
+    required: false,
+    default: 'pending',
+    enum: ['pending', 'draft', 'publish', 'ended']
+  },
+  linkEvaluasi: { type: String, required: false },
+  slug: { type: String, required: true },
+  desainSertifikat: { type: desainSertifikatSchema, required: false }
+}, { timestamps: true });
 
 module.exports = mongoose.model('Kelas', kelasSchema);
- 
-//compare this snippet from models/kelas.js to controllers/kelas.js:

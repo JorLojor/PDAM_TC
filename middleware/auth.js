@@ -73,7 +73,6 @@ module.exports = {
         }catch(error){
             res.sendStatus(401);
         }
-
     },
     server:async(req,res,next)=>{
         const authHeader = req.headers.authorization;

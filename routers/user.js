@@ -24,7 +24,7 @@ const upload = multer({ storage })
 router.get('/all' ,userController.getAllUser);
 router.post('/my' ,userController.getSingleUser);
 
-router.get('/',auth.admin,userController.getStatusPendingUser); // get status pending userå
+router.get('/need-approval',auth.admin,userController.getStatusPendingUser); // get status pending userå
 router.get('/role/:role',auth.admin,userController.getByRole); // get status pending userå
 router.get('/role-react-select/:role',auth.admin,userController.getByRoleReactSelect); // get status pending userå
 router.post('/filtered',auth.admin,userController.getWithFilter); // get with filter
