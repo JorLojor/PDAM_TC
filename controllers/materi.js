@@ -227,18 +227,19 @@ module.exports = {
   },
   updateMateri: async (req, res) => {
     const idMaterial = req.params.id;
-    const update = req.body;
+    const {data} = req.body
+    
+    const extractedData = JSON.parse(data)
 
-    console.log(req.body);
 
-    // try {
-    //   const materi = await MateriModel.findByIdAndUpdate(idMaterial, update, {
-    //     new: true,
-    //   });
-    //   response(200, materi, "Materi", res);
-    // } catch (error) {
-    //   response(500, error, "Server error", res);
-    // }
+    try {
+      const materi = await MateriModel.findByIdAndUpdate(idMaterial, extractedData, {
+        new: true,
+      });
+      response(200, materi, "Materi berhasil diubah", res);
+    } catch (error) {
+      response(500, error,error.message, res);
+    }
   },
   deleteMateri: async (req, res) => {
     const idMaterial = req.params.id;
