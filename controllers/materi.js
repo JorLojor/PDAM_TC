@@ -272,4 +272,19 @@ module.exports = {
       session.endSession();
     }
   },
+
+  getSubmateri: async (req, res) => {
+    try {
+      const _id = req.params.id;
+      const result = await MateriModel.findById(_id);
+
+      if (!result) {
+        response(404, _id, "Materi tidak di temukan", res);
+      }
+
+      response(200, result.items, "Materi di dapat", res);
+    } catch (error) {
+      response(500, error, "Server error", res);
+    }
+  }
 };
