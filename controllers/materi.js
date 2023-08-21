@@ -87,7 +87,8 @@ module.exports = {
 
       JSON.parse(data).map((value, index) => {
         const { kodeMateri, section, description, items, instruktur } = value;
-        const slug = _.kebabCase(section)
+        const randomNumber = Math.floor(Math.random() * 100)
+        const slug = _.kebabCase(section)+randomNumber
         let itemsList = [];
 
         items.map((item, idx) => {
