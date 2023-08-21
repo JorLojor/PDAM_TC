@@ -4,6 +4,11 @@ const itemsMateriSchema = require('./itemsMateri');
 
 const materiSchema = new Schema({
   kodeMateri: { type: String, required: true },
+  test: { 
+    pre: { type: mongoose.Schema.Types.ObjectId, ref: 'Test' }, 
+    post: { type: mongoose.Schema.Types.ObjectId, ref: 'Test' }, 
+    quiz: { type: mongoose.Schema.Types.ObjectId, ref: 'Test' }
+  },
   slug: { type: String, required: true },
   section: { type: String, required: true },
   description: { type: String, required: true },
