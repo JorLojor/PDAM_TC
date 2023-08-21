@@ -1,8 +1,10 @@
-import Test from "../models/test";
+const Test = require('../models/test')
 
-export const store = async (req, res) => {
-    return res.status(200).json({
-        requestBody: req.body,
-        requestFiles: req.files
-    })
+module.exports = {
+    store: async (req, res) => {
+        return res.status(200).json({
+            requestBody: req.body,
+            requestFiles: req.files
+        })
+    }
 }
