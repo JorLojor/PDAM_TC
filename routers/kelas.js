@@ -3,7 +3,6 @@ const router = express.Router();
 const auth = require('../middleware/auth');
 const Controller = require('../controllers/kelas');
 
-const fs = require('fs')
 const path = require('path')
 const multer = require('multer')
 
@@ -12,7 +11,6 @@ const today = new Date().toISOString().slice(0,10)
 const storage = multer.diskStorage({
     destination: path.join(__dirname, '..', 'upload', 'kelas-featured-image',today),
     filename: (req, file, cb) => {
-        // const [name,type] = file.originalname.split('.')
       cb(null, file.originalname);
     },
   });

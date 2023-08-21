@@ -10,7 +10,7 @@ const materiSchema = new Schema({
     quiz: { type: mongoose.Schema.Types.ObjectId, ref: 'Test' }
   },
   slug: { type: String, required: true },
-  section: { type: String, required: true },
+  section: { type: String, required: true }, // Judul
   description: { type: String, required: true },
   items: [itemsMateriSchema],
   instruktur: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
