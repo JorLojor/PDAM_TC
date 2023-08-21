@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const MateriModel = require("../models/materi");
+const TestModel = require("../models/test");
 const TugasModel = require("../models/tugas");
 const KelasModel = require("../models/kelas");
 const uploadFile = require("../middleware/filepath");
@@ -289,14 +290,14 @@ module.exports = {
   },
   getTest: async (req, res) => {
     try {
-      const { slug, type } = req.params;
-      const result = await MateriModel.findOne({ slug, test: {type} });
+      const { id } = req.params;
+      const result = await TestModel.findById(id);
 
       if (!result) {
-        response(404, _id, "Materi tidak di temukan", res);
+        response(404, _id, "Test tidak di temukan", res);
       }
 
-      response(200, result.items, "Materi di dapat", res);
+      response(200, result.items, "Test di dapat", res);
     } catch (error) {
       response(500, error, "Server error", res);
     }

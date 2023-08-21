@@ -34,11 +34,9 @@ const testSchema = new Schema({
             required: ['true', 'tipe soal diperlukan']
         },
         answer: [{
-            value: {
-                type: String,
-                img: String,
-                isTrue: Boolean
-            }
+            value: String,
+            img: String,
+            isTrue: Boolean
         }]
     }]
 }, { timestamps: true })
