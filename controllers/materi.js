@@ -276,7 +276,21 @@ module.exports = {
   getSubmateri: async (req, res) => {
     try {
       const { slug } = req.params;
-      const result = await MateriModel.findOne({ slug });
+      const result = await MateriModel.findOne({ slug }).populate('items.quiz');
+
+      if (!result) {
+        response(404, _id, "Materi tidak di temukan", res);
+      }
+
+      response(200, result.items, "Materi di dapat", res);
+    } catch (error) {
+      response(500, error, "Server error", res);
+    }
+  },
+  getTest: async (req, res) => {
+    try {
+      const { slug, type } = req.params;
+      const result = await MateriModel.findOne({ slug, test: {type} });
 
       if (!result) {
         response(404, _id, "Materi tidak di temukan", res);

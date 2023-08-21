@@ -7,7 +7,6 @@ const materiSchema = new Schema({
   test: { 
     pre: { type: mongoose.Schema.Types.ObjectId, ref: 'Test' }, 
     post: { type: mongoose.Schema.Types.ObjectId, ref: 'Test' }, 
-    quiz: { type: mongoose.Schema.Types.ObjectId, ref: 'Test' }
   },
   slug: { type: String, required: true },
   section: { type: String, required: true }, // Judul

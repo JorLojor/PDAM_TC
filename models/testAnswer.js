@@ -7,12 +7,17 @@ const answerSchema = new Schema({
         ref: 'User',
         required: [true, 'user id diperlukan']
     },
+    test: { 
+        type: mongoose.Schema.Types.ObjectId, 
+        ref: 'Test', 
+        required: [true, 'test id diperlukan'] 
+    },
     answers: [{
         kodeSoal: {
-            type: Schema.Types.Mixed,
+            type: String,
             required: [true, 'Kode soal diperlukan']
         },
-        value: String
+        value: Schema.Types.Mixed
     }],
     nilai: Number
 })
