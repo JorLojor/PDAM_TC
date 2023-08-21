@@ -275,8 +275,8 @@ module.exports = {
 
   getSubmateri: async (req, res) => {
     try {
-      const _id = req.params.id;
-      const result = await MateriModel.findById(_id);
+      const { slug } = req.params;
+      const result = await MateriModel.findOne({ slug });
 
       if (!result) {
         response(404, _id, "Materi tidak di temukan", res);

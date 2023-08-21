@@ -29,7 +29,7 @@ router.get('/slug/:slug',auth.user ,Controller.getBySlugMateri);
 router.post('/',upload.array('attachments',10),Controller.createMateri);
 router.put('/:id', auth.instruktur,upload.array('attachments',10),Controller.updateMateri);
 router.delete('/:id', auth.instruktur,Controller.deleteMateri);
-router.get('/sub/:id', auth.instruktur, Controller.getSubmateri);
+router.get('/sub/:slug', auth.instruktur, Controller.getSubmateri);
 
 
 module.exports = router;
