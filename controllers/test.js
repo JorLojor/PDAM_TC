@@ -3,6 +3,10 @@ const response = require("../respons/response");
 
 module.exports = {
     store: async (req, res) => {
-        return response(200, {body: req.body, files: req.files}, "Username atau email sudah terdaftar", res);
+        let { data } = req.body;
+        data = data.replaceAll("'", '"')
+        const dataPertanyaan = JSON.parse(data)
+        const post = {}
+        return response(200, dataPertanyaan, "Username atau email sudah terdaftar", res);
     }
 }
