@@ -288,18 +288,4 @@ module.exports = {
       response(500, error, "Server error", res);
     }
   },
-  getTest: async (req, res) => {
-    try {
-      const { id } = req.params;
-      const result = await TestModel.findById(id).populate('pembuat');
-
-      if (!result) {
-        response(404, id, "Test tidak di temukan", res);
-      }
-
-      response(200, result, "Test di dapat", res);
-    } catch (error) {
-      response(500, error, "Server error", res);
-    }
-  }
 };
