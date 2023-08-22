@@ -21,7 +21,7 @@ function calculateGrade(answerArray, maxGrade) {
     const booleanAnswers = answerArray.filter((element) => typeof element === 'boolean');
     const correctCount = booleanAnswers.reduce((acc, currentValue) => {
         if (currentValue === true) {
-        return acc + 1;
+            return acc + 1;
         }
         return acc;
     }, 0);
@@ -78,20 +78,20 @@ module.exports = {
                 question: questions
             }
             const tests = new Test(post)
-            tests.save({session})
+            tests.save({ session })
             if (dataPertanyaan.type == "pre") {
                 materi.test.pre = tests._id
             } else if (dataPertanyaan.type == "post") {
                 materi.test.post = tests._id
             }
             if (title != "null" && dataPertanyaan.type == "quiz") {
-                await MateriModel.updateOne({ slug :slug, 'items.title': title }, { $set: { 'items.$.quiz': tests._id } }, { upsert: true, new: true, session });
+                await MateriModel.updateOne({ slug: slug, 'items.title': title }, { $set: { 'items.$.quiz': tests._id } }, { upsert: true, new: true, session });
             }
-            materi.save({session})
-            
+            materi.save({ session })
+
             await session.commitTransaction();
             session.endSession();
-            return response(200, {},"Test Berhasil di masukan", res);
+            return response(200, {}, "Test Berhasil di masukan", res);
         } catch (error) {
             await session.abortTransaction();
             session.endSession();
@@ -112,7 +112,7 @@ module.exports = {
             response(500, error, "Server error", res);
         }
     },
-    nilai: async (req,res) => {
+    nilai: async (req, res) => {
         const session = await mongoose.startSession();
         session.startTransaction();
         try {
@@ -120,7 +120,7 @@ module.exports = {
             let { data } = req.body;
             data = data.replaceAll("'", '"')
             const dataJawaban = JSON.parse(data)
-            let jawaban = dataJawaban.answer.map((answer) =>{
+            let jawaban = dataJawaban.answer.map((answer) => {
                 return answer.value
             })
 
@@ -132,7 +132,7 @@ module.exports = {
                 nilai
             }
             let answer = new testAnswer(post)
-            answer.save({session})
+            answer.save({ session })
 
             await session.commitTransaction();
             session.endSession();
@@ -150,20 +150,74 @@ module.exports = {
             const { id } = req.params;
             const test = await Test.findById(id);
             test.question.forEach(question => {
-                if(question.img != null) {
+                if (question.img != null) {
                     fs.unlinkSync(path.join(__dirname, question.img), { recursive: true, force: true })
                 }
                 question.answer.forEach(answer => {
-                    if(answer.img != null) {
+                    if (answer.img != null) {
                         fs.unlinkSync(path.join(__dirname, answer.img), { recursive: true, force: true })
                     }
                 })
             })
-            test.deleteOne({session})
-            
+            test.deleteOne({ session })
+
             await session.commitTransaction();
             session.endSession();
             response(200, image, "Nilai berhasil dimasukan", res);
+        } catch (error) {
+            await session.abortTransaction();
+            session.endSession();
+            response(500, error, "Server error", res);
+        }
+    },
+    updateTest: async (req, res) => {
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        try {
+            let { data } = req.body;
+            const { id } = req.params;
+            data = data.replaceAll("'", '"')
+            let imageTest = '/uploads/test-image/'
+            const dataPertanyaan = JSON.parse(data)
+
+            if (req.files) {
+                imageTest = req.files[0].path.split("/PDAM_TC/")[1];
+            }
+            const questions = dataPertanyaan.questions.map((data) => {
+                let path = null
+                if (data.img != null) {
+                    path = imageTest + data.img.name
+                }
+                let answer = data.answer.map((answer) => {
+                    let pathAnswer = null
+                    if (answer.img != null) {
+                        pathAnswer = imageTest + answer.img.name
+                    }
+                    return {
+                        value: answer.value,
+                        isTrue: answer.isTrue,
+                        img: pathAnswer
+                    }
+                })
+                return {
+                    value: data.value,
+                    type: data.type,
+                    img: path,
+                    kode: makeid(8),
+                    answer
+                }
+            })
+            const post = {
+                judul: dataPertanyaan.judul,
+                type: dataPertanyaan.type,
+                pembuat: dataPertanyaan.pembuat,
+                question: questions
+            }
+            await Test.updateOne({ _id: id }, post, { new: true, upsert: true, session })
+
+            await session.commitTransaction();
+            session.endSession();
+            return response(200, {}, "Test Berhasil di masukan", res);
         } catch (error) {
             await session.abortTransaction();
             session.endSession();
