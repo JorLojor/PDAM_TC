@@ -277,7 +277,7 @@ module.exports = {
   getSubmateri: async (req, res) => {
     try {
       const { slug } = req.params;
-      const result = await MateriModel.findOne({ slug }).populate('items.quiz');
+      const result = await MateriModel.findOne({ slug }).populate('items.quiz items.tugas');
 
       if (!result) {
         response(404, _id, "Materi tidak di temukan", res);
@@ -291,13 +291,13 @@ module.exports = {
   getTest: async (req, res) => {
     try {
       const { id } = req.params;
-      const result = await TestModel.findById(id);
+      const result = await TestModel.findById(id).populate('pembuat');
 
       if (!result) {
-        response(404, _id, "Test tidak di temukan", res);
+        response(404, id, "Test tidak di temukan", res);
       }
 
-      response(200, result.items, "Test di dapat", res);
+      response(200, result, "Test di dapat", res);
     } catch (error) {
       response(500, error, "Server error", res);
     }
