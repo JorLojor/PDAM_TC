@@ -3,6 +3,7 @@ const response = require("../respons/response");
 const MateriModel = require("../models/materi");
 const testAnswer = require("../models/testAnswer");
 const mongoose = require("mongoose");
+const fs = require('fs');
 
 function makeid(length) {
     let result = '';
@@ -142,7 +143,31 @@ module.exports = {
             response(500, error, "Server error", res);
         }
     },
-    deleteTest: async (req, res){
-
+    deleteTest: async (req, res) => {
+        const session = await mongoose.startSession();
+        session.startTransaction();
+        try {
+            const { id } = req.params;
+            const test = await Test.findById(id);
+            test.question.forEach(question => {
+                if(question.img != null) {
+                    fs.unlinkSync(path.join(__dirname, question.img), { recursive: true, force: true })
+                }
+                question.answer.forEach(answer => {
+                    if(answer.img != null) {
+                        fs.unlinkSync(path.join(__dirname, answer.img), { recursive: true, force: true })
+                    }
+                })
+            })
+            test.deleteOne({session})
+            
+            await session.commitTransaction();
+            session.endSession();
+            response(200, image, "Nilai berhasil dimasukan", res);
+        } catch (error) {
+            await session.abortTransaction();
+            session.endSession();
+            response(500, error, "Server error", res);
+        }
     }
 }

@@ -23,8 +23,7 @@ testRouter.get("/:id", auth.user, Controller.getTest);
 testRouter.post("/nilai/:id", auth.user, Controller.nilai)
 
 //buat yang bisa post test
-// testRouter.get("/fu/:id", auth.user, auth.instruktur, Controller.followUp);
-// testRouter.get("/room/:id", auth.user, auth.instruktur, Controller.getRoom);
 testRouter.post("/store/:slug/:title", auth.user, auth.instruktur,upload.array('images'), Controller.store);
+testRouter.delete("/delete/:id", auth.user, auth.instruktur, Controller.deleteTest);
 
 module.exports = testRouter;
