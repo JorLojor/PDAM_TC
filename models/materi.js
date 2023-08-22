@@ -2,12 +2,14 @@ const mongoose = require('mongoose');
 const { Schema } = mongoose;
 const itemsMateriSchema = require('./itemsMateri');
 
+const TestSchema = new Schema({
+  pre: { type: mongoose.Schema.Types.ObjectId, ref: 'Test' },
+  post: { type: mongoose.Schema.Types.ObjectId, ref: 'Test' },
+})
+
 const materiSchema = new Schema({
   kodeMateri: { type: String, required: true },
-  test: {
-    pre: { type: mongoose.Schema.Types.ObjectId, ref: 'Test' }, 
-    post: { type: mongoose.Schema.Types.ObjectId, ref: 'Test' }, 
-  },
+  test: { type: TestSchema, required: false, default: null },
   slug: { type: String, required: true },
   section: { type: String, required: true }, // Judul
   description: { type: String, required: true },
