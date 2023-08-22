@@ -119,7 +119,7 @@ module.exports = {
             let { data } = req.body;
             data = data.replaceAll("'", '"')
             const dataJawaban = JSON.parse(data)
-            let jawaban = dataJawaban.map((answer) =>{
+            let jawaban = dataJawaban.answer.map((answer) =>{
                 return answer.value
             })
 
@@ -141,5 +141,8 @@ module.exports = {
             session.endSession();
             response(500, error, "Server error", res);
         }
+    },
+    deleteTest: async (req, res){
+
     }
 }
