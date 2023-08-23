@@ -4,6 +4,7 @@ const MateriModel = require("../models/materi");
 const testAnswer = require("../models/testAnswer");
 const mongoose = require("mongoose");
 const fs = require('fs');
+const path = require('path');
 
 function makeid(length) {
     let result = '';
