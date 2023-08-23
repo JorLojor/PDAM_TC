@@ -20,7 +20,7 @@ const kelasSchema = new Schema({
   materi: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Materi' }],
   absensi: [{
     name: String,
-    time: String
+    time: String,
   }],
   peserta: [{ type: pesertaKelasSchema, required: false }],
   kodeNotaDinas: { type: String, required: false },

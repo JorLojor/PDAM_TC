@@ -170,7 +170,7 @@ module.exports = {
             }
 
             await session.commitTransaction();
-            response(200, image, "Test Berhasil Dihapus", res);
+            response(200, [], "Test Berhasil Dihapus", res);
         } catch (error) {
             if (session.inTransaction()) {
                 await session.abortTransaction();

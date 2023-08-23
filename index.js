@@ -37,6 +37,7 @@ const tugasRoutes = require("./routers/tugas");
 const sertifikatRoutes = require("./routers/sertifikat");
 const kategoriRoutes = require("./routers/kategori");
 const testRoutes = require("./routers/test");
+const absenRoutes = require("./routers/absensi");
 // routes
 
 app.use("/chat/", chatRoute);
@@ -48,6 +49,7 @@ app.use("/sertifikat/", sertifikatRoutes);
 app.use("/kategori/", kategoriRoutes);
 app.use("/room/", roomRoute);
 app.use("/test/", testRoutes);
+app.use("/absen/", absenRoutes);
 
 const uploadsDirectory = path.join(__dirname, "upload");
 

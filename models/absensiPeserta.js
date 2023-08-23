@@ -27,4 +27,4 @@ const absenSchema = new Schema({
     }
 }, {timestamps: true})
 
-module.exports = mongoose.model('Absensi', kelasSchema);
+module.exports = mongoose.model('Absensi', absenSchema);
