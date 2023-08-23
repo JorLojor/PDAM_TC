@@ -5,6 +5,6 @@ const auth = require("../middleware/auth");
 const Controller = require("../controllers/room");
 
 router.get("/", auth.user, Controller.index);
-router.post("/", auth.user, auth.onlyStudent, Controller.store);
+router.post("/", auth.user, Controller.store);
 
 module.exports = router;

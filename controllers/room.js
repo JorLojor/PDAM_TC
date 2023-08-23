@@ -57,20 +57,24 @@ module.exports = {
 
   store: async (req, res) => {
     try {
-      const room = await Room.find({
-        users: { $in: req.user.id },
+      const user = req.body.user;
+
+      const userCheck = await User.findById(user);
+
+      if (!userCheck) {
+        return response(400, null, "User tidak tersedia", res);
+      }
+
+      const room = await Room.findOne({
+        users: [req.user.id, user],
       });
 
       if (room) {
         return response(400, null, "Room sudah tersedia", res);
       }
 
-      const admin = await User.find({
-        role: 1,
-      });
-
       let result = await Room.create({
-        users: [req.user.id, admin._id],
+        users: [req.user.id, user],
       });
 
       result = await Room.findById(result._id)
