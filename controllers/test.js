@@ -148,13 +148,14 @@ module.exports = {
         try {
             const { id, slug, title } = req.params;
             const test = await Test.findById(id);
+            const dirname = __dirname.replace('/controller', '')
             test.question.forEach(question => {
                 if (question.img != null) {
-                    fs.unlinkSync(path.join(__dirname, question.img), { recursive: true, force: true })
+                    fs.unlinkSync(path.join(dirname, question.img), { recursive: true, force: true })
                 }
                 question.answer.forEach(answer => {
                     if (answer.img != null) {
-                        fs.unlinkSync(path.join(__dirname, answer.img), { recursive: true, force: true })
+                        fs.unlinkSync(path.join(dirname, answer.img), { recursive: true, force: true })
                     }
                 })
             })
