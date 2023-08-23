@@ -21,7 +21,7 @@ const path = require("path");
 
 app.use(cors());
 app.use(express.json());
-// app.use(express.urlencoded({ extended: true }));
+app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 
 mongoose.connect(process.env.mongodb2);
