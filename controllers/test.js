@@ -39,7 +39,7 @@ module.exports = {
         try {
             let { data } = req.body;
             const { slug, title } = req.params;
-            data = data.replaceAll("'", '"')
+            // data = data.replaceAll("'", '"') cima buat test
             let imageTest = '/uploads/test-image/'
             const dataPertanyaan = JSON.parse(data)
             const materi = await MateriModel.findOne({ slug })
@@ -118,7 +118,7 @@ module.exports = {
         try {
             const { id } = req.params;
             let { data } = req.body;
-            data = data.replaceAll("'", '"')
+            // data = data.replaceAll("'", '"') cuma buat test
             const dataJawaban = JSON.parse(data)
             let jawaban = dataJawaban.answer.map((answer) => {
                 return answer.value
@@ -176,7 +176,7 @@ module.exports = {
         try {
             let { data } = req.body;
             const { id } = req.params;
-            data = data.replaceAll("'", '"')
+            // data = data.replaceAll("'", '"') cuma buat experiment
             let imageTest = '/uploads/test-image/'
             const dataPertanyaan = JSON.parse(data)
 
