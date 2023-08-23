@@ -29,7 +29,7 @@ module.exports = {
         return response(400, null, "Forbidden", res);
       }
 
-      if (isPaginate === 0) {
+      if (isNaN(isPaginate)) {
         const totalData = await Chat.find({
           room: id,
         }).countDocuments();
@@ -114,7 +114,7 @@ module.exports = {
     }
   },
 
-  store: async (req,res) => {
+  store: async (req, res) => {
     try {
       const chat = req.body.chat;
 
@@ -155,21 +155,20 @@ module.exports = {
       return response(500, error, "Server error", res);
     }
   },
-  storeIo: async ({chat,room:roomId,sender}) => {
+  storeIo: async ({ chat, room: roomId, sender }) => {
     try {
-
       if (!chat) {
         console.log("Mohon isi chat");
         return null;
       }
 
-      const id = roomId
+      const id = roomId;
 
-      const room = await Room.findOne({_id:id});
+      const room = await Room.findOne({ _id: id });
 
       if (!room) {
         console.log("Data tidak ditemukan");
-        return null
+        return null;
       }
 
       let valid = false;
@@ -180,11 +179,11 @@ module.exports = {
         }
       });
 
-      const getSender = await user.findOne({_id:sender})
+      const getSender = await user.findOne({ _id: sender });
 
       if (!valid && getSender.role !== 1) {
         console.log("Forbidden");
-        return null
+        return null;
       }
 
       const newChat = await Chat.create({
@@ -194,13 +193,14 @@ module.exports = {
       });
 
       if (newChat) {
-        const getNewChat = await Chat.findOne({_id:newChat._id}).populate("sender");
-        return getNewChat
+        const getNewChat = await Chat.findOne({ _id: newChat._id }).populate(
+          "sender"
+        );
+        return getNewChat;
       }
-
     } catch (error) {
       console.log(error);
-      return error.message
+      return error.message;
     }
   },
 };
