@@ -44,6 +44,8 @@ module.exports = {
             const dataPertanyaan = JSON.parse(data)
             const materi = await MateriModel.findOne({ slug })
 
+            console.log(JSON.parse(data));
+
             if (req.files) {
                 imageTest = req.files[0].path.split("/PDAM_TC/")[1];
             }
@@ -95,7 +97,7 @@ module.exports = {
         } catch (error) {
             await session.abortTransaction();
             session.endSession();
-            response(500, error, "Server error", res);
+            response(500, error, error.message, res);
         }
     },
     getTest: async (req, res) => {

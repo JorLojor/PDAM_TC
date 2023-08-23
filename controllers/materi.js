@@ -273,7 +273,6 @@ module.exports = {
       session.endSession();
     }
   },
-
   getSubmateri: async (req, res) => {
     try {
       const { slug } = req.params;
@@ -288,4 +287,24 @@ module.exports = {
       response(500, error, "Server error", res);
     }
   },
+  getAllMateriReactSelect: async (req, res) => {
+    try {
+      const result = await MateriModel.find().select('section kodeMateri instruktur').populate('instruktur');
+
+      if (!result) {
+        response(404, _id, "Materi tidak di temukan", res);
+      }
+
+      const mapped = result.map((v,i) => {
+        return {
+          value: v._id,
+          label: v.section + " - " + `(${v.instruktur.name})`
+        }
+      })
+
+      response(200, mapped, "Materi di dapat", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  }
 };

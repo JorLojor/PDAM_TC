@@ -30,5 +30,6 @@ router.post('/',upload.array('attachments',10),Controller.createMateri);
 router.put('/:id', auth.instruktur,upload.array('attachments',10),Controller.updateMateri);
 router.delete('/:id', auth.instruktur,Controller.deleteMateri);
 router.get('/sub/:slug', auth.user, Controller.getSubmateri);
+router.get('/react/select', auth.user, Controller.getAllMateriReactSelect);
 
 module.exports = router;
