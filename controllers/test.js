@@ -50,12 +50,12 @@ module.exports = {
             const questions = dataPertanyaan.questions.map((data) => {
                 let path = null
                 if (data.img != null) {
-                    path = imageTest + data.img.name
+                    path = imageTest
                 }
                 let answer = data.answer.map((answer) => {
                     let pathAnswer = null
                     if (answer.img != null) {
-                        pathAnswer = imageTest + answer.img.name
+                        pathAnswer = imageTest
                     }
                     return {
                         value: answer.value,
