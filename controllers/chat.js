@@ -1,7 +1,6 @@
 const response = require("../respons/response");
 
 const Chat = require("../models/chat");
-const Complaint = require("../models/complaint");
 const Room = require("../models/room");
 
 module.exports = {
@@ -142,13 +141,13 @@ module.exports = {
         return response(400, null, "Forbidden", res);
       }
 
-      let result = await Chat.create({
+      await Chat.create({
         sender: req.user.id,
         room: id,
         chat,
       });
 
-      return response(200, result, "Berhasil menambahkan chat", res);
+      return response(200, { chat }, "Berhasil menambahkan chat", res);
     } catch (error) {
       console.log(error);
 

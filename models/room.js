@@ -15,11 +15,6 @@ const room = new Schema(
       index: true,
       required: false,
     },
-    complain: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Complain",
-      index: true,
-    },
   },
   { timestamps: true }
 );
