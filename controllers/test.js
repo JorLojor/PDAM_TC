@@ -40,13 +40,14 @@ module.exports = {
         try {
             let { data } = req.body;
             const { slug, title } = req.params;
-            // data = data.replaceAll("'", '"') 
+            data = data.replaceAll("'", '"')
             let imageTest = '/uploads/test-image/'
             const dataPertanyaan = JSON.parse(data)
-            const materi = await MateriModel.findOne({ slug })
+            const materi = await MateriModel.findOne({ slug }).session(session)
 
             if (req.files) {
-                imageTest = req.files[0].path.split("/PDAM_TC/")[1];
+                return response(200, req.files, "Test Berhasil di masukan", res);
+                // imageTest = req.files[0].path.split("/PDAM_TC/")[1];
             }
             const questions = dataPertanyaan.questions.map((data) => {
                 let path = null
@@ -88,15 +89,12 @@ module.exports = {
             if (title != "null" && dataPertanyaan.type == "quiz") {
                 await MateriModel.updateOne({ slug: slug, 'items.title': title }, { $set: { 'items.$.quiz': tests._id } }, { upsert: true, new: true, session });
             }
-            materi.save({ session })
 
             await session.commitTransaction();
-            session.endSession();
             return response(200, {}, "Test Berhasil di masukan", res);
         } catch (error) {
+            response(500, error, error.message, res);
             await session.abortTransaction();
-            session.endSession();
-            return response(500, error, error.message, res);
         } finally {
             session.endSession();
         }
@@ -150,7 +148,7 @@ module.exports = {
         const session = await mongoose.startSession();
         session.startTransaction();
         try {
-            const { id } = req.params;
+            const { id, slug, title } = req.params;
             const test = await Test.findById(id);
             test.question.forEach(question => {
                 if (question.img != null) {
@@ -164,9 +162,17 @@ module.exports = {
             })
             test.deleteOne({ session })
 
+            if (test.type == 'pre') {
+                await MateriModel.updateOne({ 'test.pre': id }, { $set: { 'test.pre': null } }, { upsert: true, new: true, session });
+            } else if (test.type == 'post') {
+                await MateriModel.updateOne({ 'test.post': id }, { $set: { 'test.post': null } }, { upsert: true, new: true, session });
+            } else if (test.type == 'quiz') {
+                await MateriModel.updateOne({ slug , 'items.title': title }, { $set: { 'items.$.quiz': null } }, { upsert: true, new: true, session });
+            }
+
             await session.commitTransaction();
             session.endSession();
-            response(200, image, "Nilai berhasil dimasukan", res);
+            response(200, image, "Test Berhasil Dihapus", res);
         } catch (error) {
             await session.abortTransaction();
             session.endSession();

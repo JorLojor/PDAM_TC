@@ -25,6 +25,6 @@ testRouter.post("/nilai/:id", auth.user, Controller.nilai)
 //buat yang bisa post test
 testRouter.post("/store/:slug/:title", auth.user,upload.array('images'), Controller.store);
 testRouter.patch("/update/:id/", auth.user, auth.instruktur,upload.array('images'), Controller.updateTest);
-testRouter.delete("/delete/:id", auth.user, auth.instruktur, Controller.deleteTest);
+testRouter.delete("/delete/:id/:slug/:title", auth.user, auth.instruktur, Controller.deleteTest);
 
 module.exports = testRouter;
