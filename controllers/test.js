@@ -170,12 +170,14 @@ module.exports = {
             }
 
             await session.commitTransaction();
-            session.endSession();
             response(200, image, "Test Berhasil Dihapus", res);
         } catch (error) {
-            await session.abortTransaction();
+            if (session.inTransaction()) {
+                await session.abortTransaction();
+            }
+            response(500, error, error.message, res);
+        } finally {
             session.endSession();
-            response(500, error, "Server error", res);
         }
     },
     updateTest: async (req, res) => {
