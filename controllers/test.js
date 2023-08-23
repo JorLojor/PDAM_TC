@@ -40,14 +40,12 @@ module.exports = {
         try {
             let { data } = req.body;
             const { slug, title } = req.params;
-            data = data.replaceAll("'", '"')
+            // data = data.replaceAll("'", '"')
             let imageTest = '/uploads/test-image/'
             const dataPertanyaan = JSON.parse(data)
-            const materi = await MateriModel.findOne({ slug }).session(session)
-
+            console.log(req.files)
             if (req.files) {
-                return response(200, req.files, "Test Berhasil di masukan", res);
-                // imageTest = req.files[0].path.split("/PDAM_TC/")[1];
+                imageTest = req.files[0].path.split("/PDAM_TC/")[1];
             }
             const questions = dataPertanyaan.questions.map((data) => {
                 let path = null
@@ -91,7 +89,7 @@ module.exports = {
             }
 
             await session.commitTransaction();
-            return response(200, {}, "Test Berhasil di masukan", res);
+            response(200, {}, "Test Berhasil di masukan", res);
         } catch (error) {
             response(500, error, error.message, res);
             await session.abortTransaction();

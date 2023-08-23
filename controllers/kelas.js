@@ -213,6 +213,7 @@ module.exports = {
         kelasType,
         kodeNotaDinas,
         link,
+        absensi //buat bikin jadwal absensi kelas contoh struktur nya [{ name: "masuk pagi", time: "07:00"}, {name: "istirahat", time: "12:00"}, {name: "pulang", time: "15:00"}]
       } = req.body;
 
       let imageKelas = null;
@@ -256,6 +257,7 @@ module.exports = {
         peserta,
         instruktur,
         materi,
+        absensi,
         jadwal,
         kelasType,
         kodeNotaDinas,

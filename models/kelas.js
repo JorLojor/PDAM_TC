@@ -18,6 +18,10 @@ const kelasSchema = new Schema({
     required: true
   },
   materi: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Materi' }],
+  absensi: [{
+    name: String,
+    time: String
+  }],
   peserta: [{ type: pesertaKelasSchema, required: false }],
   kodeNotaDinas: { type: String, required: false },
   classPermission: { type: String, required: false },
