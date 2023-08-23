@@ -39,12 +39,10 @@ module.exports = {
         try {
             let { data } = req.body;
             const { slug, title } = req.params;
-            data = data.replaceAll("'", '"') 
+            // data = data.replaceAll("'", '"') 
             let imageTest = '/uploads/test-image/'
             const dataPertanyaan = JSON.parse(data)
             const materi = await MateriModel.findOne({ slug })
-
-            console.log(JSON.parse(data));
 
             if (req.files) {
                 imageTest = req.files[0].path.split("/PDAM_TC/")[1];
@@ -98,6 +96,8 @@ module.exports = {
             await session.abortTransaction();
             session.endSession();
             return response(500, error, error.message, res);
+        } finally {
+            session.endSession();
         }
     },
     getTest: async (req, res) => {
