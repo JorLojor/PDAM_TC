@@ -2,6 +2,7 @@ const response = require("../respons/response");
 
 const Chat = require("../models/chat");
 const Room = require("../models/room");
+const user = require("../models/user");
 
 module.exports = {
   index: async (req, res) => {
@@ -113,7 +114,7 @@ module.exports = {
     }
   },
 
-  store: async (req, res) => {
+  store: async (req,res) => {
     try {
       const chat = req.body.chat;
 
@@ -152,6 +153,54 @@ module.exports = {
       console.log(error);
 
       return response(500, error, "Server error", res);
+    }
+  },
+  storeIo: async ({chat,room:roomId,sender}) => {
+    try {
+
+      if (!chat) {
+        console.log("Mohon isi chat");
+        return null;
+      }
+
+      const id = roomId
+
+      const room = await Room.findOne({_id:id});
+
+      if (!room) {
+        console.log("Data tidak ditemukan");
+        return null
+      }
+
+      let valid = false;
+
+      room.users.map((r) => {
+        if (sender == r) {
+          valid = true;
+        }
+      });
+
+      const getSender = await user.findOne({_id:sender})
+
+      if (!valid && getSender.role !== 1) {
+        console.log("Forbidden");
+        return null
+      }
+
+      const newChat = await Chat.create({
+        sender: sender,
+        room: id,
+        chat,
+      });
+
+      if (newChat) {
+        const getNewChat = await Chat.findOne({_id:newChat._id}).populate("sender");
+        return getNewChat
+      }
+
+    } catch (error) {
+      console.log(error);
+      return error.message
     }
   },
 };

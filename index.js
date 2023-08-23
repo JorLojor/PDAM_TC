@@ -38,6 +38,8 @@ const sertifikatRoutes = require("./routers/sertifikat");
 const kategoriRoutes = require("./routers/kategori");
 const testRoutes = require("./routers/test");
 const absenRoutes = require("./routers/absensi");
+const { storeIo } = require("./controllers/chat");
+const { log } = require("console");
 // routes
 
 app.use("/chat/", chatRoute);
@@ -61,6 +63,16 @@ app.get("/", (req, res) => {
 
 io.on("connection", (socket) => {
   console.log("User connected to socket!");
+
+  socket.on('send-message',async({room,sender,chat})=>{
+    console.log(room,sender,chat)
+    try {
+      const send = await storeIo({room,sender,chat})
+      io.emit('new-message',send)
+    } catch (error) {
+      console.log(error)
+    }
+  })
 });
 
 server.listen(process.env.local_port, () => {
