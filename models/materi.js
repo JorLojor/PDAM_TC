@@ -9,7 +9,7 @@ const TestSchema = new Schema({
 
 const materiSchema = new Schema({
   kodeMateri: { type: String, required: true },
-  test: { type: TestSchema, required: false, default: null },
+  test: { type: TestSchema, required: false },
   slug: { type: String, required: true },
   section: { type: String, required: true }, // Judul
   description: { type: String, required: true },

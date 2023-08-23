@@ -39,7 +39,7 @@ module.exports = {
         try {
             let { data } = req.body;
             const { slug, title } = req.params;
-            // data = data.replaceAll("'", '"') cima buat test
+            data = data.replaceAll("'", '"') 
             let imageTest = '/uploads/test-image/'
             const dataPertanyaan = JSON.parse(data)
             const materi = await MateriModel.findOne({ slug })
@@ -82,9 +82,9 @@ module.exports = {
             const tests = new Test(post)
             tests.save({ session })
             if (dataPertanyaan.type == "pre") {
-                materi.test.pre = tests._id
+                await MateriModel.updateOne({ slug: slug }, { $set: { 'test.pre': tests._id } }, { upsert: true, new: true, session });
             } else if (dataPertanyaan.type == "post") {
-                materi.test.post = tests._id
+                await MateriModel.updateOne({ slug: slug }, { $set: { 'test.post': tests._id } }, { upsert: true, new: true, session });
             }
             if (title != "null" && dataPertanyaan.type == "quiz") {
                 await MateriModel.updateOne({ slug: slug, 'items.title': title }, { $set: { 'items.$.quiz': tests._id } }, { upsert: true, new: true, session });
@@ -97,7 +97,7 @@ module.exports = {
         } catch (error) {
             await session.abortTransaction();
             session.endSession();
-            response(500, error, error.message, res);
+            return response(500, error, error.message, res);
         }
     },
     getTest: async (req, res) => {
