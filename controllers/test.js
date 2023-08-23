@@ -45,7 +45,7 @@ module.exports = {
             const dataPertanyaan = JSON.parse(data)
             console.log(req.files)
             if (req.files) {
-                imageTest = req.files[0].path.split("/PDAM_TC/")[1];
+                imageTest = '/upload/' + req.files[0].path.split("/upload/").pop();
             }
             const questions = dataPertanyaan.questions.map((data) => {
                 let path = null
