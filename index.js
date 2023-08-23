@@ -29,7 +29,7 @@ mongoose.connect(process.env.mongodb2);
 // routes
 
 const chatRoute = require("./routers/chat");
-const complainRoute = require("./routers/complaint");
+const roomRoute = require("./routers/room");
 const kelasRoutes = require("./routers/kelas");
 const materiRoutes = require("./routers/materi");
 const userRoutes = require("./routers/user");
@@ -40,13 +40,13 @@ const testRoutes = require("./routers/test");
 // routes
 
 app.use("/chat/", chatRoute);
-app.use("/complaint/", complainRoute);
 app.use("/kelas/", kelasRoutes);
 app.use("/materi/", materiRoutes);
 app.use("/user/", userRoutes);
 app.use("/tugas/", tugasRoutes);
 app.use("/sertifikat/", sertifikatRoutes);
 app.use("/kategori/", kategoriRoutes);
+app.use("/room/", roomRoute);
 app.use("/test/", testRoutes);
 
 const uploadsDirectory = path.join(__dirname, "upload");
