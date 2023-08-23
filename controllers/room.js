@@ -9,9 +9,9 @@ module.exports = {
     try {
       const isPaginate = parseInt(req.query.paginate);
 
-      if (isPaginate === 0) {
-        const totalData = await Chat.find({
-          room: id,
+      if (isNaN(isPaginate)) {
+        const totalData = await Room.find({
+          users: { $in: req.user.id },
         }).countDocuments();
 
         const data = await Room.find({
