@@ -147,7 +147,7 @@ module.exports = {
         session.startTransaction();
         try {
             const { id, slug, title } = req.params;
-            const test = await Test.findById(id);
+            const test = await Test.findOne({_id: id});
             const dirname = __dirname.replace('/controllers', '')
             test.question.forEach(question => {
                 if (question.img != null) {
