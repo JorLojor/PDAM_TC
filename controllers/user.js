@@ -98,7 +98,7 @@ module.exports = {
     try {
       const isPaginate = parseInt(req.query.paginate);
 
-      if (isPaginate === 0) {
+      if (isNaN(isPaginate)) {
         const totalData = await userModel.countDocuments();
         const data = await userModel.find();
         // .populate("kelas");
@@ -109,6 +109,7 @@ module.exports = {
         response(200, result, "get user", res);
         return;
       }
+
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
       const totalData = await userModel.countDocuments();
@@ -198,15 +199,14 @@ module.exports = {
       });
       response(200, filtered, "Berhasil get status pending user", res);
     } catch (error) {
-      response(500,error.message,error.message,res)
+      response(500, error.message, error.message, res);
     }
   },
   updateStatusUser: async (req, res) => {
     //admin dapat setuju atau menolak registrasi user
     const id = req.params.id; //idUser yang ingin dirubah
-    const status = req.body.status //status yang ingin dirubah
+    const status = req.body.status; //status yang ingin dirubah
     try {
-
       const result = await userModel.findOneAndUpdate(
         { _id: id },
         { status: status },
@@ -339,7 +339,7 @@ module.exports = {
 
     try {
       const getUser = await userModel.findOne({ _id: id }).select("password");
-      
+
       if (req.body.old) {
         const cekPassword = bcrypt.compareSync(req.body.old, getUser.password);
         if (!cekPassword) {
@@ -364,20 +364,22 @@ module.exports = {
     }
   },
   resetPassword: async (req, res) => {
-    const { id,code } = req.params;
+    const { id, code } = req.params;
 
     try {
-      const getUser = await userModel.findOne({ _id: id,access_token:code }).select("password");
-      
+      const getUser = await userModel
+        .findOne({ _id: id, access_token: code })
+        .select("password");
+
       if (!getUser) {
-        response(403,null,'Invalid Key or Invalid ID')
+        response(403, null, "Invalid Key or Invalid ID");
         return;
       }
 
       const passwordHash = bcrypt.hashSync(req.body.new, 10);
       const user = await userModel.findByIdAndUpdate(
         id,
-        { $set:{password: passwordHash,access_token:null} },
+        { $set: { password: passwordHash, access_token: null } },
         {
           new: true,
         }
@@ -411,7 +413,7 @@ module.exports = {
         { $set: { access_token: token } },
         { new: true, session }
       );
-      await sendConfirmationEmail(email, update.access_token,update.username);
+      await sendConfirmationEmail(email, update.access_token, update.username);
       await session.commitTransaction();
 
       response(200, update, "Berhasil mengirim konfirmasi reset password", res);
@@ -427,18 +429,16 @@ module.exports = {
 
     try {
       const check = await userModel.findOne({ access_token: code });
-      
+
       if (!check) {
-        response(403,null,'Invalid Code!')
+        response(403, null, "Invalid Code!");
         return;
       }
 
-      response(200,check,'User berhasil ditemukan',res)
+      response(200, check, "User berhasil ditemukan", res);
     } catch (error) {
-      response(500,null,error.message,res)
+      response(500, null, error.message, res);
     }
   },
-  checkPesertaNeedVerification: async(req,res)=>{
-
-  }
+  checkPesertaNeedVerification: async (req, res) => {},
 };
