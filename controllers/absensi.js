@@ -48,7 +48,10 @@ module.exports = {
     getData: async (req, res) => {
         try {
             const { date, kelas } = req.params
-            const absenPeserta = await Absensi.find({ date: date, kelas: kelas })
+            
+            const findKelasBySlug = await Kelas.findOne({slug: kelas})
+
+            const absenPeserta = await Absensi.find({ date: date, kelas: findKelasBySlug._id }).populate('user', 'name').populate('kelas', 'nama')
             response(200, absenPeserta, 'Absensi berhasil didapat', res);
         } catch (error) {
             response(500, error, error.message, res);

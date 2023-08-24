@@ -19,7 +19,7 @@ module.exports = {
       const data = await KelasModel.find()
         .skip((halaman - 1) * batas)
         .limit(batas)
-        .populate("materi instruktur kategori");
+        .populate("materi kategori");
 
       for (const kelas of data) {
         for (let i = 0; i < kelas.peserta.length; i++) {
@@ -29,18 +29,6 @@ module.exports = {
           });
           if (userData) {
             kelas.peserta[i].user = userData;
-          }
-        }
-      }
-
-      for (const kelas of data) {
-        for (let i = 0; i < kelas.instruktur.length; i++) {
-          const instruktur = kelas.instruktur[i];
-          const userData = await UserModel.findOne({
-            _id: instruktur.user,
-          });
-          if (userData) {
-            kelas.instruktur[i].user = userData;
           }
         }
       }
@@ -83,7 +71,7 @@ module.exports = {
 
     try {
       let kelas = await KelasModel.findById(id).populate(
-        "materi instruktur peserta"
+        "materi peserta"
       );
 
       if (!kelas) {
@@ -100,7 +88,7 @@ module.exports = {
 
     try {
       let kelas = await KelasModel.findOne({ slug: slug }).populate(
-        "materi instruktur peserta kategori"
+        "materi peserta kategori"
       ).populate({
         path: 'desainSertifikat.peserta',
         model: 'Sertifikat', // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
@@ -124,7 +112,7 @@ module.exports = {
 
     try {
       let kelas = await KelasModel.findOne({ kodeNotaDinas: kodeNotaDinas }).populate(
-        "materi instruktur peserta kategori status"
+        "materi peserta kategori status"
       );
 
       if (!kelas) {
@@ -142,7 +130,7 @@ module.exports = {
 
     try {
       const get = await KelasModel.find({ instruktur })
-        .populate("materi instruktur kategori")
+        .populate("materi kategori")
         .populate({
           path: 'materi.items.tugas',
           model: 'Tugas',
@@ -210,12 +198,14 @@ module.exports = {
         kategori,
         instruktur,
         peserta = [],
-        materi = [],
+        materi,
         jadwal,
         kelasType,
         kodeNotaDinas,
         link,
       } = req.body;
+
+      console.log(req.body);
 
       let imageKelas = null;
       let status = 'pending'
@@ -257,7 +247,8 @@ module.exports = {
         kategori,
         peserta,
         instruktur,
-        materi,
+        materi : JSON.parse(materi),
+        absensi,
         jadwal,
         kelasType,
         kodeNotaDinas,
@@ -640,8 +631,14 @@ module.exports = {
 
     try {
       let kelas = await KelasModel.findOne({ slug: slug })
-        .populate("materi instruktur")
-        .select("materi nama instruktur");
+        .populate({
+          path: 'materi', // Populate the 'materi' array
+          populate: {
+            path: 'instruktur', // Populate the 'instruktur' field within the 'materi' array
+            model: 'User', // The Instruktur model
+          },
+        })
+        .select("materi nama").exec();
 
       if (!kelas) {
         response(404, id, "Materi tidak ditemukan", res);
@@ -649,7 +646,7 @@ module.exports = {
 
       response(200, kelas, "Materi ditemukan", res);
     } catch (error) {
-      response(500, error, "Server error", res);
+      response(500, error, error.message, res);
     }
   },
   getWithFilter: async (req, res) => {
@@ -658,7 +655,7 @@ module.exports = {
       let totalData;
 
       if (isPaginate === 0) {
-        const data = await KelasModel.find({ ...req.body }).populate('instruktur').populate({
+        const data = await KelasModel.find({ ...req.body }).populate({
           path: 'desainSertifikat.peserta',
           model: 'Sertifikat', // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
         })
@@ -682,8 +679,7 @@ module.exports = {
 
       const data = await KelasModel.find({ ...req.body })
         .skip((page - 1) * limit)
-        .limit(limit)
-        .populate("instruktur").populate({
+        .limit(limit).populate({
           path: 'desainSertifikat.peserta',
           model: 'Sertifikat', // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
         })

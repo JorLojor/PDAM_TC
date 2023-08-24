@@ -41,6 +41,7 @@ router.delete('/:id',auth.admin , userController.deleteUser);
 router.put('/forgot/pass' , userController.forgotPassword);
 router.get('/reset-password/:code' , userController.checkUserResetPassword);
 router.put('/reset/:id/:code', userController.resetPassword);
+router.put('/instruktur/rating/:id',auth.user,userController.rate);
 
 
 
