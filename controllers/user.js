@@ -1,11 +1,13 @@
 const mongoose = require("mongoose");
 const userModel = require("../models/user");
+const ratingModel = require("../models/rating");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const response = require("../respons/response");
 const user = require("../models/user");
 const tokenGenerator = require("../service/mail/tokenGenerator");
 const sendConfirmationEmail = require("../service/mail/config");
+
 
 module.exports = {
   createUser: async (req, res) => {
@@ -440,5 +442,34 @@ module.exports = {
       response(500, null, error.message, res);
     }
   },
-  checkPesertaNeedVerification: async (req, res) => {},
+  rate:async(req,res)=>{
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    try {
+      const { user, rating, comment } = req.body
+      const { id } = req.params
+      let rate = new ratingModel({
+          user, rating, comment
+      })
+      const saveRate = rate.save({session})
+
+      console.log(id);
+
+      const updateRatingUser = await userModel.findOneAndUpdate({_id:new mongoose.Types.ObjectId(id)},{$push:{rating:saveRate._id}},{new:true,session})
+
+      if (!updateRatingUser) {
+        await session.abortTransaction();
+        response(500, null, 'Terjadi kesalahan saat update rating user!', res);
+        return;
+      }
+
+      await session.commitTransaction()
+      response(200, updateRatingUser, 'Rating berhasil dimasukan', res);
+    }catch(error){
+      await session.abortTransaction();
+      response(500, error, error.message, res);
+    } finally {
+      session.endSession()
+    }
+  }
 };
