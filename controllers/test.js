@@ -43,8 +43,7 @@ module.exports = {
             // data = data.replaceAll("'", '"')
             let imageTest = '/uploads/test-image/'
             const dataPertanyaan = JSON.parse(data)
-            console.log(req.files)
-            if (req.files) {
+            if (req.files.length > 0 || req.files != null) {
                 imageTest = '/upload/' + req.files[0].path.split("/upload/").pop();
             }
             const questions = dataPertanyaan.questions.map((data) => {
@@ -111,6 +110,20 @@ module.exports = {
             response(500, error, "Server error", res);
         }
     },
+    getQuiz: async (req, res) => {
+        try {
+            const { slug } = req.params;
+            const materi = await MateriModel.findOne({ slug }).populate('items.quiz', '-question').select('items.quiz items.title');
+
+            if (!materi) {
+                response(404, id, "Test tidak di temukan", res);
+            }
+
+            response(200, materi, "Test di dapat", res);
+        } catch (error) {
+            response(500, error, "Server error", res);
+        }
+    },
     nilai: async (req, res) => {
         const session = await mongoose.startSession();
         session.startTransaction();
@@ -147,7 +160,7 @@ module.exports = {
         session.startTransaction();
         try {
             const { id, slug, title } = req.params;
-            const test = await Test.findOne({_id: id});
+            const test = await Test.findOne({ _id: id });
             const dirname = __dirname.replace('/controllers', '')
             test.question.forEach(question => {
                 if (question.img != null) {
@@ -166,7 +179,7 @@ module.exports = {
             } else if (test.type == 'post') {
                 await MateriModel.updateOne({ 'test.post': id }, { $set: { 'test.post': null } }, { upsert: true, new: true, session });
             } else if (test.type == 'quiz') {
-                await MateriModel.updateOne({ slug , 'items.title': title }, { $set: { 'items.$.quiz': null } }, { upsert: true, new: true, session });
+                await MateriModel.updateOne({ slug, 'items.title': title }, { $set: { 'items.$.quiz': null } }, { upsert: true, new: true, session });
             }
 
             await session.commitTransaction();
@@ -190,7 +203,7 @@ module.exports = {
             let imageTest = '/uploads/test-image/'
             const dataPertanyaan = JSON.parse(data)
 
-            if (req.files) {
+            if (req.files.length > 0) {
                 imageTest = req.files[0].path.split("/PDAM_TC/")[1];
             }
             const questions = dataPertanyaan.questions.map((data) => {

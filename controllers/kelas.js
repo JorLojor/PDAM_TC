@@ -203,6 +203,7 @@ module.exports = {
         kelasType,
         kodeNotaDinas,
         link,
+        absensi
       } = req.body;
 
       console.log(req.body);

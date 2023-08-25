@@ -20,6 +20,7 @@ const storage = multer.diskStorage({
 
 //user
 testRouter.get("/:id", auth.user, Controller.getTest);
+testRouter.get("/quiz/:slug", auth.user, Controller.getQuiz);
 testRouter.post("/nilai/:id", auth.user, Controller.nilai)
 
 //buat yang bisa post test

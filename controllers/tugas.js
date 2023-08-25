@@ -77,75 +77,11 @@ module.exports = {
   getAllTugasInstruktur: async (req, res) => {
     const { id } = req.params;
 
-    const session = await mongoose.startSession();
-    session.startTransaction();
-
     try {
-      let materiWithTugas = [];
-      //Get All Kelas punya Instruktur
-      const kelasList = await KelasModel.find({ instruktur: id })
-        .session(session)
-        .populate("materi").select('nama materi');
-      //Collect Materi
-      // Loop through each Kelas to collect Materi with Tugas
-      for (const kelas of kelasList) {
-        const materiWithTugasForKelas = [];
-
-        // Loop through each Materi in the Kelas
-        for (const materi of kelas.materi) {
-          const tugasIds = [];
-
-          // Collect Tugas ids from each Item
-          for (const item of materi.items) {
-            if (item.tugas) {
-              tugasIds.push(...item.tugas);
-            }
-          }
-
-          // Find Tugas documents based on the collected ids
-          const tugasGet = await tugasSchema.find({
-            _id: { $in: tugasIds },
-          }).session(session);
-
-
-          let newItems = materi.items.map((v)=>{
-            const {tugas, ...rest} = v
-
-            return {
-              ...rest._doc,
-              tugas:tugasGet
-          }})
-
-
-          
-
-          // Combine Materi and Tugas for this Materi
-          materiWithTugasForKelas.push({
-            ...materi.toObject(),
-            items: newItems,
-          });
-        }
-
-        // Add Materi with Tugas to the result
-        materiWithTugas.push({
-          ...kelas.toObject(),
-          materi: materiWithTugasForKelas,
-        });
-      }
-
-      const filterNonTugas = materiWithTugas.filter((v)=>v.materi.length !== 0)
-
-    //   const getTugasOnly = filterNonTugas.map((v)=>{
-    //     return v.materi
-    //   })
-
-      await session.commitTransaction();
-      response(200, filterNonTugas, "Ditemukan", res);
+      const tugasList = await MateriModel.find({ instruktur: id }).populate('items.tugas').select('section items.title items.tugas');
+      response(200, tugasList, "Ditemukan", res);
     } catch (error) {
       response(500, null, error.message, res);
-      await session.abortTransaction();
-    } finally {
-      session.endSession();
     }
   },
   creteTugas: async (req, res) => {
