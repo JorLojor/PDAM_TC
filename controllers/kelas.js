@@ -167,7 +167,7 @@ module.exports = {
         materi,
         jadwal,
         kodeNotaDinas,
-        absensi //buat bikin jadwal absensi kelas contoh struktur nya [{ name: "masuk pagi", time: "07:00"}, {name: "istirahat", time: "12:00"}, {name: "pulang", time: "15:00"}]
+        absensi
       } = req.body;
 
       const kelas = new KelasModel({
