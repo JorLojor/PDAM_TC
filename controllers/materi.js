@@ -76,6 +76,21 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+  getByGuruMateri: async (req, res) => {
+    const { id } = req.params;
+
+    try {
+      const result = await MateriModel.findOne({ _id: new mongoose.Types.ObjectId(id) });
+
+      if (!result) {
+        response(404, result, "Materi tidak di temukan", res);
+      }
+
+      response(200, result, "Materi di dapat", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
   createMateri: async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
