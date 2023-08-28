@@ -891,8 +891,25 @@ module.exports = {
     }
   },
 
-  storeRecentClassIO: async ({id, id_user}) => {
+  storeRecentClassIO: async ({ id, id_user }) => {
     try {
+      const check = await RecentClass.findOne({
+        user: id_user,
+        $and: {
+          kelas: 1,
+        },
+      });
+
+      if (check) {
+        const data = await RecentClass.find({
+          user: id_user,
+        })
+          .populate("kelas")
+          .sort({ number: -1 });
+
+        return data;
+      }
+
       const first = await RecentClass.findOne({
         number: 1,
         $and: [
