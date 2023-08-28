@@ -14,18 +14,21 @@ module.exports = {
     try {
       const slug = req.params.slug;
 
-      let task = await MateriModel.findOne({ slug })
-        .populate("items.tugas")
-        .select("items.tugas, section");
+      let materi = await MateriModel.findOne({ slug });
 
-      let data = [];
+      if (!materi) {
+        return response(400, null, "Materi tidak ditemukan", res);
+      }
 
-      task.items.map((row) => {
-        data.push({
-          section: task.section,
-          task: row.tugas,
-        });
-      });
+      task = await tugasSchema
+        .find({
+          materi: materi._id,
+        })
+        .populate("materi", "section");
+
+      if (!task) {
+        return response(400, null, "Tugas tidak ditemukan", res);
+      }
 
       return response(200, task, "berhasil get tugas", res);
     } catch (error) {
