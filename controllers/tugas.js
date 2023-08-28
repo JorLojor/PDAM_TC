@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const tugasSchema = require("../models/tugas");
 const userModel = require("../models/user");
 const KelasModel = require("../models/kelas");
-const MateriModel = require('../models/materi')
+const MateriModel = require("../models/materi");
 const response = require("../respons/response");
 const upload = require("../middleware/filepath");
 const uploadFile = require("../middleware/filepath");
@@ -12,65 +12,65 @@ require("dotenv").config();
 module.exports = {
   getTugas: async (req, res) => {
     try {
-      const isPaginate = parseInt(req.query.paginate);
-      if (isPaginate === 0) {
-        const totalData = await tugasSchema.countDocuments();
-        const data = await tugasSchema.find();
-        result = { data: data, "total data": totalData };
-        response(200, result, "get user", res);
-        return;
-      }
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
-      const totalData = await tugasSchema.countDocuments();
+      const slug = req.params.slug;
 
-      const data = await tugasSchema
-        .find()
-        .skip((page - 1) * limit)
-        .limit(limit);
+      let task = await MateriModel.findOne({ slug })
+        .populate("items.tugas")
+        .select("items.tugas, section");
 
-      const result = { data: data, "total data": totalData };
+      let data = [];
 
-      response(200, result, "Berhasil get all tugas", res);
+      task.items.map((row) => {
+        data.push({
+          section: task.section,
+          task: row.tugas,
+        });
+      });
+
+      return response(200, data, "berhasil get tugas", res);
     } catch (error) {
-      response(500, error, "Server error", res);
+      return response(500, error, "Server error", res);
     }
   },
-  getOnetugas:async(req,res)=>{
-    const {id} = req.params;
+  getOnetugas: async (req, res) => {
+    const { id } = req.params;
 
     try {
-      const get = await tugasSchema.findOne({_id:id}).populate('kelas pengumpulanTugas.user')
-      response(200,get,'Ditemukan',res)
+      const get = await tugasSchema
+        .findOne({ _id: id })
+        .populate("kelas pengumpulanTugas.user");
+      response(200, get, "Ditemukan", res);
     } catch (error) {
-      response(500,null,error.message,res)      
+      response(500, null, error.message, res);
     }
   },
-  getTugasFiltered:async(req,res)=>{
+  getTugasFiltered: async (req, res) => {
     try {
-      const get = await tugasSchema.find({...req.body}).populate('kelas')
-      response(200,get,'Tugas ditemukan',res)
+      const get = await tugasSchema.find({ ...req.body }).populate("kelas");
+      response(200, get, "Tugas ditemukan", res);
     } catch (error) {
-      response(500,error,error.message,res)
+      response(500, error, error.message, res);
     }
   },
-  checkPesertaStatus:async(req,res)=>{
-    const {id,idTugas} = req.params;
+  checkPesertaStatus: async (req, res) => {
+    const { id, idTugas } = req.params;
 
     try {
-      const checkTugas = await tugasSchema.findOne({_id:idTugas})
-      const pengumpulanTugas = checkTugas.pengumpulanTugas
+      const checkTugas = await tugasSchema.findOne({ _id: idTugas });
+      const pengumpulanTugas = checkTugas.pengumpulanTugas;
 
-      const checkUserInsideTugas = pengumpulanTugas.filter((tugas)=> tugas.user.toString() === id)
-      
+      const checkUserInsideTugas = pengumpulanTugas.filter(
+        (tugas) => tugas.user.toString() === id
+      );
+
       if (checkUserInsideTugas.length === 0) {
-        res.json({status:'Belum Mengumpulkan'})
+        res.json({ status: "Belum Mengumpulkan" });
         return;
       }
 
-      res.json({status:checkUserInsideTugas[0].status})
+      res.json({ status: checkUserInsideTugas[0].status });
     } catch (error) {
-      res.json({status:'Error!'})
+      res.json({ status: "Error!" });
       console.log(error.message);
     }
   },
@@ -78,7 +78,9 @@ module.exports = {
     const { id } = req.params;
 
     try {
-      const tugasList = await MateriModel.find({ instruktur: id }).populate('items.tugas').select('section items.title items.tugas');
+      const tugasList = await MateriModel.find({ instruktur: id })
+        .populate("items.tugas")
+        .select("section items.title items.tugas");
       response(200, tugasList, "Ditemukan", res);
     } catch (error) {
       response(500, null, error.message, res);
@@ -112,53 +114,53 @@ module.exports = {
   pengumpulanTugas: async (req, res) => {
     // fungsi put yang di gunakan user saat mengumpulkan tugas
     try {
-        const idTugas = req.params.id;
-        const user = req.body.user; //id user yang mengumpulkan tugas
-        // const answerFile = req.file.path; //jawaban dari user
-        const answer = req.body.answer; //jawaban dalam bentuk text
+      const idTugas = req.params.id;
+      const user = req.body.user; //id user yang mengumpulkan tugas
+      // const answerFile = req.file.path; //jawaban dari user
+      const answer = req.body.answer; //jawaban dalam bentuk text
 
-        let answerFile = null;
+      let answerFile = null;
 
-        if (req.file) {
-          answerFile = req.file.path.split("/PDAM_TC/")[1];
+      if (req.file) {
+        answerFile = req.file.path.split("/PDAM_TC/")[1];
+      }
+
+      const tugas = await tugasSchema.findById(idTugas);
+      let cekUser = false;
+
+      tugas.pengumpulanTugas.forEach((e) => {
+        if (user == e.user) {
+          cekUser = true;
         }
+      });
 
-        const tugas = await tugasSchema.findById(idTugas);
-        let cekUser = false;
+      if (cekUser) {
+        response(400, user, "anda sudah mengumpulkan", res);
+      }
+      const today = new Date();
+      let status = "menunggu";
 
-        tugas.pengumpulanTugas.forEach((e) => {
-          if (user == e.user) {
-            cekUser = true;
-          }
-        });
+      if (tugas.deadline < today) {
+        status = "telat";
+      }
 
-        if (cekUser) {
-          response(400, user, "anda sudah mengumpulkan", res);
-        }
-        const today = new Date();
-        let status = "menunggu";
+      const pengumpulan = {
+        user,
+        answerFile,
+        answer,
+        status: status,
+      };
+      let data = tugas.pengumpulanTugas;
+      data.push(pengumpulan);
 
-        if (tugas.deadline < today) {
-          status = "telat";
-        }
-
-        const pengumpulan = {
-          user,
-          answerFile,
-          answer,
-          status: status,
-        };
-        let data = tugas.pengumpulanTugas;
-        data.push(pengumpulan);
-
-        const result = await tugasSchema.findByIdAndUpdate(
-          idTugas,
-          { pengumpulanTugas: data },
-          { new: true }
-        );
-        response(200, result, "pengumpulan berhasil di tambahkan", res);
+      const result = await tugasSchema.findByIdAndUpdate(
+        idTugas,
+        { pengumpulanTugas: data },
+        { new: true }
+      );
+      response(200, result, "pengumpulan berhasil di tambahkan", res);
     } catch (error) {
-      response(500, error,error.message, res);
+      response(500, error, error.message, res);
     }
   },
   updatePengumpulanTugas1: async (req, res) => {
@@ -294,37 +296,45 @@ module.exports = {
       //Ubah / Tambahkan nilai user kedalam item pengumpulanTugas
       //Update nilai pengumpulanTugas tugas
 
-      const getTugas = await tugasSchema.findOne({_id:id}).session(session)
+      const getTugas = await tugasSchema.findOne({ _id: id }).session(session);
       if (!getTugas) {
-        response(404,getTugas,'Tidak ada Tugas yang dimaksud!',res)
+        response(404, getTugas, "Tidak ada Tugas yang dimaksud!", res);
         return;
       }
-      const boxTugas = getTugas.pengumpulanTugas
+      const boxTugas = getTugas.pengumpulanTugas;
 
-      const checkUserInsideBox = boxTugas.filter((item)=>item.user.toString() === idUser)
-      const withoutUserInsideBox = boxTugas.filter((item)=>item.user.toString() !== idUser)
+      const checkUserInsideBox = boxTugas.filter(
+        (item) => item.user.toString() === idUser
+      );
+      const withoutUserInsideBox = boxTugas.filter(
+        (item) => item.user.toString() !== idUser
+      );
 
       if (checkUserInsideBox.length === 0) {
-        response(404,checkUserInsideBox,'Tidak ada User yang dimaksud!',res)
+        response(404, checkUserInsideBox, "Tidak ada User yang dimaksud!", res);
         return;
       }
 
-      const mappedTugas = checkUserInsideBox.map((v)=>{
+      const mappedTugas = checkUserInsideBox.map((v) => {
         return {
           ...v._doc,
-          nilai:nilai
-        }
-      })
+          nilai: nilai,
+        };
+      });
 
-      const combinedBox = [...withoutUserInsideBox,...mappedTugas]
+      const combinedBox = [...withoutUserInsideBox, ...mappedTugas];
 
-      const updateTugas = await tugasSchema.findOneAndUpdate({_id:id},{$set:{pengumpulanTugas:combinedBox}},{new:true,session})
+      const updateTugas = await tugasSchema.findOneAndUpdate(
+        { _id: id },
+        { $set: { pengumpulanTugas: combinedBox } },
+        { new: true, session }
+      );
 
       await session.commitTransaction();
       response(200, updateTugas, "tugas berhasil di update", res);
     } catch (error) {
       response(500, error, error.message, res);
-      await session.abortTransaction()
+      await session.abortTransaction();
     } finally {
       session.endSession();
     }
