@@ -93,18 +93,22 @@ module.exports = {
           kelas,
         })
           .populate("user", "name")
-          .populate("kelas");
+          .populate("kelas")
+          .skip((page - 1) * limit)
+          .limit(limit);
       } else if (user) {
         data = await Absensi.find({
           user,
         })
           .populate("user", "name")
           .populate("kelas")
-          .skip((page - 1) * limit);
+          .skip((page - 1) * limit)
+          .limit(limit);
       } else {
         data = await Absensi.find()
           .populate("user", "name")
           .populate("kelas")
+          .skip((page - 1) * limit)
           .limit(limit);
       }
 
