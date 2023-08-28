@@ -880,13 +880,10 @@ module.exports = {
   getRecentClass: async (req, res) => {
     try {
       const data = await RecentClass.find({
-        kelas: req.params.id,
-        $and: [
-          {
-            user: req.user.id,
-          },
-        ],
-      }).sort({ number: -1 });
+        user: req.user.id,
+      })
+        .populate("kelas")
+        .sort({ number: -1 });
 
       response(200, data, "Kelas terbaru berhasil ditemukan", res);
     } catch (error) {
@@ -900,9 +897,6 @@ module.exports = {
         number: 1,
         $and: [
           {
-            kelas: id,
-          },
-          {
             user: id_user,
           },
         ],
@@ -911,9 +905,6 @@ module.exports = {
       const second = await RecentClass.findOne({
         number: 2,
         $and: [
-          {
-            kelas: id,
-          },
           {
             user: id_user,
           },
@@ -924,9 +915,6 @@ module.exports = {
         number: 3,
         $and: [
           {
-            kelas: id,
-          },
-          {
             user: id_user,
           },
         ],
@@ -935,9 +923,6 @@ module.exports = {
       const fourth = await RecentClass.findOne({
         number: 4,
         $and: [
-          {
-            kelas: id,
-          },
           {
             user: id_user,
           },
@@ -973,13 +958,10 @@ module.exports = {
       });
 
       const data = await RecentClass.find({
-        kelas: id,
-        $and: [
-          {
-            user: id_user,
-          },
-        ],
-      }).sort({ number: -1 });
+        user: id_user,
+      })
+        .populate("kelas")
+        .sort({ number: -1 });
 
       return data;
     } catch (error) {
