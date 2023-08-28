@@ -29,7 +29,12 @@ router.get("/:id", auth.user, Controller.getOneKelas);
 router.get("/slug/:slug", auth.user, Controller.getOneKelasBySlug);
 router.post("/nd/", auth.server, Controller.getOneKelasByND);
 router.get("/materi/:slug", auth.user, Controller.getMateriKelas);
-router.get("/latest/:id", auth.user, Controller.getRecentClass);
+router.get(
+  "/latest/:id",
+  auth.user,
+  auth.onlyStudent,
+  Controller.getRecentClass
+);
 router.post("/peserta/:slug", auth.user, Controller.getPesertaKelas);
 router.post("/filtered", auth.user, Controller.getWithFilter);
 router.put("/admin/:id", auth.admin, Controller.updateKelasAdminSide);
