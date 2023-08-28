@@ -891,7 +891,7 @@ module.exports = {
     }
   },
 
-  storeRecentClassIO: async (id, id_user) => {
+  storeRecentClassIO: async ({id, id_user}) => {
     try {
       const first = await RecentClass.findOne({
         number: 1,

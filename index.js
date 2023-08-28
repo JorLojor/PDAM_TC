@@ -77,6 +77,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("save-recent-class", async ({ id, id_user }) => {
+    console.log(id, id_user);
     try {
       const recentClass = await storeRecentClassIO({ id, id_user });
 
