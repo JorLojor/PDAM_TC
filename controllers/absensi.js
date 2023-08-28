@@ -2,6 +2,7 @@ const Kelas = require("../models/kelas");
 const Absensi = require("../models/absensiPeserta");
 const response = require("../respons/response");
 const mongoose = require("mongoose");
+const moment = require("moment");
 
 module.exports = {
   index: async (req, res) => {
@@ -185,6 +186,28 @@ module.exports = {
         0
       );
 
+      const hasDoneToday = await Absensi.findOne({
+        user,
+        $and: [
+          {
+            kelas,
+          },
+          {
+            absenName,
+          },
+          {
+            createdAt: {
+              $gte: moment().startOf("day").toDate(),
+              $lte: moment().endOf("day").toDate(),
+            },
+          },
+        ],
+      });
+
+      if (hasDoneToday) {
+        return response(403, {}, "Anda sudah absen hari ini", res);
+      }
+
       // Compare Date objects
       if (currentDate >= date1 && currentDate <= date2) {
         let absen = new Absensi({
@@ -195,14 +218,14 @@ module.exports = {
         });
         absen.save({ session });
       } else {
-        response(403, {}, "Absen Tidak diakui", res);
+        return response(403, {}, "Absen Tidak diakui", res);
       }
 
       session.commitTransaction();
-      response(200, {}, "Absensi berhasil dimasukan", res);
+      return response(200, {}, "Absensi berhasil dimasukan", res);
     } catch (error) {
       session.abortTransaction();
-      response(500, error, error.message, res);
+      return response(500, error, error.message, res);
     } finally {
       session.endSession();
     }
@@ -220,9 +243,9 @@ module.exports = {
       })
         .populate("user", "name")
         .populate("kelas", "nama");
-      response(200, absenPeserta, "Absensi berhasil didapat", res);
+      return response(200, absenPeserta, "Absensi berhasil didapat", res);
     } catch (error) {
-      response(500, error, error.message, res);
+      return response(500, error, error.message, res);
     }
   },
 };
