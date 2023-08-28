@@ -896,7 +896,7 @@ module.exports = {
       const check = await RecentClass.findOne({
         user: id_user,
         $and: {
-          kelas: 1,
+          kelas: id,
         },
       });
 
