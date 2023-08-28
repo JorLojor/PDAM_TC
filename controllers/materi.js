@@ -3,6 +3,7 @@ const MateriModel = require("../models/materi");
 const TestModel = require("../models/test");
 const TugasModel = require("../models/tugas");
 const KelasModel = require("../models/kelas");
+const User = require("../models/user");
 const uploadFile = require("../middleware/filepath");
 const multer = require("multer");
 const response = require("../respons/response");
@@ -45,6 +46,7 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   getOneMateri: async (req, res) => {
     try {
       const _id = req.params.id;
@@ -59,6 +61,7 @@ module.exports = {
       response(500, error, "Server error", res);
     }
   },
+
   getBySlugMateri: async (req, res) => {
     const { slug } = req.params;
 
@@ -76,11 +79,14 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   getByGuruMateri: async (req, res) => {
     const { id } = req.params;
 
     try {
-      const result = await MateriModel.findOne({ _id: new mongoose.Types.ObjectId(id) });
+      const result = await MateriModel.findOne({
+        _id: new mongoose.Types.ObjectId(id),
+      });
 
       if (!result) {
         response(404, result, "Materi tidak di temukan", res);
@@ -91,6 +97,7 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   createMateri: async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -103,8 +110,8 @@ module.exports = {
 
       JSON.parse(data).map((value, index) => {
         const { kodeMateri, section, description, items, instruktur } = value;
-        const randomNumber = Math.floor(Math.random() * 100)
-        const slug = _.kebabCase(section)+randomNumber
+        const randomNumber = Math.floor(Math.random() * 100);
+        const slug = _.kebabCase(section) + randomNumber;
         let itemsList = [];
 
         items.map((item, idx) => {
@@ -242,22 +249,27 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   updateMateri: async (req, res) => {
     const idMaterial = req.params.id;
-    const {data} = req.body
-    
-    const extractedData = JSON.parse(data)
+    const { data } = req.body;
 
+    const extractedData = JSON.parse(data);
 
     try {
-      const materi = await MateriModel.findByIdAndUpdate(idMaterial, extractedData, {
-        new: true,
-      });
+      const materi = await MateriModel.findByIdAndUpdate(
+        idMaterial,
+        extractedData,
+        {
+          new: true,
+        }
+      );
       response(200, materi, "Materi berhasil diubah", res);
     } catch (error) {
-      response(500, error,error.message, res);
+      response(500, error, error.message, res);
     }
   },
+
   deleteMateri: async (req, res) => {
     const idMaterial = req.params.id;
 
@@ -288,10 +300,30 @@ module.exports = {
       session.endSession();
     }
   },
+
+  getAllSubmateri: async (req, res) => {
+    try {
+      let submateri = await MateriModel.find({
+        "items.quiz": { $ne: null },
+      }).populate("items.quiz items.tugas");
+
+      submateri = await User.populate(submateri, {
+        path: "items.quiz.pembuat",
+        select: "name",
+      });
+
+      response(200, submateri, "Submateri di dapat", res);
+    } catch (error) {
+      response(500, error, "Server error", res);
+    }
+  },
+
   getSubmateri: async (req, res) => {
     try {
       const { slug } = req.params;
-      const result = await MateriModel.findOne({ slug }).populate('items.quiz items.tugas');
+      const result = await MateriModel.findOne({ slug }).populate(
+        "items.quiz items.tugas"
+      );
 
       if (!result) {
         response(404, _id, "Materi tidak di temukan", res);
@@ -302,24 +334,27 @@ module.exports = {
       response(500, error, "Server error", res);
     }
   },
+
   getAllMateriReactSelect: async (req, res) => {
     try {
-      const result = await MateriModel.find().select('section kodeMateri instruktur').populate('instruktur');
+      const result = await MateriModel.find()
+        .select("section kodeMateri instruktur")
+        .populate("instruktur");
 
       if (!result) {
         response(404, _id, "Materi tidak di temukan", res);
       }
 
-      const mapped = result.map((v,i) => {
+      const mapped = result.map((v, i) => {
         return {
           value: v._id,
-          label: v.section + " - " + `(${v.instruktur.name})`
-        }
-      })
+          label: v.section + " - " + `(${v.instruktur.name})`,
+        };
+      });
 
       response(200, mapped, "Materi di dapat", res);
     } catch (error) {
       response(500, error, error.message, res);
     }
-  }
+  },
 };

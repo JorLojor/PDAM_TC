@@ -823,6 +823,7 @@ module.exports = {
       response(500, error.message, error.message, res);
     }
   },
+
   kickPeserta: async (req, res) => {
     const { slug, id } = req.body;
 
@@ -859,6 +860,7 @@ module.exports = {
       session.endSession();
     }
   },
+
   listKelasAbsenUser: async (req, res) => {
     const { iduser } = req.params;
 
