@@ -895,9 +895,11 @@ module.exports = {
     try {
       const check = await RecentClass.findOne({
         user: id_user,
-        $and: {
-          kelas: id,
-        },
+        $and: [
+          {
+            kelas: id,
+          },
+        ],
       });
 
       if (check) {
