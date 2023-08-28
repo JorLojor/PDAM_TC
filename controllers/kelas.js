@@ -965,7 +965,7 @@ module.exports = {
 
       return data;
     } catch (error) {
-      response(500, null, error.message, res);
+      console.log(error);
     }
   },
 };
