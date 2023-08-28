@@ -32,6 +32,7 @@ module.exports = {
       return response(500, error, "Server error", res);
     }
   },
+
   getOnetugas: async (req, res) => {
     const { id } = req.params;
 
@@ -44,6 +45,7 @@ module.exports = {
       response(500, null, error.message, res);
     }
   },
+
   getTugasFiltered: async (req, res) => {
     try {
       const get = await tugasSchema.find({ ...req.body }).populate("kelas");
@@ -52,6 +54,7 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   checkPesertaStatus: async (req, res) => {
     const { id, idTugas } = req.params;
 
@@ -74,6 +77,7 @@ module.exports = {
       console.log(error.message);
     }
   },
+
   getAllTugasInstruktur: async (req, res) => {
     const { id } = req.params;
 
@@ -86,31 +90,45 @@ module.exports = {
       response(500, null, error.message, res);
     }
   },
-  creteTugas: async (req, res) => {
+
+  store: async (req, res) => {
     try {
-      uploadFile.single("attachment")(req, res, async function (err) {
-        if (err instanceof multer.MulterError) {
-          return res.status(400).json({ error: "File upload error" });
-        } else if (err) {
-          return res.status(500).json({ error: "Something went wrong" });
-        }
-        const { title, instruction, deadline, materi, kelas } = req.body;
-        const attachment = req.file.path;
-        const tugas = new tugasSchema({
-          title,
-          instruction,
-          deadline,
-          attachment,
-          kelas,
-          materi,
-        });
-        const result = await tugas.save();
-        response(200, result, "tugas berhasil di tambahkan", res);
+      const { title, instruction, deadline, materi } = req.body;
+
+      const materiData = await MateriModel.findOne({ slug: materi });
+
+      if (!materiData) {
+        response(500, null, "Materi tidak ditemukan", res);
+      }
+
+      if (req.file) {
+        attachment = req.file.path.split("/PDAM_TC/")[1];
+      }
+
+      const tugas = tugasSchema.create({
+        title,
+        instruction,
+        deadline,
+        attachment,
+        materi: materiData._id,
       });
+
+      await MateriModel.findByIdAndUpdate(
+        materiData._id,
+        {
+          $push: {
+            "items.tugas": tugas._id,
+          },
+        },
+        { new: true }
+      );
+
+      response(200, tugas, "tugas berhasil di tambahkan", res);
     } catch (error) {
       response(500, error.message, "Server error failed to add", res);
     }
   },
+
   pengumpulanTugas: async (req, res) => {
     // fungsi put yang di gunakan user saat mengumpulkan tugas
     try {
@@ -163,6 +181,7 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   updatePengumpulanTugas1: async (req, res) => {
     try {
       uploadFile.single("answerFile")(req, res, async function (err) {
@@ -208,6 +227,7 @@ module.exports = {
       response(500, error, "Server error failed to update", res);
     }
   },
+
   updatePengumpulanTugas: async (req, res) => {
     try {
       uploadFile.single("answerFile")(req, res, async function (err) {
@@ -265,6 +285,7 @@ module.exports = {
       response(500, error, "Server error failed to update", res);
     }
   },
+
   penilaianTesting: async (req, res) => {
     try {
       const id = req.params._id;
@@ -282,6 +303,7 @@ module.exports = {
       response(500, error, "Server error failed to update", res);
     }
   },
+
   penilaian: async (req, res) => {
     const id = req.params.id;
     const idUser = req.body.idUser;
@@ -352,6 +374,7 @@ module.exports = {
       response(500, error, "Server error failed to update", res);
     }
   },
+
   deleteTugas: async (req, res) => {
     const id = req.params.id;
     try {

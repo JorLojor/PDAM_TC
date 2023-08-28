@@ -23,7 +23,15 @@ router.get("/materi/:slug", auth.user, Controller.getTugas);
 router.get("/check/:id/:idTugas", auth.user, Controller.checkPesertaStatus);
 router.get("/:id", auth.user, Controller.getOnetugas);
 router.get("/:id/tugas", Controller.getAllTugasInstruktur);
-router.post("/", auth.instruktur, Controller.creteTugas);
+
+router.post(
+  "/",
+  auth.user,
+  auth.instruktur,
+  upload.single("attachment"),
+  Controller.store
+);
+
 router.post("/filtered", Controller.getTugasFiltered);
 router.put("/:id", auth.instruktur, Controller.updateTugas);
 router.delete("/:id", auth.instruktur, Controller.deleteTugas);
