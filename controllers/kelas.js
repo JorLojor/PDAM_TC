@@ -883,7 +883,7 @@ module.exports = {
         user: req.user.id,
       })
         .populate("kelas")
-        .sort({ number: -1 });
+        .sort({ number: 1 });
 
       response(200, data, "Kelas terbaru berhasil ditemukan", res);
     } catch (error) {
@@ -907,7 +907,7 @@ module.exports = {
           user: id_user,
         })
           .populate("kelas")
-          .sort({ number: -1 });
+          .sort({ number: 1 });
 
         return data;
       }
@@ -980,7 +980,7 @@ module.exports = {
         user: id_user,
       })
         .populate("kelas")
-        .sort({ number: -1 });
+        .sort({ number: 1 });
 
       return data;
     } catch (error) {
