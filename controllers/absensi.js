@@ -5,40 +5,120 @@ const mongoose = require("mongoose");
 
 module.exports = {
   index: async (req, res) => {
-    const isPaginate = parseInt(req.query.paginate);
+    try {
+      const isPaginate = parseInt(req.query.paginate);
+      const kelas = req.query.kelas;
+      const user = req.query.user;
 
-    if (isNaN(isPaginate)) {
-      const totalData = await Absensi.find().countDocuments();
+      let data;
+      let totalData;
 
-      const data = await Absensi.find()
-        .populate("user", "name")
-        .populate("kelas");
+      if (kelas && user) {
+        totalData = await Absensi.find({
+          user,
+          $and: [
+            {
+              kelas,
+            },
+          ],
+        }).countDocuments();
+      } else if (kelas) {
+        totalData = await Absensi.find({
+          kelas,
+        }).countDocuments();
+      } else if (user) {
+        totalData = await Absensi.find({
+          user,
+        }).countDocuments();
+      } else {
+        totalData = await Absensi.find().countDocuments();
+      }
+
+      if (isNaN(isPaginate)) {
+        if (kelas && user) {
+          data = await Absensi.find({
+            user,
+            $and: [
+              {
+                kelas,
+              },
+            ],
+          })
+            .populate("user", "name")
+            .populate("kelas");
+        } else if (kelas) {
+          data = await Absensi.find({
+            kelas,
+          })
+            .populate("user", "name")
+            .populate("kelas");
+        } else if (user) {
+          data = await Absensi.find({
+            user,
+          })
+            .populate("user", "name")
+            .populate("kelas");
+        } else {
+          data = await Absensi.find()
+            .populate("user", "name")
+            .populate("kelas");
+        }
+
+        result = {
+          data,
+          "total data": totalData,
+        };
+
+        return response(200, result, "Berhasil get all absensi", res);
+      }
+
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      if (kelas && user) {
+        data = await Absensi.find({
+          user,
+          $and: [
+            {
+              kelas,
+            },
+          ],
+        })
+          .populate("user", "name")
+          .populate("kelas")
+          .skip((page - 1) * limit)
+          .limit(limit);
+      } else if (kelas) {
+        data = await Absensi.find({
+          kelas,
+        })
+          .populate("user", "name")
+          .populate("kelas");
+      } else if (user) {
+        data = await Absensi.find({
+          user,
+        })
+          .populate("user", "name")
+          .populate("kelas")
+          .skip((page - 1) * limit);
+      } else {
+        data = await Absensi.find()
+          .populate("user", "name")
+          .populate("kelas")
+          .limit(limit);
+      }
 
       result = {
-        data,
+        data: data,
         "total data": totalData,
       };
 
-      response(200, result, "Berhasil get all absensi", res);
+      return response(200, result, "Berhasil get all absensi", res);
+    } catch (error) {
+      console.log(error);
+
+      return response(500, error, "Server error", res);
     }
-
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-
-    const totalData = await Absensi.find().countDocuments();
-
-    const data = await Absensi.find()
-      .populate("user", "name")
-      .populate("kelas")
-      .skip((page - 1) * limit)
-      .limit(limit);
-
-    result = {
-      data: data,
-      "total data": totalData,
-    };
-
-    response(200, result, "Berhasil get all absensi", res);
   },
 
   store: async (req, res) => {
