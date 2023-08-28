@@ -342,8 +342,15 @@ module.exports = {
     try {
       const { slug } = req.params;
       const result = await MateriModel.findOne({ slug }).populate(
-        "items.quiz items.tugas"
-      );
+        "items.tugas"
+      ).populate({
+        path: "items.quiz",
+        populate: {
+          path: "pembuat",
+          model: "User",
+        },
+      });
+      console.log(result);
 
       if (!result) {
         response(404, _id, "Materi tidak di temukan", res);
