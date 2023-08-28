@@ -301,20 +301,40 @@ module.exports = {
     }
   },
 
-  getAllSubmateri: async (req, res) => {
+  getSubmateriByClass: async (req, res) => {
     try {
-      let submateri = await MateriModel.find({
-        "items.quiz": { $ne: null },
-      }).populate("items.quiz items.tugas");
+      const slug = req.params.slug;
 
-      submateri = await User.populate(submateri, {
-        path: "items.quiz.pembuat",
-        select: "name",
+      const kelas = await KelasModel.findOne({
+        slug,
       });
 
-      response(200, submateri, "Submateri di dapat", res);
+      if (!kelas) {
+        return response(400, {}, "Kelas tidak ditemukan", res);
+      }
+
+      let data = [];
+
+      await Promise.all(
+        kelas.materi.map(async (row) => {
+          let submateri = await MateriModel.findById(row, {}).populate(
+            "items.quiz items.tugas"
+          );
+
+          submateri = await User.populate(submateri, {
+            path: "items.quiz.pembuat",
+            select: "name",
+          });
+
+          data.push({
+            submateri: submateri.items,
+          });
+        })
+      );
+
+      return response(200, data, "Submateri di dapat", res);
     } catch (error) {
-      response(500, error, "Server error", res);
+      return response(500, error, "Server error", res);
     }
   },
 

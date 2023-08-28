@@ -23,7 +23,7 @@ const auth = require("../middleware/auth");
 const Controller = require("../controllers/materi");
 
 router.get("/", auth.user, Controller.getAllMateri);
-router.get("/submateri", auth.user, Controller.getAllSubmateri);
+router.get("/submateri/:slug", auth.user, Controller.getSubmateriByClass);
 router.get("/:id", auth.user, Controller.getOneMateri);
 router.get("/slug/:slug", auth.user, Controller.getBySlugMateri);
 router.post("/", upload.array("attachments", 10), Controller.createMateri);
