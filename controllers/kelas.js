@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const KelasModel = require("../models/kelas");
 const UserModel = require("../models/user");
 const calonPesertaSchema = require("../models/calonpeserta");
+const RecentClass = require("../models/recentClass");
 const response = require("../respons/response");
 const uploadImage = require("../middleware/imagepath");
 const multer = require("multer");
@@ -876,57 +877,111 @@ module.exports = {
     }
   },
 
-  storeRecentClassIO: async (id) => {
+  getRecentClass: async (req, res) => {
     try {
-      const first = await KelasModel.findOne({
-        orderRecent: 1,
+      const data = await RecentClass.find({
+        kelas: req.params.id,
+        $and: [
+          {
+            user: req.user.id,
+          },
+        ],
+      }).sort({ number: -1 });
+
+      response(200, data, "Kelas terbaru berhasil ditemukan", res);
+    } catch (error) {
+      response(500, null, error.message, res);
+    }
+  },
+
+  storeRecentClassIO: async (id, id_user) => {
+    try {
+      const first = await RecentClass.findOne({
+        number: 1,
+        $and: [
+          {
+            kelas: id,
+          },
+          {
+            user: id_user,
+          },
+        ],
       });
 
-      const second = await KelasModel.findOne({
-        orderRecent: 2,
+      const second = await RecentClass.findOne({
+        number: 2,
+        $and: [
+          {
+            kelas: id,
+          },
+          {
+            user: id_user,
+          },
+        ],
       });
 
-      const third = await KelasModel.findOne({
-        orderRecent: 3,
+      const third = await RecentClass.findOne({
+        number: 3,
+        $and: [
+          {
+            kelas: id,
+          },
+          {
+            user: id_user,
+          },
+        ],
       });
 
-      const fourth = await KelasModel.findOne({
-        orderRecent: 4,
+      const fourth = await RecentClass.findOne({
+        number: 4,
+        $and: [
+          {
+            kelas: id,
+          },
+          {
+            user: id_user,
+          },
+        ],
       });
 
       if (first) {
-        await KelasModel.findByIdAndUpdate(first.id, {
-          orderRecent: 2,
+        await RecentClass.findByIdAndUpdate(first.id, {
+          number: 2,
         });
       }
 
       if (second) {
-        await KelasModel.findByIdAndUpdate(second.id, {
-          orderRecent: 3,
+        await RecentClass.findByIdAndUpdate(second.id, {
+          number: 3,
         });
       }
 
       if (third) {
-        await KelasModel.findByIdAndUpdate(third.id, {
-          orderRecent: 4,
+        await RecentClass.findByIdAndUpdate(third.id, {
+          number: 4,
         });
       }
 
       if (fourth) {
-        await KelasModel.findByIdAndUpdate(fourth.id, {
-          orderRecent: null,
-        });
+        await RecentClass.findByIdAndDelete(fourth.id);
       }
 
-      await KelasModel.findByIdAndUpdate(id, {
-        orderRecent: 1,
+      await RecentClass.findByIdAndUpdate(id, {
+        number: 1,
+        kelas: id,
+        user: id_user,
       });
 
-      const data = await KelasModel.find({
-        orderRecent: { $ne: null },
-      });
+      const data = await RecentClass.find({
+        kelas: id,
+        $and: [
+          {
+            user: id_user,
+          },
+        ],
+      }).sort({ number: -1 });
 
-      return response(200, data, "Kelas berhasil ditemukan", res);
+      return data;
     } catch (error) {
       response(500, null, error.message, res);
     }

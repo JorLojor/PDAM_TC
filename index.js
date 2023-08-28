@@ -69,16 +69,17 @@ io.on("connection", (socket) => {
     console.log(room, sender, chat);
     try {
       const send = await storeIo({ room, sender, chat });
+
       io.emit("new-message", send);
     } catch (error) {
       console.log(error);
     }
   });
 
-  socket.on("save-recent-class", async ({ id }) => {
-    console.log(room, sender, chat);
+  socket.on("save-recent-class", async ({ id, id_user }) => {
     try {
-      const recentClass = await storeRecentClassIO({ id });
+      const recentClass = await storeRecentClassIO({ id, id_user });
+
       io.emit("recent-class", recentClass);
     } catch (error) {
       console.log(error);
