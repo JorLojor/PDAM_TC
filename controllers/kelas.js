@@ -69,9 +69,7 @@ module.exports = {
     const id = req.params.id;
 
     try {
-      let kelas = await KelasModel.findById(id).populate(
-        "materi peserta"
-      );
+      let kelas = await KelasModel.findById(id).populate("materi peserta");
 
       if (!kelas) {
         response(404, id, "Kelas tidak ditemukan", res);
@@ -86,16 +84,16 @@ module.exports = {
     const slug = req.params.slug;
 
     try {
-      let kelas = await KelasModel.findOne({ slug: slug }).populate(
-        "materi peserta kategori"
-      ).populate({
-        path: 'desainSertifikat.peserta',
-        model: 'Sertifikat', // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
-      })
-      .populate({
-        path: 'desainSertifikat.instruktur',
-        model: 'Sertifikat', // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
-      });;
+      let kelas = await KelasModel.findOne({ slug: slug })
+        .populate("materi peserta kategori")
+        .populate({
+          path: "desainSertifikat.peserta",
+          model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
+        })
+        .populate({
+          path: "desainSertifikat.instruktur",
+          model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+        });
 
       if (!kelas) {
         response(404, id, "Kelas tidak ditemukan", res);
@@ -110,39 +108,41 @@ module.exports = {
     const kodeNotaDinas = req.body.kodeNotaDinas;
 
     try {
-      let kelas = await KelasModel.findOne({ kodeNotaDinas: kodeNotaDinas }).populate(
-        "materi peserta kategori status"
-      );
+      let kelas = await KelasModel.findOne({
+        kodeNotaDinas: kodeNotaDinas,
+      }).populate("materi peserta kategori status");
 
       if (!kelas) {
-        res.status(404).json(kelas)
+        res.status(404).json(kelas);
         return;
       }
 
-      res.json(kelas)
+      res.json(kelas);
     } catch (error) {
       response(500, error, error.message, res);
     }
   },
-  getKelasByInstruktur:async(req,res)=>{
-    const {instruktur} = req.params;
+  getKelasByInstruktur: async (req, res) => {
+    const { instruktur } = req.params;
 
     try {
       const get = await KelasModel.find({ instruktur })
         .populate("materi kategori")
         .populate({
-          path: 'materi.items.tugas',
-          model: 'Tugas',
-        }).lean()
+          path: "materi.items.tugas",
+          model: "Tugas",
+        })
+        .lean()
         .exec();
-      response(200, get, 'Kelas berhasil ditemukan', res);
+      response(200, get, "Kelas berhasil ditemukan", res);
     } catch (error) {
       response(500, null, error.message, res);
     }
   },
+
   createKelasTest: async (req, res) => {
-    const session = await mongoose.startSession()
-    session.startTransaction()
+    const session = await mongoose.startSession();
+    session.startTransaction();
 
     try {
       const {
@@ -160,37 +160,52 @@ module.exports = {
         kelasType,
         kodeNotaDinas,
         link,
-        absensi
+        absensi,
       } = req.body;
 
       let imageKelas = null;
-      let status = 'pending'
+      let status = "pending";
 
       if (req.file) {
         imageKelas = req.file.path.split("/PDAM_TC/")[1];
       }
 
-      const checkKelas = await KelasModel.findOne({kodeNotaDinas}).session(session)
+      const checkKelas = await KelasModel.findOne({ kodeNotaDinas }).session(
+        session
+      );
 
       if (checkKelas) {
-        response(403,checkKelas,`Kode Nota Dinas sudah terdaftar di kelas lain! (${checkKelas.nama})`,res)
-        await session.abortTransaction()
+        response(
+          403,
+          checkKelas,
+          `Kode Nota Dinas sudah terdaftar di kelas lain! (${checkKelas.nama})`,
+          res
+        );
+        await session.abortTransaction();
         return;
       }
-      
-      const getND = await axios.post(process.env.url_rab+'nd/global/check',{},{
-        headers:{
-          Authorization:`Bearer ${process.env.key_for_grant_access}`
+
+      const getND = await axios.post(
+        process.env.url_rab + "nd/global/check",
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${process.env.key_for_grant_access}`,
+          },
         }
-      })
+      );
 
       if (getND.data) {
-        const filtered = getND.data.filter(v => v.kodeND === kodeNotaDinas)
+        const filtered = getND.data.filter((v) => v.kodeND === kodeNotaDinas);
         if (filtered.length !== 0) {
-          status = filtered[0].status === 'pending' ? 'pending' : filtered[0].status === 'Approved' ? 'draft' : 'declined'
+          status =
+            filtered[0].status === "pending"
+              ? "pending"
+              : filtered[0].status === "Approved"
+              ? "draft"
+              : "declined";
         }
       }
-
 
       const kelas = new KelasModel({
         kodeKelas,
@@ -203,7 +218,7 @@ module.exports = {
         kategori,
         peserta,
         instruktur,
-        materi : JSON.parse(materi),
+        materi: JSON.parse(materi),
         absensi,
         jadwal,
         kelasType,
@@ -211,20 +226,21 @@ module.exports = {
         image: imageKelas,
         linkPelatihan: link,
         kategori,
-        status
+        status,
       });
 
-      const result = await kelas.save({session});
+      const result = await kelas.save({ session });
 
-      await session.commitTransaction()
+      await session.commitTransaction();
       response(200, kelas, "Kelas berhasil di buat", res);
     } catch (error) {
       response(500, error, error.message, res);
-      await session.abortTransaction()
-    } finally{
-      session.endSession()
+      await session.abortTransaction();
+    } finally {
+      session.endSession();
     }
   },
+
   updateKelasAdminSide: async (req, res) => {
     try {
       const id = req.params.id;
@@ -242,9 +258,13 @@ module.exports = {
     try {
       const slug = req.params.slug;
       const updated = req.body;
-      const result = await KelasModel.findOneAndUpdate({slug:slug}, updated, {
-        new: true,
-      });
+      const result = await KelasModel.findOneAndUpdate(
+        { slug: slug },
+        updated,
+        {
+          new: true,
+        }
+      );
 
       response(200, result, "Kelas berhasil di update", res);
     } catch (error) {
@@ -253,10 +273,14 @@ module.exports = {
   },
   updateKelasWithND: async (req, res) => {
     try {
-      const {nd,...rest} = req.body
-      const result = await KelasModel.findOneAndUpdate({kodeNotaDinas:nd}, {$set:{...rest}}, {
-        new: true,
-      });
+      const { nd, ...rest } = req.body;
+      const result = await KelasModel.findOneAndUpdate(
+        { kodeNotaDinas: nd },
+        { $set: { ...rest } },
+        {
+          new: true,
+        }
+      );
 
       console.log(result);
 
@@ -284,26 +308,29 @@ module.exports = {
   },
   deleteKelas: async (req, res) => {
     const id = req.params.id;
-    const session = await mongoose.startSession()
-    session.startTransaction()
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
-
-      const checkKelas = await KelasModel.findOne({_id:id}).session(session)
+      const checkKelas = await KelasModel.findOne({ _id: id }).session(session);
       if (checkKelas.peserta.length !== 0) {
-        response(500,checkKelas,'Kelas ini sudah memiliki peserta , tidak bisa dihapus!',res)
-      await session.abortTransaction()
+        response(
+          500,
+          checkKelas,
+          "Kelas ini sudah memiliki peserta , tidak bisa dihapus!",
+          res
+        );
+        await session.abortTransaction();
         return;
       }
-      const result = await KelasModel.findByIdAndDelete(id,{session});
+      const result = await KelasModel.findByIdAndDelete(id, { session });
 
-      await session.commitTransaction()
+      await session.commitTransaction();
       response(200, result, "Kelas berhasil di hapus", res);
     } catch (error) {
       response(500, error, error.message, res);
-      await session.abortTransaction()
-
-    } finally{
-    session.endSession()
+      await session.abortTransaction();
+    } finally {
+      session.endSession();
     }
   },
   deactivatedKelas: async (req, res) => {
@@ -427,12 +454,12 @@ module.exports = {
 
           extractedPesertaKelas.push({
             user: resultUser._id,
-            status:'approved'
+            status: "approved",
           });
 
           extractedKelasUser.push({
             kelas: resultkelas._id,
-            status:'approved'
+            status: "approved",
           });
 
           const resultEditKelas = await KelasModel.findOneAndUpdate(
@@ -538,48 +565,68 @@ module.exports = {
     }
   },
   approvePeserta: async (req, res) => {
-    const {slug, iduser} = req.params
-    const {status} = req.body;
+    const { slug, iduser } = req.params;
+    const { status } = req.body;
 
-    const session = await mongoose.startSession()
-    session.startTransaction()
-    
+    const session = await mongoose.startSession();
+    session.startTransaction();
+
     try {
-      const get = await KelasModel.findOne({ slug }).select('peserta').session(session);
+      const get = await KelasModel.findOne({ slug })
+        .select("peserta")
+        .session(session);
 
-      const extracted = [...get.peserta]
+      const extracted = [...get.peserta];
 
-      const selectPeserta = extracted.filter(v => v.user.toString() === iduser)
-      const withoutSelected = extracted.filter(v => v.user.toString() !== iduser)
+      const selectPeserta = extracted.filter(
+        (v) => v.user.toString() === iduser
+      );
+      const withoutSelected = extracted.filter(
+        (v) => v.user.toString() !== iduser
+      );
 
-      selectPeserta[0].status = status
+      selectPeserta[0].status = status;
 
-      const mergePesertaList = [...withoutSelected,...selectPeserta]
+      const mergePesertaList = [...withoutSelected, ...selectPeserta];
 
-      await KelasModel.findOneAndUpdate({slug},{$set:{peserta:mergePesertaList}},{new:true,session})
-      
-      const getUser = await UserModel.findOne({ _id:iduser }).select('kelas').session(session);
-      
-      const extractUser = [...getUser.kelas]
+      await KelasModel.findOneAndUpdate(
+        { slug },
+        { $set: { peserta: mergePesertaList } },
+        { new: true, session }
+      );
 
-      const selectKelas = extractUser.filter(v => v.kelas.toString() === get._id.toString())
-      const withoutSelectedKelas = extractUser.filter(v => v.kelas.toString() !== get._id.toString())
+      const getUser = await UserModel.findOne({ _id: iduser })
+        .select("kelas")
+        .session(session);
 
-      selectKelas[0].status = status
+      const extractUser = [...getUser.kelas];
 
-      const mergeKelasList = [...withoutSelectedKelas,...selectKelas]
+      const selectKelas = extractUser.filter(
+        (v) => v.kelas.toString() === get._id.toString()
+      );
+      const withoutSelectedKelas = extractUser.filter(
+        (v) => v.kelas.toString() !== get._id.toString()
+      );
 
-      const resp = await UserModel.findOneAndUpdate({_id:iduser},{$set:{kelas:mergeKelasList}},{new:true,session})
-      
-      await session.commitTransaction()
+      selectKelas[0].status = status;
 
-      response(200,resp,'Berhasil merubah status',res)
+      const mergeKelasList = [...withoutSelectedKelas, ...selectKelas];
+
+      const resp = await UserModel.findOneAndUpdate(
+        { _id: iduser },
+        { $set: { kelas: mergeKelasList } },
+        { new: true, session }
+      );
+
+      await session.commitTransaction();
+
+      response(200, resp, "Berhasil merubah status", res);
     } catch (error) {
       console.log(error.message);
       response(500, error, "Server error", res);
-      await session.abortTransaction()
-    } finally{
-      session.endSession()
+      await session.abortTransaction();
+    } finally {
+      session.endSession();
     }
   },
   getMateriKelas: async (req, res) => {
@@ -587,30 +634,33 @@ module.exports = {
 
     try {
       let kelas = await KelasModel.findOne({ slug: slug })
-      .populate({
-        path:'materi',
-        populate:{
-          path:'instruktur',
-          model:'User',
-          populate:{
-            path:'rating',
-            model:'rating'
-          }
-        }
-      }).populate({
-          path: 'materi', // Populate the 'materi' array
+        .populate({
+          path: "materi",
           populate: {
-            path: 'items.tugas', // Populate the 'tugas' field within the 'materi' array
-            model: 'Tugas', // The Tugas model
+            path: "instruktur",
+            model: "User",
+            populate: {
+              path: "rating",
+              model: "rating",
+            },
           },
-        }).populate({
-          path:'materi',
-          populate:{
-            path:'test.pre test.post',
-            model:'Test'
-          }
         })
-        .select("materi nama").exec();
+        .populate({
+          path: "materi", // Populate the 'materi' array
+          populate: {
+            path: "items.tugas", // Populate the 'tugas' field within the 'materi' array
+            model: "Tugas", // The Tugas model
+          },
+        })
+        .populate({
+          path: "materi",
+          populate: {
+            path: "test.pre test.post",
+            model: "Test",
+          },
+        })
+        .select("materi nama")
+        .exec();
 
       if (!kelas) {
         response(404, id, "Materi tidak ditemukan", res);
@@ -627,14 +677,15 @@ module.exports = {
       let totalData;
 
       if (isPaginate === 0) {
-        const data = await KelasModel.find({ ...req.body }).populate({
-          path: 'desainSertifikat.peserta',
-          model: 'Sertifikat', // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
-        })
-        .populate({
-          path: 'desainSertifikat.instruktur',
-          model: 'Sertifikat', // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
-        });
+        const data = await KelasModel.find({ ...req.body })
+          .populate({
+            path: "desainSertifikat.peserta",
+            model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
+          })
+          .populate({
+            path: "desainSertifikat.instruktur",
+            model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+          });
         if (data) {
           totalData = data.length;
         }
@@ -651,13 +702,14 @@ module.exports = {
 
       const data = await KelasModel.find({ ...req.body })
         .skip((page - 1) * limit)
-        .limit(limit).populate({
-          path: 'desainSertifikat.peserta',
-          model: 'Sertifikat', // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
+        .limit(limit)
+        .populate({
+          path: "desainSertifikat.peserta",
+          model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
         })
         .populate({
-          path: 'desainSertifikat.instruktur',
-          model: 'Sertifikat', // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+          path: "desainSertifikat.instruktur",
+          model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
         });
 
       if (data) {
@@ -688,15 +740,18 @@ module.exports = {
       let pesertaIds = getKelas.peserta.map((v) => v.user);
 
       if (isPaginate === 0) {
-        let peserta
+        let peserta;
 
         peserta = await UserModel.find({ _id: { $in: pesertaIds } });
         if (type) {
-          peserta = await UserModel.find({ _id: { $in: pesertaIds },userType:type });
+          peserta = await UserModel.find({
+            _id: { $in: pesertaIds },
+            userType: type,
+          });
         }
-        const checkKelasHasSome = peserta.filter((pes)=>{
-          return pes.kelas.some((kelas)=> kelas.status === status)
-        })
+        const checkKelasHasSome = peserta.filter((pes) => {
+          return pes.kelas.some((kelas) => kelas.status === status);
+        });
         if (peserta) {
           totalData = peserta.length;
         }
@@ -712,26 +767,28 @@ module.exports = {
       let peserta;
 
       peserta = await UserModel.find({ _id: { $in: pesertaIds } })
-          .skip((page - 1) * limit)
-          .limit(limit)
+        .skip((page - 1) * limit)
+        .limit(limit);
 
       if (type) {
-        peserta = await UserModel.find({ _id: { $in: pesertaIds },userType:type })
+        peserta = await UserModel.find({
+          _id: { $in: pesertaIds },
+          userType: type,
+        })
           .skip((page - 1) * limit)
-          .limit(limit)
+          .limit(limit);
       }
-        // .populate("instruktur");
+      // .populate("instruktur");
 
-        let checkKelasHasSome
+      let checkKelasHasSome;
 
-        checkKelasHasSome = peserta
+      checkKelasHasSome = peserta;
 
-        if (status) {
-          checkKelasHasSome = peserta.filter((pes)=>{
-            return pes.kelas.some((kelas)=> kelas.status === status)
-          })
-        }
-
+      if (status) {
+        checkKelasHasSome = peserta.filter((pes) => {
+          return pes.kelas.some((kelas) => kelas.status === status);
+        });
+      }
 
       if (peserta) {
         totalData = peserta.length;
@@ -741,8 +798,8 @@ module.exports = {
         name: getKelas.nama,
         peserta: checkKelasHasSome,
         total: totalData,
-        page:page,
-        limit:limit
+        page: page,
+        limit: limit,
       };
 
       response(200, result, "Data Peserta ditemukan", res);
@@ -750,45 +807,57 @@ module.exports = {
       response(500, error.message, error.message, res);
     }
   },
-  kickPeserta:async (req,res) =>{
-    const {slug,id} = req.body
+  kickPeserta: async (req, res) => {
+    const { slug, id } = req.body;
 
-    const session = await mongoose.startSession()
-    session.startTransaction()
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
+      const getKelas = await KelasModel.findOne({ slug }).session(session);
+      const getUser = await UserModel.findOne({ _id: id }).session(session);
 
-      const getKelas = await KelasModel.findOne({slug}).session(session)
-      const getUser = await UserModel.findOne({_id:id}).session(session)
+      const kelasWithoutUser = getKelas.peserta.filter(
+        (v) => v.user.toString() !== getUser._id.toString()
+      );
+      const updateKelas = await KelasModel.findOneAndUpdate(
+        { slug },
+        { $set: { peserta: kelasWithoutUser } },
+        { new: true, session }
+      );
 
-      const kelasWithoutUser = getKelas.peserta.filter(v => v.user.toString() !== getUser._id.toString())
-      const updateKelas = await KelasModel.findOneAndUpdate({slug},{$set:{peserta:kelasWithoutUser}},{new:true,session})
-      
-      const userWithoutKelas = getUser.kelas.filter(v => v.kelas.toString() !== getKelas._id.toString())
-      const updateUser = await UserModel.findOneAndUpdate({_id:id},{$set:{kelas:userWithoutKelas}},{new:true,session})
+      const userWithoutKelas = getUser.kelas.filter(
+        (v) => v.kelas.toString() !== getKelas._id.toString()
+      );
+      const updateUser = await UserModel.findOneAndUpdate(
+        { _id: id },
+        { $set: { kelas: userWithoutKelas } },
+        { new: true, session }
+      );
 
-      await session.commitTransaction()
-      response(200,updateKelas,'Berhasil mengeluarkan user dari kelas',res)
+      await session.commitTransaction();
+      response(200, updateKelas, "Berhasil mengeluarkan user dari kelas", res);
     } catch (error) {
-      response(500,error,error.message,res)
-      await session.abortTransaction()
+      response(500, error, error.message, res);
+      await session.abortTransaction();
     } finally {
-      session.endSession()
+      session.endSession();
     }
   },
-  listKelasAbsenUser: async(req,res)=>{
-    const {iduser} = req.params;
+  listKelasAbsenUser: async (req, res) => {
+    const { iduser } = req.params;
 
     try {
-      const get = await KelasModel.find({ 'peserta.user': iduser })
+      const get = await KelasModel.find({ "peserta.user": iduser })
         .populate("materi kategori")
         .populate({
-          path: 'materi.items.tugas',
-          model: 'Tugas',
-        }).lean()
+          path: "materi.items.tugas",
+          model: "Tugas",
+        })
+        .lean()
         .exec();
-      response(200, get, 'Kelas berhasil ditemukan', res);
-    }catch(error){
+      response(200, get, "Kelas berhasil ditemukan", res);
+    } catch (error) {
       response(500, null, error.message, res);
     }
-  }
+  },
 };
