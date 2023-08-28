@@ -42,6 +42,7 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   nilaiPerKelas: async (req, res) => {
     const kelasId = req.params.id;
     try {
@@ -65,6 +66,7 @@ module.exports = {
       response(500, error, "Server error", res);
     }
   },
+
   getOneKelas: async (req, res) => {
     const id = req.params.id;
 
@@ -80,6 +82,7 @@ module.exports = {
       response(500, error, "Server error", res);
     }
   },
+
   getOneKelasBySlug: async (req, res) => {
     const slug = req.params.slug;
 
@@ -104,6 +107,7 @@ module.exports = {
       response(500, error, "Server error", res);
     }
   },
+
   getOneKelasByND: async (req, res) => {
     const kodeNotaDinas = req.body.kodeNotaDinas;
 
@@ -254,6 +258,7 @@ module.exports = {
       response(500, error, "Server error", res);
     }
   },
+
   updateKelasAdminSlug: async (req, res) => {
     try {
       const slug = req.params.slug;
@@ -271,6 +276,7 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   updateKelasWithND: async (req, res) => {
     try {
       const { nd, ...rest } = req.body;
@@ -289,6 +295,7 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   updateKelasInstrukturSide: async (req, res) => {
     try {
       const id = req.params.id;
@@ -306,6 +313,7 @@ module.exports = {
       response(500, error, "Server error", res);
     }
   },
+
   deleteKelas: async (req, res) => {
     const id = req.params.id;
     const session = await mongoose.startSession();
@@ -333,6 +341,7 @@ module.exports = {
       session.endSession();
     }
   },
+
   deactivatedKelas: async (req, res) => {
     // menonaktifkan kelas
     try {
@@ -348,6 +357,7 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   activateKelas: async (req, res) => {
     // menonaktifkan kelas
     try {
@@ -497,6 +507,7 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   enrollmentKelas: async (req, res) => {
     try {
       const id = req.params.id;
@@ -564,6 +575,7 @@ module.exports = {
       response(500, error, "Server error", res);
     }
   },
+
   approvePeserta: async (req, res) => {
     const { slug, iduser } = req.params;
     const { status } = req.body;
@@ -629,6 +641,7 @@ module.exports = {
       session.endSession();
     }
   },
+
   getMateriKelas: async (req, res) => {
     const { slug } = req.params;
 
@@ -671,6 +684,7 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   getWithFilter: async (req, res) => {
     try {
       const isPaginate = parseInt(req.query.paginate);
@@ -726,6 +740,7 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   getPesertaKelas: async (req, res) => {
     const { slug } = req.params;
     let totalData;
@@ -856,6 +871,62 @@ module.exports = {
         .lean()
         .exec();
       response(200, get, "Kelas berhasil ditemukan", res);
+    } catch (error) {
+      response(500, null, error.message, res);
+    }
+  },
+
+  storeRecentClassIO: async (id) => {
+    try {
+      const first = await KelasModel.findOne({
+        orderRecent: 1,
+      });
+
+      const second = await KelasModel.findOne({
+        orderRecent: 2,
+      });
+
+      const third = await KelasModel.findOne({
+        orderRecent: 3,
+      });
+
+      const fourth = await KelasModel.findOne({
+        orderRecent: 4,
+      });
+
+      if (first) {
+        await KelasModel.findByIdAndUpdate(first.id, {
+          orderRecent: 2,
+        });
+      }
+
+      if (second) {
+        await KelasModel.findByIdAndUpdate(second.id, {
+          orderRecent: 3,
+        });
+      }
+
+      if (third) {
+        await KelasModel.findByIdAndUpdate(third.id, {
+          orderRecent: 4,
+        });
+      }
+
+      if (fourth) {
+        await KelasModel.findByIdAndUpdate(fourth.id, {
+          orderRecent: null,
+        });
+      }
+
+      await KelasModel.findByIdAndUpdate(id, {
+        orderRecent: 1,
+      });
+
+      const data = await KelasModel.find({
+        orderRecent: { $ne: null },
+      });
+
+      return response(200, data, "Kelas berhasil ditemukan", res);
     } catch (error) {
       response(500, null, error.message, res);
     }

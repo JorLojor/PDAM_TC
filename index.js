@@ -39,6 +39,7 @@ const kategoriRoutes = require("./routers/kategori");
 const testRoutes = require("./routers/test");
 const absenRoutes = require("./routers/absensi");
 const { storeIo } = require("./controllers/chat");
+const { storeRecentClassIO } = require("./controllers/kelas");
 const { log } = require("console");
 // routes
 
@@ -64,15 +65,25 @@ app.get("/", (req, res) => {
 io.on("connection", (socket) => {
   console.log("User connected to socket!");
 
-  socket.on('send-message',async({room,sender,chat})=>{
-    console.log(room,sender,chat)
+  socket.on("send-message", async ({ room, sender, chat }) => {
+    console.log(room, sender, chat);
     try {
-      const send = await storeIo({room,sender,chat})
-      io.emit('new-message',send)
+      const send = await storeIo({ room, sender, chat });
+      io.emit("new-message", send);
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  })
+  });
+
+  socket.on("save-recent-class", async ({ id }) => {
+    console.log(room, sender, chat);
+    try {
+      const recentClass = await storeRecentClassIO({ id });
+      io.emit("recent-class", recentClass);
+    } catch (error) {
+      console.log(error);
+    }
+  });
 });
 
 server.listen(process.env.local_port, () => {

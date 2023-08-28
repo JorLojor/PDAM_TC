@@ -155,6 +155,7 @@ module.exports = {
       return response(500, error, "Server error", res);
     }
   },
+
   storeIo: async ({ chat, room: roomId, sender }) => {
     try {
       if (!chat) {
