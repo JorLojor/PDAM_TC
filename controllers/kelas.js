@@ -930,28 +930,28 @@ module.exports = {
       });
 
       if (first) {
-        await RecentClass.findByIdAndUpdate(first.id, {
+        await RecentClass.findByIdAndUpdate(first._id, {
           number: 2,
         });
       }
 
       if (second) {
-        await RecentClass.findByIdAndUpdate(second.id, {
+        await RecentClass.findByIdAndUpdate(second._id, {
           number: 3,
         });
       }
 
       if (third) {
-        await RecentClass.findByIdAndUpdate(third.id, {
+        await RecentClass.findByIdAndUpdate(third._id, {
           number: 4,
         });
       }
 
       if (fourth) {
-        await RecentClass.findByIdAndDelete(fourth.id);
+        await RecentClass.findByIdAndDelete(fourth._id);
       }
 
-      await RecentClass.findByIdAndUpdate(id, {
+      await RecentClass.create({
         number: 1,
         kelas: id,
         user: id_user,
