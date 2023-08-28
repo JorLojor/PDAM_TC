@@ -27,7 +27,7 @@ module.exports = {
         });
       });
 
-      return response(200, data, "berhasil get tugas", res);
+      return response(200, task, "berhasil get tugas", res);
     } catch (error) {
       return response(500, error, "Server error", res);
     }
