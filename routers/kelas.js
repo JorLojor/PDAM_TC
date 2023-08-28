@@ -25,7 +25,6 @@ router.post('/nd/',auth.server ,Controller.getOneKelasByND);
 router.get('/materi/:slug',auth.user ,Controller.getMateriKelas);
 router.post('/peserta/:slug',auth.user,Controller.getPesertaKelas);
 router.post('/filtered',auth.user ,Controller.getWithFilter);
-router.post('/', auth.admin,Controller.createKelas);
 router.put('/admin/:id', auth.admin,Controller.updateKelasAdminSide);
 router.put('/adminSlug/:slug', auth.admin,Controller.updateKelasAdminSlug);
 router.put('/status/nd',auth.server,Controller.updateKelasWithND);
@@ -37,6 +36,7 @@ router.put('/assign/:slug', auth.user,Controller.assignPesertaKelas)
 router.put('/test/:id',auth.user,Controller.enrolKelas) //testing
 router.put('/kick',auth.admin,Controller.kickPeserta) //testing
 router.post('/test',auth.admin,upload.single('featured_image'),Controller.createKelasTest); // testing
+router.get('/list/absen/:iduser',auth.user,Controller.listKelasAbsenUser)
 
 router.delete('/:id', auth.admin,Controller.deleteKelas);
 router.put('/deactivate/:id', auth.admin,Controller.deactivatedKelas);// deactive kelas

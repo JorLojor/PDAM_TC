@@ -10,7 +10,6 @@ const { default: axios } = require("axios");
 
 module.exports = {
   getAllKelas: async (req, res) => {
-    // make paginatiomm
     try {
       const halaman = parseInt(req.query.halaman) || 1;
       const batas = parseInt(req.query.batas) || 5;
@@ -141,48 +140,6 @@ module.exports = {
       response(500, null, error.message, res);
     }
   },
-  createKelas: async (req, res) => {
-    try {
-      const {
-        kodeKelas,
-        nama,
-        harga,
-        kapasitasPeserta,
-        description,
-        methods,
-        instruktur,
-        peserta,
-        materi,
-        jadwal,
-        kodeNotaDinas,
-        absensi
-      } = req.body;
-
-      const kelas = new KelasModel({
-        kodeKelas,
-        nama,
-        slug: _.kebabCase(nama),
-        harga,
-        image: featured_image,
-        kapasitasPeserta,
-        description,
-        methods,
-        absensi,
-        peserta,
-        instruktur,
-        materi,
-        jadwal,
-        kodeNotaDinas,
-      });
-
-      const result = await kelas.save();
-
-      response(200, result, "Kelas berhasil di buat", res);
-    } catch (error) {
-      console.log(error);
-      response(500, error, "Server error", res);
-    }
-  },
   createKelasTest: async (req, res) => {
     const session = await mongoose.startSession()
     session.startTransaction()
@@ -205,8 +162,6 @@ module.exports = {
         link,
         absensi
       } = req.body;
-
-      console.log(req.body);
 
       let imageKelas = null;
       let status = 'pending'
@@ -632,12 +587,28 @@ module.exports = {
 
     try {
       let kelas = await KelasModel.findOne({ slug: slug })
-        .populate({
+      .populate({
+        path:'materi',
+        populate:{
+          path:'instruktur',
+          model:'User',
+          populate:{
+            path:'rating',
+            model:'rating'
+          }
+        }
+      }).populate({
           path: 'materi', // Populate the 'materi' array
           populate: {
-            path: 'instruktur', // Populate the 'instruktur' field within the 'materi' array
-            model: 'User', // The Instruktur model
+            path: 'items.tugas', // Populate the 'tugas' field within the 'materi' array
+            model: 'Tugas', // The Tugas model
           },
+        }).populate({
+          path:'materi',
+          populate:{
+            path:'test.pre test.post',
+            model:'Test'
+          }
         })
         .select("materi nama").exec();
 
@@ -802,6 +773,22 @@ module.exports = {
       await session.abortTransaction()
     } finally {
       session.endSession()
+    }
+  },
+  listKelasAbsenUser: async(req,res)=>{
+    const {iduser} = req.params;
+
+    try {
+      const get = await KelasModel.find({ 'peserta.user': iduser })
+        .populate("materi kategori")
+        .populate({
+          path: 'materi.items.tugas',
+          model: 'Tugas',
+        }).lean()
+        .exec();
+      response(200, get, 'Kelas berhasil ditemukan', res);
+    }catch(error){
+      response(500, null, error.message, res);
     }
   }
 };

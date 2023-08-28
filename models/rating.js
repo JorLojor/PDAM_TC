@@ -7,5 +7,5 @@ const RatingSchema =  new Schema({
     comment : {type: String, required: true}
 },{ timestamps: true })
 
-module.exports = mongoose.model('Rating', RatingSchema)
+module.exports = mongoose.model('rating', RatingSchema)
 

@@ -48,7 +48,6 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
-  //registrasi untuk pendafataran peserta diluar PDAM (eksternal)
   register: async (req, res) => {
     try {
       const { name, email, username, password } = req.body;
@@ -442,34 +441,53 @@ module.exports = {
       response(500, null, error.message, res);
     }
   },
-  rate:async(req,res)=>{
+  rate: async (req, res) => {
     const session = await mongoose.startSession();
-    session.startTransaction();
+  
     try {
-      const { user, rating, comment } = req.body
-      const { id } = req.params
-      let rate = new ratingModel({
-          user, rating, comment
-      })
-      const saveRate = rate.save({session})
+      await session.withTransaction(async () => {
+        const { user, rating, comment } = req.body;
+        const { id } = req.params;
+        let rate = new ratingModel({
+          user,
+          rating,
+          comment
+        });
+  
+        const saveRate = await rate.save({ session });
+  
+        const getRatingUser = await userModel.findOne({ _id: id }).session(session);
+  
+        if (!getRatingUser) {
+          response(500, null, 'Terjadi kesalahan saat update rating user!', res);
+          return;
+        }
 
-      console.log(id);
-
-      const updateRatingUser = await userModel.findOneAndUpdate({_id:new mongoose.Types.ObjectId(id)},{$push:{rating:saveRate._id}},{new:true,session})
-
-      if (!updateRatingUser) {
-        await session.abortTransaction();
-        response(500, null, 'Terjadi kesalahan saat update rating user!', res);
-        return;
-      }
-
-      await session.commitTransaction()
-      response(200, updateRatingUser, 'Rating berhasil dimasukan', res);
-    }catch(error){
-      await session.abortTransaction();
+        const newRating = [...getRatingUser.rating, saveRate._id]
+  
+        const updateRatingUser = await userModel.findOneAndUpdate(
+          { _id: id },
+          { rating: newRating },
+          { new: true, session }
+        );
+  
+        if (!updateRatingUser) {
+          response(500, null, 'Terjadi kesalahan saat update rating user!', res);
+          return;
+        }
+  
+        response(200, updateRatingUser, 'Rating berhasil dimasukan', res);
+      });
+  
+      // Commit the transaction
+      await session.commitTransaction();
+    } catch (error) {
+      // Abort the transaction on error
+      // await session.abortTransaction();
       response(500, error, error.message, res);
     } finally {
-      session.endSession()
+      // End the session
+      session.endSession();
     }
   }
 };

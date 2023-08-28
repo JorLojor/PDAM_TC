@@ -15,7 +15,7 @@ const userSchema = new Schema({
     kelas : [{type: kelasInUserSchema, required:false}],
     spesialis: {type: String},// spesialis, req false
     nilai: [{type: mongoose.Schema.Types.ObjectId, required: false, ref: 'nilai'}],// nilai ref nilai,
-    rating:[{type: mongoose.Schema.Types.ObjectId, required: false, ref: 'rating'}],// rating ref rating,
+    rating:[{type: mongoose.Schema.Types.ObjectId, required: false, ref: 'rating',default:[]}],// rating ref rating,
     status : {type : String, required : true, default : 'pending'},// status registrasi -> pending,declined,accepted
     access_token:{type:String,required:false}
 },{ timestamps: true });
