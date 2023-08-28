@@ -33,7 +33,12 @@ router.post(
 );
 
 router.post("/filtered", Controller.getTugasFiltered);
-router.put("/:id", auth.instruktur, Controller.updateTugas);
+router.put(
+  "/:id",
+  auth.instruktur,
+  upload.single("attachment"),
+  Controller.updateTugas
+);
 router.delete("/:id", auth.instruktur, Controller.deleteTugas);
 
 router.put(

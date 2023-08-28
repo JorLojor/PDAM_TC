@@ -98,6 +98,8 @@ module.exports = {
     try {
       const { title, instruction, deadline, materi } = req.body;
 
+      let attachment = "";
+
       const materiData = await MateriModel.findOne({ slug: materi });
 
       if (!materiData) {
@@ -367,11 +369,40 @@ module.exports = {
   // test
   updateTugas: async (req, res) => {
     const id = req.params.id;
-    const update = req.body;
+
+    let attachment = "";
+
+    const { title, instruction, deadline, materi } = req.body;
+
+    const materiData = await MateriModel.findOne({ slug: materi });
+
+    if (!materiData) {
+      response(500, null, "Materi tidak ditemukan", res);
+    }
+
+    const oldData = await tugasSchema.findById(id, {});
+
+    if (req.file) {
+      attachment = req.file.path.split("/PDAM_TC/")[1];
+    } else {
+      attachment = oldData.attachment;
+    }
+
     try {
-      const tugas = await tugasSchema.findByIdAndUpdate(id, update, {
-        new: true,
-      });
+      const tugas = await tugasSchema.findByIdAndUpdate(
+        id,
+        {
+          title,
+          instruction,
+          deadline,
+          attachment,
+          materi: materiData._id,
+        },
+        {
+          new: true,
+        }
+      );
+
       response(200, tugas, "tugas berhasil di update", res);
     } catch (error) {
       response(500, error, "Server error failed to update", res);
