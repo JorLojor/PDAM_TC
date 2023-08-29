@@ -27,6 +27,11 @@ router.get("/submateri/:slug", auth.user, Controller.getSubmateriByClass);
 router.get("/:id", auth.user, Controller.getOneMateri);
 router.get("/slug/:slug", auth.user, Controller.getBySlugMateri);
 router.post("/", upload.array("attachments", 10), Controller.createMateri);
+router.post(
+  "/filtered",
+  upload.array("attachments", 10),
+  Controller.getFiltered
+);
 router.put(
   "/:id",
   auth.instruktur,

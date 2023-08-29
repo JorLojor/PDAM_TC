@@ -47,6 +47,48 @@ module.exports = {
     }
   },
 
+  getFiltered: async (req, res) => {
+    try {
+      let { page, limits, isPaginate } = req.query;
+      const totalData = await MateriModel.find({
+        ...req.body,
+      }).countDocuments();
+
+      if (isPaginate === 0) {
+        const data = await MateriModel.find({
+          ...req.body,
+        }).populate("instruktur items.tugas");
+
+        result = {
+          data: data,
+          "total data": totalData,
+        };
+
+        response(200, results, "get materi");
+        return;
+      }
+
+      page = parseInt(page) || 1;
+      limits = parseInt(limits) || 6;
+
+      const data = await MateriModel.find({
+        ...req.body,
+      })
+        .populate("instruktur items.tugas")
+        .skip((page - 1) * limits)
+        .limit(limits);
+
+      result = {
+        data: data,
+        "total data": totalData,
+      };
+
+      response(200, result, "Get all materi", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
+
   getOneMateri: async (req, res) => {
     try {
       const _id = req.params.id;
@@ -341,15 +383,15 @@ module.exports = {
   getSubmateri: async (req, res) => {
     try {
       const { slug } = req.params;
-      const result = await MateriModel.findOne({ slug }).populate(
-        "items.tugas"
-      ).populate({
-        path: "items.quiz",
-        populate: {
-          path: "pembuat",
-          model: "User",
-        },
-      });
+      const result = await MateriModel.findOne({ slug })
+        .populate("items.tugas")
+        .populate({
+          path: "items.quiz",
+          populate: {
+            path: "pembuat",
+            model: "User",
+          },
+        });
       console.log(result);
 
       if (!result) {

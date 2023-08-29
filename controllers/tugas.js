@@ -48,7 +48,6 @@ module.exports = {
       response(500, null, error.message, res);
     }
   },
-  
 
   getTugasFiltered: async (req, res) => {
     try {
@@ -375,11 +374,11 @@ module.exports = {
 
     const { title, instruction, deadline } = req.body;
 
-   if(req.file){
-    attachment = "/upload/" + req.file.path.split("/upload/").pop();
-   }
+    if (req.file) {
+      attachment = "/upload/" + req.file.path.split("/upload/").pop();
+    }
 
-   const getTugas = await tugasSchema.findById(id)
+    const getTugas = await tugasSchema.findById(id);
 
     try {
       const tugas = await tugasSchema.findByIdAndUpdate(
@@ -418,12 +417,12 @@ module.exports = {
     } catch (error) {
       response(500, error, "Server error failed to delete", res);
       await session.abortTransaction();
-    }finally{
+    } finally {
       session.endSession();
     }
   },
-  
-  getMateriTugas: async (req,res)=>{
+
+  getMateriTugas: async (req, res) => {
     const { id } = req.params;
     try {
       const get = await tugasSchema.find({ materi: id }).populate("materi");
@@ -431,5 +430,5 @@ module.exports = {
     } catch (error) {
       response(500, error, error.message, res);
     }
-  }
+  },
 };

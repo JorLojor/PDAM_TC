@@ -8,7 +8,6 @@ const user = require("../models/user");
 const tokenGenerator = require("../service/mail/tokenGenerator");
 const sendConfirmationEmail = require("../service/mail/config");
 
-
 module.exports = {
   createUser: async (req, res) => {
     try {
@@ -48,6 +47,7 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   register: async (req, res) => {
     try {
       const { name, email, username, password } = req.body;
@@ -72,6 +72,7 @@ module.exports = {
       response(500, error, "Server error", res);
     }
   },
+
   login: async (req, res) => {
     try {
       const { username, password } = req.body;
@@ -94,6 +95,7 @@ module.exports = {
       response(500, error, "Server error", res);
     }
   },
+
   getAllUser: async (req, res) => {
     // pake pagination
     try {
@@ -132,6 +134,7 @@ module.exports = {
       response(500, error, "Server error", res);
     }
   },
+
   getSingleUser: async (req, res) => {
     try {
       const id = req.body._id;
@@ -151,6 +154,7 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   updateUser: async (req, res) => {
     const idUser = req.params.id;
     const updatedUser = req.body;
@@ -181,6 +185,7 @@ module.exports = {
       res.status(500).json({ error: "Internal server error, coba lagi" });
     }
   },
+
   deleteUser: async (req, res) => {
     const idUser = req.params.id;
 
@@ -191,6 +196,7 @@ module.exports = {
       res.status(500).json({ error: "Internal server error, coba lagi" });
     }
   },
+
   getStatusPendingUser: async (req, res) => {
     try {
       const user = await userModel.find();
@@ -203,6 +209,7 @@ module.exports = {
       response(500, error.message, error.message, res);
     }
   },
+
   updateStatusUser: async (req, res) => {
     //admin dapat setuju atau menolak registrasi user
     const id = req.params.id; //idUser yang ingin dirubah
@@ -219,6 +226,7 @@ module.exports = {
       res.status(500).json({ error: "Internal server error, coba lagi" });
     }
   },
+
   getByRole: async (req, res) => {
     const { role } = req.params;
 
@@ -256,6 +264,7 @@ module.exports = {
       response(500, [], error.message, res);
     }
   },
+
   getByRoleReactSelect: async (req, res) => {
     const { role } = req.params;
 
@@ -281,16 +290,19 @@ module.exports = {
       response(500, [], error.message, res);
     }
   },
+
   getWithFilter: async (req, res) => {
     try {
       const isPaginate = parseInt(req.query.paginate);
       let totalData;
 
       if (isPaginate === 0) {
-        const data = await userModel.find({ ...req.body });
+        const data = await userModel.find({ ...req.body }).select("-password");
+
         if (data) {
           totalData = data.length;
         }
+
         result = {
           data: data,
           "total data": totalData,
@@ -304,6 +316,7 @@ module.exports = {
 
       const data = await userModel
         .find({ ...req.body })
+        .select("-password")
         .skip((page - 1) * limit)
         .limit(limit);
       // .populate("kelas")
@@ -319,6 +332,8 @@ module.exports = {
 
       response(200, result, "Berhasil get filtered user", res);
     } catch (error) {
+      console.log(error);
+
       response(500, error, error.message, res);
     }
   },
@@ -443,7 +458,7 @@ module.exports = {
   },
   rate: async (req, res) => {
     const session = await mongoose.startSession();
-  
+
     try {
       await session.withTransaction(async () => {
         const { user, rating, comment } = req.body;
@@ -451,34 +466,46 @@ module.exports = {
         let rate = new ratingModel({
           user,
           rating,
-          comment
+          comment,
         });
-  
+
         const saveRate = await rate.save({ session });
-  
-        const getRatingUser = await userModel.findOne({ _id: id }).session(session);
-  
+
+        const getRatingUser = await userModel
+          .findOne({ _id: id })
+          .session(session);
+
         if (!getRatingUser) {
-          response(500, null, 'Terjadi kesalahan saat update rating user!', res);
+          response(
+            500,
+            null,
+            "Terjadi kesalahan saat update rating user!",
+            res
+          );
           return;
         }
 
-        const newRating = [...getRatingUser.rating, saveRate._id]
-  
+        const newRating = [...getRatingUser.rating, saveRate._id];
+
         const updateRatingUser = await userModel.findOneAndUpdate(
           { _id: id },
           { rating: newRating },
           { new: true, session }
         );
-  
+
         if (!updateRatingUser) {
-          response(500, null, 'Terjadi kesalahan saat update rating user!', res);
+          response(
+            500,
+            null,
+            "Terjadi kesalahan saat update rating user!",
+            res
+          );
           return;
         }
-  
-        response(200, updateRatingUser, 'Rating berhasil dimasukan', res);
+
+        response(200, updateRatingUser, "Rating berhasil dimasukan", res);
       });
-  
+
       // Commit the transaction
       await session.commitTransaction();
     } catch (error) {
@@ -489,5 +516,5 @@ module.exports = {
       // End the session
       session.endSession();
     }
-  }
+  },
 };

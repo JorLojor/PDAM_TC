@@ -116,6 +116,7 @@ module.exports = {
   getTest: async (req, res) => {
     try {
       const { id } = req.params;
+
       const result = await TestModel.findById(id).populate("pembuat");
 
       if (!result) {
@@ -131,6 +132,25 @@ module.exports = {
   getTestAnswer: async (req, res) => {
     try {
       const data = await testAnswer.find({}).populate("user").populate("test");
+
+      if (!data) {
+        return response(400, null, "Data tidak ditemukan", res);
+      }
+
+      return response(200, data, "Data ditemukan", res);
+    } catch (error) {
+      console.log(error);
+
+      return response(500, error, "Server error", res);
+    }
+  },
+
+  getTestAnswerFiltered: async (req, res) => {
+    try {
+      const data = await testAnswer
+        .find({ ...req.body })
+        .populate("user")
+        .populate("test");
 
       if (!data) {
         return response(400, null, "Data tidak ditemukan", res);

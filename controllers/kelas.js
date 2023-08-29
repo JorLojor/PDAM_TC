@@ -127,6 +127,7 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   getKelasByInstruktur: async (req, res) => {
     const { instruktur } = req.params;
 
@@ -374,6 +375,7 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   enrolKelas: async (req, res) => {
     const slug = req.params.slug;
     const idUser = req.body.idUser;
@@ -440,6 +442,7 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   assignPesertaKelas: async (req, res) => {
     const slug = req.params.slug;
     const idUser = req.body.idUser;
@@ -693,6 +696,8 @@ module.exports = {
 
       if (isPaginate === 0) {
         const data = await KelasModel.find({ ...req.body })
+          .populate("materi")
+          .populate("kategori")
           .populate({
             path: "desainSertifikat.peserta",
             model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
@@ -708,8 +713,7 @@ module.exports = {
           data: data,
           "total data": totalData,
         };
-        response(200, result, "get kelas", res);
-        return;
+        return response(200, result, "get kelas", res);
       }
 
       const page = parseInt(req.query.page) || 1;
@@ -718,6 +722,8 @@ module.exports = {
       const data = await KelasModel.find({ ...req.body })
         .skip((page - 1) * limit)
         .limit(limit)
+        .populate("materi")
+        .populate("kategori")
         .populate({
           path: "desainSertifikat.peserta",
           model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
@@ -736,9 +742,9 @@ module.exports = {
         "total data": totalData,
       };
 
-      response(200, result, "Berhasil get filtered kelas", res);
+      return response(200, result, "Berhasil get filtered kelas", res);
     } catch (error) {
-      response(500, error, error.message, res);
+      return response(500, error, error.message, res);
     }
   },
 
