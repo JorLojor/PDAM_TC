@@ -39,7 +39,7 @@ router.put(
   upload.single("attachment"),
   Controller.updateTugas
 );
-router.delete("/:id", auth.instruktur, Controller.deleteTugas);
+router.delete("/:id", auth.user, Controller.deleteTugas);
 
 router.put(
   "/pengumpulan/:id",

@@ -42,16 +42,17 @@ module.exports = {
     try {
       const get = await tugasSchema
         .findOne({ _id: id })
-        .populate("kelas pengumpulanTugas.user");
+        .populate("materi pengumpulanTugas.user");
       response(200, get, "Ditemukan", res);
     } catch (error) {
       response(500, null, error.message, res);
     }
   },
+  
 
   getTugasFiltered: async (req, res) => {
     try {
-      const get = await tugasSchema.find({ ...req.body }).populate("kelas");
+      const get = await tugasSchema.find({ ...req.body }).populate("materi");
       response(200, get, "Tugas ditemukan", res);
     } catch (error) {
       response(500, error, error.message, res);
@@ -107,7 +108,7 @@ module.exports = {
       }
 
       if (req.file) {
-        attachment = req.file.path.split("/PDAM_TC/")[1];
+        attachment = "/upload/" + req.file.path.split("/upload/").pop();
       }
 
       const tugas = tugasSchema.create({
@@ -372,21 +373,13 @@ module.exports = {
 
     let attachment = "";
 
-    const { title, instruction, deadline, materi } = req.body;
+    const { title, instruction, deadline } = req.body;
 
-    const materiData = await MateriModel.findOne({ slug: materi });
+   if(req.file){
+    attachment = "/upload/" + req.file.path.split("/upload/").pop();
+   }
 
-    if (!materiData) {
-      response(500, null, "Materi tidak ditemukan", res);
-    }
-
-    const oldData = await tugasSchema.findById(id, {});
-
-    if (req.file) {
-      attachment = req.file.path.split("/PDAM_TC/")[1];
-    } else {
-      attachment = oldData.attachment;
-    }
+   const getTugas = await tugasSchema.findById(id)
 
     try {
       const tugas = await tugasSchema.findByIdAndUpdate(
@@ -395,8 +388,7 @@ module.exports = {
           title,
           instruction,
           deadline,
-          attachment,
-          materi: materiData._id,
+          attachment: attachment ? attachment : getTugas.attachment,
         },
         {
           new: true,
@@ -405,17 +397,39 @@ module.exports = {
 
       response(200, tugas, "tugas berhasil di update", res);
     } catch (error) {
-      response(500, error, "Server error failed to update", res);
+      response(500, error, error.message, res);
     }
   },
 
   deleteTugas: async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
     const id = req.params.id;
     try {
-      const result = await tugasSchema.findByIdAndDelete(id);
+      const result = await tugasSchema.findByIdAndDelete(id).session(session);
+      const materi = await MateriModel.findOneAndUpdate(
+        { "items.tugas": id },
+        { $pull: { "items.tugas": id } },
+        { new: true, session }
+      );
+
+      await session.commitTransaction();
       response(200, result, "tugas berhasil di hapus", res);
     } catch (error) {
       response(500, error, "Server error failed to delete", res);
+      await session.abortTransaction();
+    }finally{
+      session.endSession();
     }
   },
+  
+  getMateriTugas: async (req,res)=>{
+    const { id } = req.params;
+    try {
+      const get = await tugasSchema.find({ materi: id }).populate("materi");
+      response(200, get, "Tugas ditemukan", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  }
 };
