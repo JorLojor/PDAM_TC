@@ -1,0 +1,57 @@
+const mongoose = require("mongoose");
+const { Schema } = mongoose;
+
+const setting = new Schema(
+  {
+    banner: [
+      {
+        type: String,
+        required: false,
+      },
+    ],
+    about: {
+      type: String,
+      required: false,
+    },
+    our_class: {
+      type: String,
+      required: false,
+    },
+    instructors: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+        index: true,
+        required: false,
+      },
+    ],
+    youtube_link: {
+      type: String,
+      required: false,
+    },
+    testimony: [
+      {
+        type: String,
+        required: false,
+      },
+    ],
+    class_count: {
+      type: Number,
+      required: false,
+    },
+    instructor_count: {
+      type: Number,
+      required: false,
+    },
+    participant_count: {
+      type: Number,
+      required: false,
+    },
+  },
+  { timestamps: true }
+);
+
+module.exports = mongoose.model("Setting", setting);
+
+// Path: models/setting.js
+// Compare this snippet from controllers/setting.js:
