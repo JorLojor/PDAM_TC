@@ -1,46 +1,53 @@
 const mongoose = require("mongoose");
 const { Schema } = mongoose;
 
-const testSchema = new Schema({
+const testSchema = new Schema(
+  {
     judul: {
-        type: 'string',
-        required: [true, 'judul diperlukan untuk test ini']
+      type: "string",
+      required: [true, "judul diperlukan untuk test ini"],
     },
     type: {
-        type: 'string',
-        enum: ['pre', 'post', 'quiz'],
-        required: [true, 'tipe test diperlukan']
+      type: "string",
+      enum: ["pre", "post", "quiz"],
+      required: [true, "tipe test diperlukan"],
     },
     pembuat: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
     },
-    question: [{
+    question: [
+      {
         kode: {
-            type: 'string',
-            required: [true, 'kode soal diperlukan']
+          type: "string",
+          required: [true, "kode soal diperlukan"],
         },
         value: {
-            type: 'string',
-            required: [true, 'pertanyaan diperlukan']
+          type: "string",
+          required: [true, "pertanyaan diperlukan"],
         },
         img: {
-            type: String,
-            default: ''
+          type: String,
+          default: "",
         },
         type: {
-            type: String,
-            enum: ['essay', 'pg'],
-            required: ['true', 'tipe soal diperlukan']
+          type: String,
+          enum: ["essay", "pg"],
+          required: ["true", "tipe soal diperlukan"],
         },
-        answer: [{
+        answer: [
+          {
             value: String,
             img: String,
-            isTrue: Boolean
-        }]
-    }]
-}, { timestamps: true })
+            isTrue: Boolean,
+          },
+        ],
+      },
+    ],
+  },
+  { timestamps: true }
+);
 
-const Test = mongoose.model("Test", testSchema)
+const Test = mongoose.model("Test", testSchema);
 
-module.exports = Test
+module.exports = Test;

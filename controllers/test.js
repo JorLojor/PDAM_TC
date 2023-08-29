@@ -128,6 +128,22 @@ module.exports = {
     }
   },
 
+  getTestAnswer: async (req, res) => {
+    try {
+      const data = await testAnswer.find({}).populate("user").populate("test");
+
+      if (!data) {
+        return response(400, null, "Data tidak ditemukan", res);
+      }
+
+      return response(200, data, "Data ditemukan", res);
+    } catch (error) {
+      console.log(error);
+
+      return response(500, error, "Server error", res);
+    }
+  },
+
   getQuiz: async (req, res) => {
     try {
       const { slug } = req.params;
