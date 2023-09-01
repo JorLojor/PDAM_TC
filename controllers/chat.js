@@ -79,13 +79,14 @@ module.exports = {
 
       if (isNaN(isPaginate)) {
         const totalData = await ChatNotification.find({
-          users: { $in: req.user.id },
+          for: req.user.id,
         }).countDocuments();
 
         let data = await ChatNotification.find({
-          users: { $in: req.user.id },
+          for: req.user.id,
         })
-          .populate("users", "name")
+          .populate("sender", "name")
+          .populate("for", "name")
           .populate("chat", "sender chat read createdAt");
 
         data = await Chat.populate(data, {
@@ -105,15 +106,16 @@ module.exports = {
       const limit = parseInt(req.query.limit) || 10;
 
       const totalData = await ChatNotification.find({
-        users: { $in: req.user.id },
+        for: req.user.id,
       }).countDocuments();
 
       let data = await ChatNotification.find({
-        users: { $in: req.user.id },
+        for: req.user.id,
       })
         .skip((page - 1) * limit)
         .limit(limit)
-        .populate("users", "name")
+        .populate("sender", "name")
+        .populate("for", "name")
         .populate("chat", "sender chat read createdAt");
 
       data = await Chat.populate(data, {
@@ -186,13 +188,7 @@ module.exports = {
         return response(400, null, "Data tidak ditemukan", res);
       }
 
-      let valid = false;
-
-      notif.users.map((r) => {
-        if (req.user.id == r) {
-          valid = true;
-        }
-      });
+      let valid = notif.for == req.user.id;
 
       if (!valid && req.user.role !== 1) {
         return response(400, null, "Forbidden", res);
@@ -203,7 +199,8 @@ module.exports = {
       });
 
       let result = await ChatNotification.findById(id)
-        .populate("users", "name")
+        .populate("sender", "name")
+        .populate("for", "name")
         .populate("chat", "sender chat read createdAt");
 
       result = await Chat.populate(result, {
@@ -217,6 +214,12 @@ module.exports = {
 
       return response(500, error, "Server error", res);
     }
+  },
+
+  deletenotification: async (req, res) => {
+    await ChatNotification.deleteMany();
+
+    return res.json("ok");
   },
 
   store: async (req, res) => {
@@ -253,13 +256,23 @@ module.exports = {
         chat,
       });
 
+      let receiver = false;
+
+      room.users.map((r) => {
+        if (req.user.id !== r) {
+          receiver = r;
+        }
+      });
+
       const newNotif = await ChatNotification.create({
         chat: newChat._id,
-        users: room.users,
+        sender: req.user.id,
+        for: receiver,
       });
 
       let notification = await ChatNotification.findById(newNotif._id, {})
-        .populate("users", "name")
+        .populate("sender", "name")
+        .populate("for", "name")
         .populate("chat", "sender chat read createdAt");
 
       notification = await Chat.populate(notification, {
@@ -323,13 +336,23 @@ module.exports = {
           chat,
         });
 
+        let receiver = false;
+
+        room.users.map((r) => {
+          if (sender !== r) {
+            receiver = r;
+          }
+        });
+
         const newNotif = await ChatNotification.create({
           chat: newChat._id,
-          users: room.users,
+          sender,
+          for: receiver,
         });
 
         let notification = await ChatNotification.findById(newNotif._id, {})
-          .populate("users", "name")
+          .populate("sender", "name")
+          .populate("for", "name")
           .populate("chat", "sender chat read createdAt");
 
         notification = await Chat.populate(notification, {

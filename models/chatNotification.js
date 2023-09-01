@@ -8,13 +8,16 @@ const chatNotification = new Schema(
       ref: "Chat",
       index: true,
     },
-    users: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-        index: true,
-      },
-    ],
+    sender: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      index: true,
+    },
+    for: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      index: true,
+    },
     active: {
       type: Boolean,
       default: true,
