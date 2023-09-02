@@ -371,6 +371,14 @@ module.exports = {
         return null;
       }
 
+      let to = "";
+
+      room.users.map((r) => {
+        if (sender !== r) {
+          to = r;
+        }
+      });
+
       const theChat = await Chat.findOne({
         sender,
         room: id,
@@ -384,7 +392,8 @@ module.exports = {
 
       let notification = await ChatNotification.findOne({
         sender,
-        chat,
+        to,
+        chat: theChat._id,
       })
         .populate("sender")
         .populate("for")
