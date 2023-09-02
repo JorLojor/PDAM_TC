@@ -345,7 +345,7 @@ module.exports = {
 
       const id = roomId;
 
-      const room = await Room.findOne({ _id: id });
+      const room = await Room.findOne({ _id: id }).populate("users");
 
       if (!room) {
         console.log("Data tidak ditemukan");
@@ -355,7 +355,7 @@ module.exports = {
       let valid = false;
 
       room.users.map((r) => {
-        if (sender == r) {
+        if (sender == r._id) {
           valid = true;
         }
       });
@@ -370,8 +370,8 @@ module.exports = {
       let to = "";
 
       room.users.map((r) => {
-        if (sender !== r) {
-          to = r;
+        if (sender !== r._id) {
+          to = r._id;
         }
       });
 
@@ -386,11 +386,13 @@ module.exports = {
         return null;
       }
 
-      let notification = await ChatNotification.findOne({
+      const newNotif = await ChatNotification.create({
+        chat: theChat._id,
         sender,
         for: to,
-        chat: theChat._id,
-      })
+      });
+
+      let notification = await ChatNotification.findById(newNotif._id, {})
         .populate("sender")
         .populate("for")
         .populate("chat", "sender chat room read createdAt");
