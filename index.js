@@ -39,7 +39,7 @@ const kategoriRoutes = require("./routers/kategori");
 const testRoutes = require("./routers/test");
 const absenRoutes = require("./routers/absensi");
 const settingRoutes = require("./routers/setting");
-const { storeIo } = require("./controllers/chat");
+const { getNotifIo, storeIo } = require("./controllers/chat");
 const { storeRecentClassIO } = require("./controllers/kelas");
 const { log } = require("console");
 // routes
