@@ -315,22 +315,18 @@ module.exports = {
         return null;
       }
 
-      const newChat = await Chat.create({
+      const newChatData = {
         sender: sender,
         room: id,
         chat,
-      });
+      };
+
+      const newChat = await Chat.create(newChatData);
 
       if (newChat) {
         const getNewChat = await Chat.findOne({ _id: newChat._id }).populate(
           "sender"
         );
-
-        const newChat = await Chat.create({
-          sender: req.user.id,
-          room: id,
-          chat,
-        });
 
         return getNewChat;
       }
@@ -339,6 +335,7 @@ module.exports = {
       return error.message;
     }
   },
+
 
   getNotifIo: async ({ chat, room: roomId, sender }) => {
     try {
