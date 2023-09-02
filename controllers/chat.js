@@ -336,7 +336,6 @@ module.exports = {
     }
   },
 
-
   getNotifIo: async ({ chat, room: roomId, sender }) => {
     try {
       if (!chat) {
@@ -389,7 +388,7 @@ module.exports = {
 
       let notification = await ChatNotification.findOne({
         sender,
-        to,
+        for: to,
         chat: theChat._id,
       })
         .populate("sender")
