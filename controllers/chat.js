@@ -85,13 +85,12 @@ module.exports = {
         let data = await ChatNotification.find({
           for: req.user.id,
         })
-          .populate("sender", "name")
-          .populate("for", "name")
-          .populate("chat", "sender chat read createdAt");
+          .populate("sender")
+          .populate("for")
+          .populate("chat", "sender chat room read createdAt");
 
         data = await Chat.populate(data, {
           path: "chat.sender",
-          select: "name",
         });
 
         result = {
@@ -114,13 +113,12 @@ module.exports = {
       })
         .skip((page - 1) * limit)
         .limit(limit)
-        .populate("sender", "name")
-        .populate("for", "name")
-        .populate("chat", "sender chat read createdAt");
+        .populate("sender")
+        .populate("for")
+        .populate("chat", "sender chat room read createdAt");
 
       data = await Chat.populate(data, {
         path: "chat.sender",
-        select: "name",
       });
 
       result = {
@@ -199,13 +197,12 @@ module.exports = {
       });
 
       let result = await ChatNotification.findById(id)
-        .populate("sender", "name")
-        .populate("for", "name")
-        .populate("chat", "sender chat read createdAt");
+        .populate("sender")
+        .populate("for")
+        .populate("chat", "sender chat room read createdAt");
 
       result = await Chat.populate(result, {
         path: "chat.sender",
-        select: "name",
       });
 
       return response(200, result, "Notif berhasil di read", res);
@@ -271,13 +268,12 @@ module.exports = {
       });
 
       let notification = await ChatNotification.findById(newNotif._id, {})
-        .populate("sender", "name")
-        .populate("for", "name")
-        .populate("chat", "sender chat read createdAt");
+        .populate("sender")
+        .populate("for")
+        .populate("chat", "sender chat room read createdAt");
 
       notification = await Chat.populate(notification, {
         path: "chat.sender",
-        select: "name",
       });
 
       return response(200, { chat }, "Berhasil menambahkan chat", res);
@@ -336,37 +332,69 @@ module.exports = {
           chat,
         });
 
-        let receiver = false;
-
-        room.users.map((r) => {
-          if (sender !== r) {
-            receiver = r;
-          }
-        });
-
-        const newNotif = await ChatNotification.create({
-          chat: newChat._id,
-          sender,
-          for: receiver,
-        });
-
-        let notification = await ChatNotification.findById(newNotif._id, {})
-          .populate("sender", "name")
-          .populate("for", "name")
-          .populate("chat", "sender chat read createdAt");
-
-        notification = await Chat.populate(notification, {
-          path: "chat.sender",
-          select: "name",
-        });
-
-        const data = {
-          newChat: getNewChat,
-          notification,
-        };
-
-        return data;
+        return getNewChat;
       }
+    } catch (error) {
+      console.log(error);
+      return error.message;
+    }
+  },
+
+  getNotifIo: async ({ chat, room: roomId, sender }) => {
+    try {
+      if (!chat) {
+        console.log("Mohon isi chat");
+        return null;
+      }
+
+      const id = roomId;
+
+      const room = await Room.findOne({ _id: id });
+
+      if (!room) {
+        console.log("Data tidak ditemukan");
+        return null;
+      }
+
+      let valid = false;
+
+      room.users.map((r) => {
+        if (sender == r) {
+          valid = true;
+        }
+      });
+
+      const getSender = await user.findOne({ _id: sender });
+
+      if (!valid && getSender.role !== 1) {
+        console.log("Forbidden");
+        return null;
+      }
+
+      const theChat = await Chat.findOne({
+        sender,
+        room: id,
+        chat,
+      });
+
+      if (!theChat) {
+        console.log("Data tidak ditemukan");
+        return null;
+      }
+
+      let notification = await ChatNotification.findOne({
+        sender,
+        chat,
+      })
+        .populate("sender")
+        .populate("for")
+        .populate("chat", "sender chat room read createdAt");
+
+      notification = await Chat.populate(notification, {
+        path: "chat.sender",
+      });
+
+      return notification;
     } catch (error) {
       console.log(error);
       return error.message;

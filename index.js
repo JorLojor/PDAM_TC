@@ -71,8 +71,10 @@ io.on("connection", (socket) => {
     console.log(room, sender, chat);
     try {
       const send = await storeIo({ room, sender, chat });
+      const notif = await getNotifIo({ room, sender, chat });
 
       io.emit("new-message", send);
+      io.emit("new-notif", notif);
     } catch (error) {
       console.log(error);
     }
