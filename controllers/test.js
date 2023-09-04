@@ -146,36 +146,47 @@ module.exports = {
   },
 
   answerTest: async (req, res) => {
-    const {user,test,answers} = req.body
+    const { user, test, answers } = req.body;
     try {
+      const validUser = await User.findById(user);
 
-      const data = await testAnswer
-        .find({ user })
-        .populate("user")
-        .populate("test");
+      if (!validUser) return response(400, null, "User tidak ditemukan", res);
 
-      if (!data) {
-        return response(400, null, "Data tidak ditemukan", res);
-      }
+      const validTest = await Test.findById(test);
 
-      const checkCorrectAnswer = answers.filter((answer) => {
-        return answer.isTrue == true
-      })
+      if (!validTest) return response(400, null, "Test tidak ditemukan", res);
 
-      const nilai = checkCorrectAnswer.length / answers.length * 100
+      const questions = validTest.question;
+
+      let correct = 0;
+      let passGrade = 0;
+
+      await Promise.all(
+        answers.map(async (row, index) => {
+          const question = questions[index].answer;
+
+          const checkAnswer = question.find((o) => o.value === row.answer);
+
+          if (checkAnswer.isTrue == true) {
+            correct = correct + 1;
+          }
+
+          passGrade = passGrade + 1;
+        })
+      );
+
+      const nilai = (correct / passGrade) * 100;
 
       const answer = new testAnswer({
         user,
         test,
         answers,
-        nilai
-      })
+        nilai,
+      });
 
-      const save = await answer.save()
+      const save = await answer.save();
 
       return response(200, save, "Jawaban telah disimpan!", res);
-
-      
     } catch (error) {
       console.log(error);
 
