@@ -31,7 +31,7 @@ const setting = new Schema(
     },
     testimony: [
       {
-        type: String,
+        type: {},
         required: false,
       },
     ],
