@@ -117,7 +117,7 @@ module.exports = {
     try {
       const { id } = req.params;
 
-      const result = await TestModel.findById(id).populate("pembuat");
+      const result = await Test.findById(id).populate("pembuat");
 
       if (!result) {
         response(404, id, "Test tidak di temukan", res);
@@ -125,7 +125,7 @@ module.exports = {
 
       response(200, result, "Test di dapat", res);
     } catch (error) {
-      response(500, error, "Server error", res);
+      response(500, error, error.message, res);
     }
   },
 
@@ -142,6 +142,44 @@ module.exports = {
       console.log(error);
 
       return response(500, error, "Server error", res);
+    }
+  },
+
+  answerTest: async (req, res) => {
+    const {user,test,answers} = req.body
+    try {
+
+      const data = await testAnswer
+        .find({ user })
+        .populate("user")
+        .populate("test");
+
+      if (!data) {
+        return response(400, null, "Data tidak ditemukan", res);
+      }
+
+      const checkCorrectAnswer = answers.filter((answer) => {
+        return answer.isTrue == true
+      })
+
+      const nilai = checkCorrectAnswer.length / answers.length * 100
+
+      const answer = new testAnswer({
+        user,
+        test,
+        answers,
+        nilai
+      })
+
+      const save = await answer.save()
+
+      return response(200, save, "Jawaban telah disimpan!", res);
+
+      
+    } catch (error) {
+      console.log(error);
+
+      return response(500, error, error.message, res);
     }
   },
 

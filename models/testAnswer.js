@@ -21,7 +21,7 @@ const answerSchema = new Schema({
       value: Schema.Types.Mixed,
     },
   ],
-  nilai: Number,
+  nilai: {type: Number, default: 0},
 });
 
 const TestAnswer = mongoose.model("TestAnswer", answerSchema);

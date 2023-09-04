@@ -45,5 +45,10 @@ testRouter.delete(
   auth.instruktur,
   Controller.deleteTest
 );
+testRouter.post(
+  "/submit",
+  auth.user,
+  Controller.answerTest
+  )
 
 module.exports = testRouter;
