@@ -81,22 +81,40 @@ module.exports = {
     try {
       const setting = await Setting.findOne();
 
-      let banner = []
+      let banner = [];
 
       if (req.files) {
         req.files.map((row) => {
-          banner.push(row.path.split('upload').pop());
+          banner.push(row.path.split("upload").pop());
         });
       }
 
       const about = req.body.about;
       const our_class = req.body.our_class;
-      const instructors = JSON.parse(req.body.instructors);
+      // ieu dites make raw json
+      const instructors = req.files
+        ? JSON.parse(req.body.instructors)
+        : req.body.instructors;
+      // ieu dites make raw json
       const youtube_link = req.body.youtube_link;
-      const testimony = req.body.testimoni;
+      let testimony = req.body.testimoni;
       const class_count = req.body.class_count;
       const instructor_count = req.body.instructor_count;
       const participant_count = req.body.participant_count;
+
+      let array = testimony.split(/\s*\,\s*/g);
+
+      testimony = [];
+
+      array.map((a, i) => {
+        const name = a.substring(0, a.indexOf(" ("));
+        const value = a.substring(a.indexOf("(") + 1, a.lastIndexOf(")"));
+
+        testimony.push({
+          name,
+          value,
+        });
+      });
 
       let data;
 
@@ -144,6 +162,7 @@ module.exports = {
 
       return response(200, data, "Setting berhasil diperbaharui", res);
     } catch (error) {
+      console.log(error);
       return response(500, null, error.message, res);
     }
   },
