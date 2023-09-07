@@ -107,11 +107,13 @@ module.exports = {
       testimony = [];
 
       array.map((a, i) => {
-        const name = a.substring(0, a.indexOf(" ("));
+        const name = a.substring(0, a.indexOf(" -"));
+        const title = a.substring(a.indexOf("- ") + 2, a.lastIndexOf(" ("));
         const value = a.substring(a.indexOf("(") + 1, a.lastIndexOf(")"));
 
         testimony.push({
           name,
+          title,
           value,
         });
       });
