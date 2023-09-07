@@ -81,20 +81,24 @@ module.exports = {
     try {
       const setting = await Setting.findOne();
 
-      let banner = req.body.banner;
+      let banner = []
+
+      if (req.files) {
+        req.files.map((row) => {
+          banner.push(row.path.split('upload').pop());
+        });
+      }
 
       const about = req.body.about;
       const our_class = req.body.our_class;
-      const instructors = req.body.instructors;
+      const instructors = JSON.parse(req.body.instructors);
       const youtube_link = req.body.youtube_link;
-      const testimony = req.body.testimony;
+      const testimony = req.body.testimoni;
       const class_count = req.body.class_count;
       const instructor_count = req.body.instructor_count;
       const participant_count = req.body.participant_count;
 
       let data;
-
-      if (!banner) banner = null;
 
       instructors.map(async (row) => {
         const valid = await User.findById(row, {
