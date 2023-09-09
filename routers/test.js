@@ -20,6 +20,7 @@ const upload = multer({ storage });
 
 //user
 testRouter.get("/answered", auth.user, Controller.getTestAnswer);
+testRouter.get("/graphic", auth.user, Controller.getGraphic);
 testRouter.get("/:id", auth.user, Controller.getTest);
 testRouter.get("/quiz/:slug", auth.user, Controller.getQuiz);
 testRouter.post("/answered", auth.user, Controller.getTestAnswerFiltered);
@@ -45,10 +46,6 @@ testRouter.delete(
   auth.instruktur,
   Controller.deleteTest
 );
-testRouter.post(
-  "/submit",
-  auth.user,
-  Controller.answerTest
-  )
+testRouter.post("/submit", auth.user, Controller.answerTest);
 
 module.exports = testRouter;

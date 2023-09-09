@@ -6,6 +6,7 @@ const testAnswer = require("../models/testAnswer");
 const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
+const moment = require("moment");
 
 function makeid(length) {
   let result = "";
@@ -110,6 +111,88 @@ module.exports = {
       await session.abortTransaction();
     } finally {
       session.endSession();
+    }
+  },
+
+  getGraphic: async (req, res) => {
+    try {
+      const fromDate = moment(req.query.fromDate);
+      const toDate = moment(req.query.toDate);
+
+      const users = await User.find({
+        role: 3,
+      })
+        .select("-password")
+        .sort("name");
+
+      let data = [];
+      await Promise.all(
+        users.map(async (user) => {
+          let answers = await testAnswer
+            .find({
+              user: user._id,
+            })
+            .populate("test", "type");
+
+          if (fromDate && toDate) {
+            answers = await testAnswer
+              .find({
+                user: user._id,
+                $and: [
+                  {
+                    createdAt: {
+                      $gte: fromDate.startOf("day").toDate(),
+                      $lte: toDate.endOf("day").toDate(),
+                    },
+                  },
+                ],
+              })
+              .populate("test", "type");
+          }
+
+          if (answers.length > 0) {
+            let preTotalValue = 0;
+            let postTotalValue = 0;
+            let preType = 0;
+            let postType = 0;
+
+            answers.map((answer) => {
+              if (answer.test.type == "pre") {
+                preType = preType + 1;
+                preTotalValue = preTotalValue + answer.nilai;
+              } else {
+                postType = postType + 1;
+                postTotalValue = postTotalValue + answer.nilai;
+              }
+            });
+
+            const nilaiPre = (preTotalValue * preType) / 100;
+            const nilaiPost = (postType * postTotalValue) / 100;
+
+            data.push({
+              user,
+              nilaiPre,
+              nilaiPost,
+            });
+          } else {
+            data.push({
+              user,
+              nilaiPre: 0,
+              nilaiPost: 0,
+            });
+
+            // data.push({
+            //   user,
+            //   type: "post",
+            //   nilai: 0,
+            // });
+          }
+        })
+      );
+
+      return response(200, data, "Data grafik", res);
+    } catch (error) {
+      return response(500, error, error.message, res);
     }
   },
 
