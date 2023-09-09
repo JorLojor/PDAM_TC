@@ -206,6 +206,19 @@ module.exports = {
         response(404, id, "Test tidak di temukan", res);
       }
 
+      const checkAnswer = await testAnswer.findOne({
+        test: id,
+        $and: [
+          {
+            user: req.user.id,
+          },
+        ],
+      });
+
+      if (checkAnswer) {
+        response(400, [], "Test sudah dijawab", res);
+      }
+
       response(200, result, "Test di dapat", res);
     } catch (error) {
       response(500, error, error.message, res);
