@@ -120,6 +120,7 @@ module.exports = {
 
       let data;
 
+      
       instructors.map(async (row) => {
         const valid = await User.findById(row, {
           role: 2,
