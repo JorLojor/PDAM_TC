@@ -203,7 +203,7 @@ module.exports = {
       const result = await Test.findById(id).populate("pembuat");
 
       if (!result) {
-        response(404, id, "Test tidak di temukan", res);
+        return response(404, id, "Test tidak di temukan", res);
       }
 
       const checkAnswer = await testAnswer.findOne({
@@ -216,12 +216,12 @@ module.exports = {
       });
 
       if (checkAnswer) {
-        response(400, [], "Test sudah dijawab", res);
+        return response(400, [], "Test sudah dijawab", res);
       }
 
-      response(200, result, "Test di dapat", res);
+      return response(200, result, "Test di dapat", res);
     } catch (error) {
-      response(500, error, error.message, res);
+      return response(500, error, error.message, res);
     }
   },
 
