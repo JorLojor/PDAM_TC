@@ -2,6 +2,7 @@ const Test = require("../models/test");
 const response = require("../respons/response");
 const MateriModel = require("../models/materi");
 const User = require("../models/user");
+const Kelas = require("../models/kelas");
 const testAnswer = require("../models/testAnswer");
 const mongoose = require("mongoose");
 const fs = require("fs");
@@ -116,8 +117,15 @@ module.exports = {
 
   getGraphic: async (req, res) => {
     try {
-      const fromDate = moment(req.query.fromDate);
-      const toDate = moment(req.query.toDate);
+      const fromDate =
+        req.query.fromDate && req.query.fromDate !== ""
+          ? moment(req.query.fromDate)
+          : null;
+
+      const toDate =
+        req.query.toDate && req.query.toDate !== ""
+          ? moment(req.query.toDate)
+          : null;
 
       const users = await User.find({
         role: 3,
@@ -126,6 +134,7 @@ module.exports = {
         .sort("name");
 
       let data = [];
+
       await Promise.all(
         users.map(async (user) => {
           let answers = await testAnswer
@@ -166,8 +175,11 @@ module.exports = {
               }
             });
 
-            const nilaiPre = (preTotalValue * preType) / 100;
-            const nilaiPost = (postType * postTotalValue) / 100;
+            const nilaiPre =
+              preType > 1 ? (preTotalValue * preType) / 100 : preTotalValue;
+
+            const nilaiPost =
+              postType > 1 ? (postType * postTotalValue) / 100 : postTotalValue;
 
             data.push({
               user,
@@ -199,6 +211,11 @@ module.exports = {
   getTest: async (req, res) => {
     try {
       const { id } = req.params;
+      const { kelas } = req.query;
+
+      if (!kelas) {
+        return response(404, id, "Mohon isi kelas", res);
+      }
 
       const result = await Test.findById(id).populate("pembuat");
 
@@ -211,6 +228,11 @@ module.exports = {
         $and: [
           {
             user: req.user.id,
+          },
+          {
+            class: {
+              $in: kelas,
+            },
           },
         ],
       });
@@ -227,7 +249,11 @@ module.exports = {
 
   getTestAnswer: async (req, res) => {
     try {
-      const data = await testAnswer.find({}).populate("user").populate("test");
+      const data = await testAnswer
+        .find({})
+        .populate("user")
+        .populate("test")
+        .populate("class");
 
       if (!data) {
         return response(400, null, "Data tidak ditemukan", res);
@@ -242,7 +268,8 @@ module.exports = {
   },
 
   answerTest: async (req, res) => {
-    const { user, test, answers } = req.body;
+    const { user, test, kelas, answers } = req.body;
+
     try {
       const validUser = await User.findById(user);
 
@@ -251,6 +278,10 @@ module.exports = {
       const validTest = await Test.findById(test);
 
       if (!validTest) return response(400, null, "Test tidak ditemukan", res);
+
+      const validKelas = await Kelas.findById(kelas);
+
+      if (!validKelas) return response(400, null, "Kelas tidak ditemukan", res);
 
       const questions = validTest.question;
 
@@ -276,6 +307,7 @@ module.exports = {
       const answer = new testAnswer({
         user,
         test,
+        class: kelas,
         answers,
         nilai,
       });

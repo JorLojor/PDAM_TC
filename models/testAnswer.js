@@ -12,6 +12,11 @@ const answerSchema = new Schema({
     ref: "Test",
     required: [true, "test id diperlukan"],
   },
+  class: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Kelas",
+    required: [true, "kelas id diperlukan"],
+  },
   answers: [
     {
       kodeSoal: {
@@ -21,7 +26,7 @@ const answerSchema = new Schema({
       value: Schema.Types.Mixed,
     },
   ],
-  nilai: {type: Number, default: 0},
+  nilai: { type: Number, default: 0 },
 });
 
 const TestAnswer = mongoose.model("TestAnswer", answerSchema);
