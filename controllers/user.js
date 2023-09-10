@@ -1,5 +1,7 @@
 const mongoose = require("mongoose");
+const ClassEnrollment = require("../models/pengajuanKelas");
 const userModel = require("../models/user");
+const Kelas = require("../models/kelas");
 const ratingModel = require("../models/rating");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -50,22 +52,49 @@ module.exports = {
 
   register: async (req, res) => {
     try {
-      const { name, email, username, password } = req.body;
+      const { name, email, username, password, is_enrollment, kelas } =
+        req.body;
+
       const cekUser = await userModel.findOne({
         $or: [{ username }, { email }],
       });
+
       if (cekUser) {
         response(400, username, "Username atau email sudah terdaftar", res);
         return;
       }
+
+      let checkKelas = null;
+
+      if (is_enrollment == true) {
+        if (!kelas) {
+          return response(400, {}, "Mohon isi kelas", res);
+        }
+
+        checkKelas = await Kelas.findById(kelas);
+
+        if (!checkKelas) {
+          return response(400, {}, "Kelas tidak ditemukan", res);
+        }
+      }
+
       const passwordHash = bcrypt.hashSync(password, 10);
+
       const user = new userModel({
         name,
         email,
         username,
         password: passwordHash,
       });
+
       await user.save();
+
+      if (is_enrollment == true) {
+        await ClassEnrollment.create({
+          user: user._id,
+          class: kelas,
+        });
+      }
 
       response(200, user, "Register berhasil", res);
     } catch (error) {
@@ -75,15 +104,52 @@ module.exports = {
 
   login: async (req, res) => {
     try {
-      const { username, password } = req.body;
+      const { username, password, is_enrollment, kelas } = req.body;
+
       const secret_key = process.env.secret_key;
+
+      let checkKelas = null;
+
+      if (is_enrollment == true) {
+        if (!kelas) {
+          return response(400, {}, "Mohon isi kelas", res);
+        }
+
+        checkKelas = await Kelas.findById(kelas);
+
+        if (!checkKelas) {
+          return response(400, {}, "Kelas tidak ditemukan", res);
+        }
+      }
+
       const user = await userModel.findOne({
         $or: [{ username }, { email: username }],
       });
+
       if (user) {
         const cekPassword = bcrypt.compareSync(password, user.password);
         if (cekPassword) {
+          if (is_enrollment == true && user.role == 3) {
+            let hasJoined = false;
+
+            checkKelas.peserta.map((p) => {
+              if (p.user == user._id.toString()) {
+                hasJoined = true;
+              }
+            });
+
+            if (hasJoined) {
+              return response(400, {}, "Anda sudah mengikuti kelas ini", res);
+            }
+
+            await ClassEnrollment.create({
+              user: user._id,
+              class: kelas,
+            });
+          }
+
           const token = jwt.sign({ id: user._id, role: user.role }, secret_key);
+
           response(200, { token, user }, "Login berhasil", res);
         } else {
           response(400, username, "Password salah", res);
@@ -92,6 +158,8 @@ module.exports = {
         response(400, username, "User tidak terdaftar", res);
       }
     } catch (error) {
+      console.log(error);
+
       response(500, error, "Server error", res);
     }
   },
