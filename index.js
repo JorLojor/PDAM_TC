@@ -39,6 +39,7 @@ const kategoriRoutes = require("./routers/kategori");
 const testRoutes = require("./routers/test");
 const absenRoutes = require("./routers/absensi");
 const settingRoutes = require("./routers/setting");
+const classEnrollmentRoutes = require("./routers/pengajuanKelas");
 const { getNotifIo, storeIo } = require("./controllers/chat");
 const { storeRecentClassIO } = require("./controllers/kelas");
 const { log } = require("console");
@@ -55,6 +56,7 @@ app.use("/room/", roomRoute);
 app.use("/test/", testRoutes);
 app.use("/absen/", absenRoutes);
 app.use("/setting/", settingRoutes);
+app.use("/pengajuan-kelas/", classEnrollmentRoutes);
 
 const uploadsDirectory = path.join(__dirname, "upload");
 
