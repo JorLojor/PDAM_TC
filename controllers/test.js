@@ -117,47 +117,112 @@ module.exports = {
 
   getGraphic: async (req, res) => {
     try {
-      const fromDate =
-        req.query.fromDate && req.query.fromDate !== ""
-          ? moment(req.query.fromDate)
-          : null;
+      // const fromDate =
+      //   req.query.fromDate && req.query.fromDate !== ""
+      //     ? moment(req.query.fromDate)
+      //     : null;
 
-      const toDate =
-        req.query.toDate && req.query.toDate !== ""
-          ? moment(req.query.toDate)
-          : null;
+      // const toDate =
+      //   req.query.toDate && req.query.toDate !== ""
+      //     ? moment(req.query.toDate)
+      //     : null;
+
+      let months = [];
+
+      let gap = 0;
+
+      for (let i = 0; i < 12; i++) {
+        const today = moment();
+
+        const month = today.month();
+
+        const year = today.year();
+
+        let startDate = moment([year, month - i]);
+
+        if (!moment(startDate).isValid()) {
+          startDate = moment([year - 1, 11 - (i - gap)]);
+        } else {
+          gap = gap + 1;
+        }
+
+        const endDate = moment(startDate).endOf("month");
+
+        let monthName = "";
+
+        switch (moment(startDate).month()) {
+          case 0:
+            monthName = "Januari";
+            break;
+          case 1:
+            monthName = "Februari";
+            break;
+          case 2:
+            monthName = "Maret";
+            break;
+          case 3:
+            monthName = "April";
+            break;
+          case 4:
+            monthName = "Mei";
+            break;
+          case 5:
+            monthName = "Juni";
+            break;
+          case 6:
+            monthName = "Juli";
+            break;
+          case 7:
+            monthName = "Agustus";
+            break;
+          case 8:
+            monthName = "September";
+            break;
+          case 9:
+            monthName = "Oktober";
+            break;
+          case 10:
+            monthName = "November";
+            break;
+          case 11:
+            monthName = "Desember";
+            break;
+        }
+
+        months.push({
+          monthName,
+          startDate,
+          endDate,
+        });
+      }
 
       const users = await User.find({
         role: 3,
-      })
-        .select("-password")
-        .sort("name");
+      }).countDocuments();
 
       let data = [];
 
       await Promise.all(
-        users.map(async (user) => {
+        months.map(async (m, i) => {
           let answers = await testAnswer
             .find({
-              user: user._id,
+              createdAt: {
+                $gte: m.startDate,
+                $lte: m.endDate,
+              },
             })
             .populate("test", "type");
 
-          if (fromDate && toDate) {
-            answers = await testAnswer
-              .find({
-                user: user._id,
-                $and: [
-                  {
-                    createdAt: {
-                      $gte: fromDate.startOf("day").toDate(),
-                      $lte: toDate.endOf("day").toDate(),
-                    },
-                  },
-                ],
-              })
-              .populate("test", "type");
-          }
+          // if (fromDate && toDate) {
+          //   answers = await testAnswer
+          //     .find({
+          //       createdAt: {
+          //         $gte: fromDate.startOf("day").toDate(),
+          //         $lte: toDate.endOf("day").toDate(),
+          //       },
+          //     })
+          //     .populate("test", "type");
+          // }
 
           if (answers.length > 0) {
             let preTotalValue = 0;
@@ -175,32 +240,41 @@ module.exports = {
               }
             });
 
-            const nilaiPre =
+            let nilaiPre =
               preType > 1 ? (preTotalValue * preType) / 100 : preTotalValue;
 
-            const nilaiPost =
+            let nilaiPost =
               postType > 1 ? (postType * postTotalValue) / 100 : postTotalValue;
 
+            nilaiPre = nilaiPre / users;
+            nilaiPost = nilaiPost / users;
+
             data.push({
-              user,
+              i,
+              bulan: m.monthName,
               nilaiPre,
               nilaiPost,
             });
           } else {
             data.push({
-              user,
+              i,
+              bulan: m.monthName,
               nilaiPre: 0,
               nilaiPost: 0,
             });
-
-            // data.push({
-            //   user,
-            //   type: "post",
-            //   nilai: 0,
-            // });
           }
         })
       );
+
+      data.sort(function (a, b) {
+        var keyA = a.i,
+          keyB = b.i;
+
+        if (keyA < keyB) return -1;
+        if (keyA > keyB) return 1;
+
+        return 0;
+      });
 
       return response(200, data, "Data grafik", res);
     } catch (error) {
