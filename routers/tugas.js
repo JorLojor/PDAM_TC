@@ -33,6 +33,8 @@ router.post(
 );
 
 router.post("/filtered", Controller.getTugasFiltered);
+router.post("/deadline", Controller.setTugasDeadline);
+
 router.put(
   "/:id",
   auth.instruktur,

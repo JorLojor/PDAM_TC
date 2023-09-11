@@ -5,6 +5,7 @@ const KelasModel = require("../models/kelas");
 const MateriModel = require("../models/materi");
 const response = require("../respons/response");
 const upload = require("../middleware/filepath");
+const TaskDeadline = require("../models/tugasDeadline");
 const uploadFile = require("../middleware/filepath");
 const multer = require("multer");
 require("dotenv").config();
@@ -55,6 +56,28 @@ module.exports = {
       response(200, get, "Tugas ditemukan", res);
     } catch (error) {
       response(500, error, error.message, res);
+    }
+  },
+
+  setTugasDeadline: async (req, res) => {
+    try {
+      const { tugas, deadline } = req.body;
+
+      const checkTugas = await tugasSchema.findOne({ _id: tugas });
+
+      if (!checkTugas) {
+        return response(404, {}, "data tidak ditemukan", res);
+      }
+
+      const data = await TaskDeadline.create({
+        user: req.user.id,
+        tugas,
+        deadline,
+      });
+
+      return response(201, data, "deadline berhasil ditambahkan", res);
+    } catch (error) {
+      return response(500, error, error.message, res);
     }
   },
 
