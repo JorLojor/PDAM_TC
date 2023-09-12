@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const KelasModel = require("../models/kelas");
 const UserModel = require("../models/user");
+const MateriModel = require("../models/materi");
 const calonPesertaSchema = require("../models/calonpeserta");
 const RecentClass = require("../models/recentClass");
 const response = require("../respons/response");
@@ -132,17 +133,38 @@ module.exports = {
     const { instruktur } = req.params;
 
     try {
-      const get = await KelasModel.find({ instruktur })
-        .populate("materi kategori")
-        .populate({
-          path: "materi.items.tugas",
-          model: "Tugas",
-        })
-        .lean()
-        .exec();
-      response(200, get, "Kelas berhasil ditemukan", res);
+      let data = [];
+
+      let materiContainer = [];
+
+      const materis = await MateriModel.find({ instruktur: instruktur });
+
+      if (materis.length > 0) {
+        materis.map((materi) => {
+          materiContainer.push(materi._id);
+        });
+      }
+
+      if (materiContainer.length > 0) {
+        for (let i = 0; i < materiContainer.length; i++) {
+          const kelas = await KelasModel.find({
+            materi: {
+              $in: materiContainer[i],
+            },
+          })
+            .populate("materi kategori")
+            .populate({
+              path: "materi.items.tugas",
+              model: "Tugas",
+            });
+
+          data.push({ kelas });
+        }
+      }
+
+      return response(200, data, "Kelas berhasil ditemukan", res);
     } catch (error) {
-      response(500, null, error.message, res);
+      return response(500, null, error.message, res);
     }
   },
 
@@ -778,7 +800,7 @@ module.exports = {
           totalData = peserta.length;
         }
 
-       let result = {
+        let result = {
           data: checkKelasHasSome,
           total: totalData,
         };
