@@ -157,7 +157,7 @@ module.exports = {
       const tugas = tugasSchema.create({
         title,
         instruction,
-        deadline,
+        timeLimit: parseInt(deadline),
         attachment,
         materi: materiData._id,
       });

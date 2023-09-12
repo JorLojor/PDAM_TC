@@ -7,7 +7,8 @@ const tugasSchema = new Schema(
     materi: { type: mongoose.Schema.Types.ObjectId, ref: "Materi" },
     title: { type: String, required: true },
     instruction: { type: String, required: true },
-    deadline: { type: Date, required: true },
+    deadline: { type: Date, required: false },
+    timeLimit: { type: Number, required: true },
     attachment: { type: String, required: false }, //file tugas (soal jadi attecment untuk memperlengkap soal)
     pengumpulanTugas: { type: [pengumpulanTugasSchema], required: false },
   },
