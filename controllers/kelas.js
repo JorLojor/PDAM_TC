@@ -133,19 +133,36 @@ module.exports = {
     const { instruktur } = req.params;
 
     try {
-      const get = await KelasModel.find({
-        materi: { $elemMatch: { instruktur: instruktur } },
-      })
-        .populate("materi kategori")
-        .populate({
-          path: "materi.items.tugas",
-          model: "Tugas",
-        })
-        .lean()
-        .exec();
+      let data = [];
 
-      console.log(get);
-      response(200, get, "Kelas berhasil ditemukan", res);
+      let materiContainer = [];
+
+      const materis = await MateriModel.find({ instruktur: instruktur });
+
+      if (materis.length > 0) {
+        materis.map((materi) => {
+          materiContainer.push(materi._id);
+        });
+      }
+
+      if (materiContainer.length > 0) {
+        for (let i = 0; i < materiContainer.length; i++) {
+          const kelas = await KelasModel.find({
+            materi: {
+              $in: materiContainer[i],
+            },
+          })
+            .populate("materi kategori")
+            .populate({
+              path: "materi.items.tugas",
+              model: "Tugas",
+            });
+
+          data.push({ kelas });
+        }
+      }
+
+      return response(200, data, "Kelas berhasil ditemukan", res);
     } catch (error) {
       return response(500, null, error.message, res);
     }
