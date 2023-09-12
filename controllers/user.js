@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-const ClassEnrollment = require("../models/pengajuanKelas");
 const userModel = require("../models/user");
 const Kelas = require("../models/kelas");
 const ratingModel = require("../models/rating");
@@ -90,10 +89,28 @@ module.exports = {
       await user.save();
 
       if (is_enrollment == true) {
-        await ClassEnrollment.create({
+        const extractedPesertaKelas = [...checkKelas.peserta];
+        const extractedKelasUser = [...user.kelas];
+
+        extractedPesertaKelas.push({
           user: user._id,
-          class: kelas,
         });
+
+        extractedKelasUser.push({
+          kelas: checkKelas._id,
+        });
+
+        await Kelas.findOneAndUpdate(
+          { _id: kelas },
+          { $set: { peserta: extractedPesertaKelas } },
+          { new: true }
+        );
+
+        await userModel.findOneAndUpdate(
+          { _id: user._id },
+          { $set: { kelas: extractedKelasUser } },
+          { new: true }
+        );
       }
 
       response(200, user, "Register berhasil", res);
@@ -130,22 +147,28 @@ module.exports = {
         const cekPassword = bcrypt.compareSync(password, user.password);
         if (cekPassword) {
           if (is_enrollment == true && user.role == 3) {
-            let hasJoined = false;
+            const extractedPesertaKelas = [...checkKelas.peserta];
+            const extractedKelasUser = [...user.kelas];
 
-            checkKelas.peserta.map((p) => {
-              if (p.user == user._id.toString()) {
-                hasJoined = true;
-              }
-            });
-
-            if (hasJoined) {
-              return response(400, {}, "Anda sudah mengikuti kelas ini", res);
-            }
-
-            await ClassEnrollment.create({
+            extractedPesertaKelas.push({
               user: user._id,
-              class: kelas,
             });
+
+            extractedKelasUser.push({
+              kelas: checkKelas._id,
+            });
+
+            await Kelas.findOneAndUpdate(
+              { _id: kelas },
+              { $set: { peserta: extractedPesertaKelas } },
+              { new: true }
+            );
+
+            await userModel.findOneAndUpdate(
+              { _id: user._id },
+              { $set: { kelas: extractedKelasUser } },
+              { new: true }
+            );
           }
 
           const token = jwt.sign({ id: user._id, role: user.role }, secret_key);
