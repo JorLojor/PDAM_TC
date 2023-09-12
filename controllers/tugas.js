@@ -108,12 +108,45 @@ module.exports = {
     const { id } = req.params;
 
     try {
-      const tugasList = await MateriModel.find({ instruktur: id })
-        .populate("items.tugas")
-        .select("section items.title items.tugas");
-      response(200, tugasList, "Ditemukan", res);
+      let data = [];
+      let tasksContainer = [];
+
+      const materis = await MateriModel.find({ instruktur: id });
+
+      if (materis.length > 0) {
+        await Promise.all(
+          materis.map(async (materi) => {
+            const tasks = await tugasSchema.find({
+              materi: materi._id,
+            });
+
+            if (tasks.length > 0) {
+              tasks.map((task) => {
+                tasksContainer.push({ materi: task.materi, task });
+              });
+            }
+          })
+        );
+      }
+
+      if (tasksContainer.length > 0) {
+        for (let i = 0; i < tasksContainer.length; i++) {
+          const tugasList = await MateriModel.findOne({
+            _id: new mongoose.Types.ObjectId(tasksContainer[i].materi),
+          })
+            .populate("items.tugas")
+            .select("section items.title items.tugas");
+
+          data.push({
+            tugasList,
+            task: tasksContainer[i].task,
+          });
+        }
+      }
+
+      return response(200, data, "Ditemukan", res);
     } catch (error) {
-      response(500, null, error.message, res);
+      return response(500, null, error.message, res);
     }
   },
 
