@@ -132,7 +132,7 @@ module.exports = {
     const { instruktur } = req.params;
 
     try {
-      const get = await KelasModel.find({ instruktur })
+      const get = await KelasModel.find({materi:{$elemMatch:{instruktur:instruktur}}})
         .populate("materi kategori")
         .populate({
           path: "materi.items.tugas",
@@ -140,6 +140,8 @@ module.exports = {
         })
         .lean()
         .exec();
+      
+        console.log(get)
       response(200, get, "Kelas berhasil ditemukan", res);
     } catch (error) {
       response(500, null, error.message, res);
