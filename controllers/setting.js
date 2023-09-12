@@ -9,7 +9,14 @@ require("dotenv").config();
 module.exports = {
   index: async (req, res) => {
     try {
-      const data = await Setting.findOne().populate("instructors", "name");
+      const data = await Setting.findOne()
+        .populate({
+          path: "instructors",
+          select:"-password",
+          populate: {
+            path:"rating"
+          }
+        })
 
       return response(200, data, "berhasil get setting", res);
     } catch (error) {

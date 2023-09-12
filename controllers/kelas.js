@@ -778,7 +778,7 @@ module.exports = {
           totalData = peserta.length;
         }
 
-        result = {
+       let result = {
           data: checkKelasHasSome,
           total: totalData,
         };
