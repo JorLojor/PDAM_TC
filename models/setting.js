@@ -10,7 +10,7 @@ const setting = new Schema(
       },
     ],
     about: {
-      type: String,
+      type: {},
       required: false,
     },
     our_class: {
