@@ -59,11 +59,24 @@ module.exports = {
     }
   },
 
+  getTugasDeadline:async(req,res)=>{
+    try {
+      const {id,task} = req.params
+
+      const get = await TaskDeadline.find({user:id,task}).populate("task")
+      console.log(get);
+      response(200,get,"Tugas ditemukan",res)
+    } catch (error) {
+      response(500,error,error.message,res)
+    }
+  },
+
   setTugasDeadline: async (req, res) => {
     try {
-      const { tugas, deadline } = req.body;
+      const { task } = req.body;
+      const currentTime = new Date();
 
-      const checkTugas = await tugasSchema.findOne({ _id: tugas });
+      const checkTugas = await tugasSchema.findOne({ _id: task });
 
       if (!checkTugas) {
         return response(404, {}, "data tidak ditemukan", res);
@@ -71,11 +84,15 @@ module.exports = {
 
       const data = await TaskDeadline.create({
         user: req.user.id,
-        tugas,
-        deadline,
+        task,
+        deadline: new Date(currentTime.getTime() + checkTugas.timeLimit * 24 * 60 * 60 * 1000),
       });
 
-      return response(201, data, "deadline berhasil ditambahkan", res);
+      const findTugas = await tugasSchema.findOne({ _id: task });
+
+      findTugas.deadline = data.deadline;
+
+      return response(201, findTugas, "deadline berhasil ditambahkan", res);
     } catch (error) {
       return response(500, error, error.message, res);
     }
@@ -188,8 +205,11 @@ module.exports = {
 
       let answerFile = null;
 
+      console.log(req.file);
+      console.log(req.files);
+
       if (req.file) {
-        answerFile = req.file.path.split("/PDAM_TC/")[1];
+        answerFile = '/upload/' + req.file.path.split("/upload/").pop();
       }
 
       const tugas = await tugasSchema.findById(idTugas);
