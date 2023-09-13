@@ -59,33 +59,42 @@ module.exports = {
     }
   },
 
-  getTugasDeadline:async(req,res)=>{
+  getTugasDeadline: async (req, res) => {
     try {
-      const {id,task} = req.params
+      const { id, task } = req.params;
 
-      const get = await TaskDeadline.find({user:id,task}).populate("task")
+      const get = await TaskDeadline.find({ user: id, task }).populate("task");
       console.log(get);
-      response(200,get,"Tugas ditemukan",res)
+      response(200, get, "Tugas ditemukan", res);
     } catch (error) {
-      response(500,error,error.message,res)
+      response(500, error, error.message, res);
     }
   },
 
   setTugasDeadline: async (req, res) => {
     try {
-      const { task } = req.body;
+      const { task, kelas } = req.body;
       const currentTime = new Date();
 
       const checkTugas = await tugasSchema.findOne({ _id: task });
 
       if (!checkTugas) {
-        return response(404, {}, "data tidak ditemukan", res);
+        return response(404, {}, "tugas tidak ditemukan", res);
+      }
+
+      const checkKelas = await KelasModel.findOne({ _id: kelas });
+
+      if (!checkKelas) {
+        return response(404, {}, "kelas tidak ditemukan", res);
       }
 
       const data = await TaskDeadline.create({
         user: req.user.id,
         task,
-        deadline: new Date(currentTime.getTime() + checkTugas.timeLimit * 24 * 60 * 60 * 1000),
+        class: kelas,
+        deadline: new Date(
+          currentTime.getTime() + checkTugas.timeLimit * 24 * 60 * 60 * 1000
+        ),
       });
 
       const findTugas = await tugasSchema.findOne({ _id: task });
@@ -202,6 +211,7 @@ module.exports = {
       const user = req.body.user; //id user yang mengumpulkan tugas
       // const answerFile = req.file.path; //jawaban dari user
       const answer = req.body.answer; //jawaban dalam bentuk text
+      const kelas = req.body.kelas; //kelas dalam bentuk text (ID)
 
       let answerFile = null;
 
@@ -209,7 +219,7 @@ module.exports = {
       console.log(req.files);
 
       if (req.file) {
-        answerFile = '/upload/' + req.file.path.split("/upload/").pop();
+        answerFile = "/upload/" + req.file.path.split("/upload/").pop();
       }
 
       const tugas = await tugasSchema.findById(idTugas);
@@ -224,6 +234,13 @@ module.exports = {
       if (cekUser) {
         response(400, user, "anda sudah mengumpulkan", res);
       }
+
+      const checkKelas = await KelasModel.findOne({ _id: kelas });
+
+      if (!checkKelas) {
+        return response(404, {}, "kelas tidak ditemukan", res);
+      }
+
       const today = new Date();
       let status = "menunggu";
 
@@ -233,11 +250,14 @@ module.exports = {
 
       const pengumpulan = {
         user,
+        kelas,
         answerFile,
         answer,
         status: status,
       };
+
       let data = tugas.pengumpulanTugas;
+
       data.push(pengumpulan);
 
       const result = await tugasSchema.findByIdAndUpdate(
