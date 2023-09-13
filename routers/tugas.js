@@ -33,7 +33,7 @@ router.post(
 );
 
 router.post("/filtered", Controller.getTugasFiltered);
-router.get('/deadline/:task/:id', auth.user, Controller.getTugasDeadline);
+router.get('/deadline/:kelas/:task/:id', auth.user, Controller.getTugasDeadline);
 router.post("/deadline", auth.user, Controller.setTugasDeadline);
 
 router.put(

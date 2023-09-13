@@ -19,7 +19,24 @@ const upload = multer({ storage });
 
 router.get("/", Controller.index);
 router.get("/organization-structure", Controller.organizationStructureList);
-router.post("/", auth.user, auth.admin, upload.array('banners'), Controller.update);
+router.post(
+  "/",
+  auth.user,
+  auth.admin,
+  upload.fields([
+    {
+      name: "banners",
+      maxCount: 5,
+    },
+    {
+      name: "testimoni",
+    },
+    {
+      name: "about",
+    },
+  ]),
+  Controller.update
+);
 router.post(
   "/organization-structure",
   auth.user,

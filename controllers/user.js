@@ -608,4 +608,23 @@ module.exports = {
       session.endSession();
     }
   },
+  forcedUpdate:async(req,res)=>{
+    const { id } = req.params
+    const {password} = req.body
+    try {
+
+      const hashedPassword = bcrypt.hashSync(password, 10);
+      
+      const forceUpdate = await userModel.findByIdAndUpdate(id,{password:hashedPassword},{new:true})
+      res.json({
+        message:'Berhasil',
+        data:forceUpdate
+      })
+    } catch (error) {
+      res.json({
+        message:error.message,
+        data:[]
+      })
+    }
+  }
 };
