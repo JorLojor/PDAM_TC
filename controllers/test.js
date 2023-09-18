@@ -41,76 +41,90 @@ function calculateGrade(answerArray, maxGrade) {
 
 module.exports = {
   store: async (req, res) => {
+    const session = await mongoose.startSession();
+
     try {
-      const session = await mongoose.startSession();
-      session.startTransaction()
+      session.startTransaction();
 
       let { data } = req.body;
 
-        const { slug, title } = req.params;
-        let imageTest = "/uploads/test-image/";
-        const dataPertanyaan = JSON.parse(data);
-        if (req.files.length > 0 || req.files != null) {
-          imageTest = "/upload/" + req.files[0].path.split("/upload/").pop();
-        }
-        const questions = dataPertanyaan.questions.map((data) => {
-          let path = null;
+      const { slug, title } = req.params;
 
-          if (data.img != null) {
-            path = imageTest;
+      let imageTest = "/uploads/test-image/";
+
+      const dataPertanyaan = JSON.parse(data);
+
+      if ((req.files && req.files.length > 0) || req.files != null) {
+        imageTest = "/upload/" + req.files[0].path.split("/upload/").pop();
+      }
+
+      const questions = dataPertanyaan.questions.map((data) => {
+        let path = null;
+        if (data.img != null) {
+          path = imageTest;
+        }
+        let answer = data.answer.map((answer) => {
+          let pathAnswer = null;
+          if (answer.img != null) {
+            pathAnswer = imageTest;
           }
-          let answer = data.answer.map((answer) => {
-            let pathAnswer = null;
-            if (answer.img != null) {
-              pathAnswer = imageTest;
-            }
-            return {
-              value: answer.value,
-              isTrue: answer.isTrue,
-              img: pathAnswer,
-            };
-          });
           return {
-            value: data.value,
-            type: data.type,
-            img: path,
-            kode: makeid(8),
-            answer,
+            value: answer.value,
+            isTrue: answer.isTrue,
+            img: pathAnswer,
           };
         });
-        const post = {
-          judul: dataPertanyaan.judul,
-          type: dataPertanyaan.type,
-          pembuat: dataPertanyaan.pembuat,
-          question: questions,
+        return {
+          value: data.value,
+          type: data.type,
+          img: path,
+          kode: makeid(8),
+          answer,
         };
-        const tests = new Test(post);
-        tests.save({ session });
-        
-        if (dataPertanyaan.type == "pre") {
-          await MateriModel.updateOne(
-            { slug: slug },
-            { $set: { "test.pre": tests._id } },
-            { upsert: true, new: true, session }
-          );
-        } else if (dataPertanyaan.type == "post") {
-          await MateriModel.updateOne(
-            { slug: slug },
-            { $set: { "test.post": tests._id } },
-            { upsert: true, new: true, session }
-          );
-        }
-        if (dataPertanyaan.type == "quiz") {
-          await MateriModel.updateOne(
-            { slug: slug, "items.title": title },
-            { $set: { "items.$.quiz": tests._id } },
-            { upsert: true, new: true, session }
-          );
-        }
+      });
+
+      const post = {
+        judul: dataPertanyaan.judul,
+        type: dataPertanyaan.type,
+        pembuat: dataPertanyaan.pembuat,
+        question: questions,
+      };
+
+      const tests = new Test(post);
+
+      tests.save({ session });
+
+      if (dataPertanyaan.type == "pre") {
+        await MateriModel.updateOne(
+          { slug: slug },
+          { $set: { "test.pre": tests._id } },
+          { upsert: true, new: true, session }
+        );
+      } else if (dataPertanyaan.type == "post") {
+        await MateriModel.updateOne(
+          { slug: slug },
+          { $set: { "test.post": tests._id } },
+          { upsert: true, new: true, session }
+        );
+      } else if (dataPertanyaan.type == "quiz") {
+        const materi = await MateriModel.updateOne(
+          { slug: slug, "items.title": title },
+          { $set: { "items.$.quiz": tests._id } },
+          { upsert: true, new: true, session }
+        );
+
+        console.log(materi);
+      }
 
       await session.commitTransaction();
-      response(200, {}, "Test Berhasil di masukan", res);
+
+      const materi = await MateriModel.findOne({
+        slug: slug,
+      });
+
+      response(200, materi, "Test Berhasil di masukan", res);
     } catch (error) {
+      console.log(error);
       response(500, error, error.message, res);
       await session.abortTransaction();
     } finally {
