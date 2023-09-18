@@ -41,69 +41,72 @@ function calculateGrade(answerArray, maxGrade) {
 
 module.exports = {
   store: async (req, res) => {
-    const session = await mongoose.startSession();
-    session.startTransaction();
     try {
+      const session = await mongoose.startSession();
+      session.startTransaction()
+
       let { data } = req.body;
-      const { slug, title } = req.params;
-      // data = data.replaceAll("'", '"')
-      let imageTest = "/uploads/test-image/";
-      const dataPertanyaan = JSON.parse(data);
-      if (req.files.length > 0 || req.files != null) {
-        imageTest = "/upload/" + req.files[0].path.split("/upload/").pop();
-      }
-      const questions = dataPertanyaan.questions.map((data) => {
-        let path = null;
-        if (data.img != null) {
-          path = imageTest;
+
+        const { slug, title } = req.params;
+        let imageTest = "/uploads/test-image/";
+        const dataPertanyaan = JSON.parse(data);
+        if (req.files.length > 0 || req.files != null) {
+          imageTest = "/upload/" + req.files[0].path.split("/upload/").pop();
         }
-        let answer = data.answer.map((answer) => {
-          let pathAnswer = null;
-          if (answer.img != null) {
-            pathAnswer = imageTest;
+        const questions = dataPertanyaan.questions.map((data) => {
+          let path = null;
+
+          if (data.img != null) {
+            path = imageTest;
           }
+          let answer = data.answer.map((answer) => {
+            let pathAnswer = null;
+            if (answer.img != null) {
+              pathAnswer = imageTest;
+            }
+            return {
+              value: answer.value,
+              isTrue: answer.isTrue,
+              img: pathAnswer,
+            };
+          });
           return {
-            value: answer.value,
-            isTrue: answer.isTrue,
-            img: pathAnswer,
+            value: data.value,
+            type: data.type,
+            img: path,
+            kode: makeid(8),
+            answer,
           };
         });
-        return {
-          value: data.value,
-          type: data.type,
-          img: path,
-          kode: makeid(8),
-          answer,
+        const post = {
+          judul: dataPertanyaan.judul,
+          type: dataPertanyaan.type,
+          pembuat: dataPertanyaan.pembuat,
+          question: questions,
         };
-      });
-      const post = {
-        judul: dataPertanyaan.judul,
-        type: dataPertanyaan.type,
-        pembuat: dataPertanyaan.pembuat,
-        question: questions,
-      };
-      const tests = new Test(post);
-      tests.save({ session });
-      if (dataPertanyaan.type == "pre") {
-        await MateriModel.updateOne(
-          { slug: slug },
-          { $set: { "test.pre": tests._id } },
-          { upsert: true, new: true, session }
-        );
-      } else if (dataPertanyaan.type == "post") {
-        await MateriModel.updateOne(
-          { slug: slug },
-          { $set: { "test.post": tests._id } },
-          { upsert: true, new: true, session }
-        );
-      }
-      if (dataPertanyaan.type == "quiz") {
-        await MateriModel.updateOne(
-          { slug: slug, "items.title": title },
-          { $set: { "items.$.quiz": tests._id } },
-          { upsert: true, new: true, session }
-        );
-      }
+        const tests = new Test(post);
+        tests.save({ session });
+        
+        if (dataPertanyaan.type == "pre") {
+          await MateriModel.updateOne(
+            { slug: slug },
+            { $set: { "test.pre": tests._id } },
+            { upsert: true, new: true, session }
+          );
+        } else if (dataPertanyaan.type == "post") {
+          await MateriModel.updateOne(
+            { slug: slug },
+            { $set: { "test.post": tests._id } },
+            { upsert: true, new: true, session }
+          );
+        }
+        if (dataPertanyaan.type == "quiz") {
+          await MateriModel.updateOne(
+            { slug: slug, "items.title": title },
+            { $set: { "items.$.quiz": tests._id } },
+            { upsert: true, new: true, session }
+          );
+        }
 
       await session.commitTransaction();
       response(200, {}, "Test Berhasil di masukan", res);
@@ -587,6 +590,4 @@ module.exports = {
       response(500, error, "Server error", res);
     }
   },
-
-  
 };

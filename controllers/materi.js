@@ -17,7 +17,7 @@ module.exports = {
 
       if (isPaginate === 0) {
         const data = await MateriModel.find().populate(
-          "instruktur items.tugas"
+          "instruktur items.tugas items.quiz"
         ).sort({createdAt:-1});
 
         result = {
@@ -32,11 +32,11 @@ module.exports = {
       page = parseInt(page) || 1;
       limits = parseInt(limits) || 6;
       const data = await MateriModel.find()
-        .populate("instruktur items.tugas")
+        .populate("instruktur items.tugas items.quiz")
         .skip((page - 1) * limits)
         .limit(limits)
         .sort({createdAt:-1})
-        
+
 
       result = {
         data: data,
