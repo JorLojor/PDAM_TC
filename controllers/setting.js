@@ -1,5 +1,6 @@
 const Setting = require("../models/setting");
 const OrganizationStructure = require("../models/organizationStructure");
+const Testimony = require("../models/testimony");
 const User = require("../models/user");
 
 const fs = require("fs");
@@ -32,6 +33,16 @@ module.exports = {
       const data = await OrganizationStructure.find();
 
       return response(200, data, "berhasil get struktur organisasi", res);
+    } catch (error) {
+      return response(500, error, "Server error", res);
+    }
+  },
+
+  testimonyList: async (req, res) => {
+    try {
+      const data = await Testimony.find();
+
+      return response(200, data, "berhasil get testimoni", res);
     } catch (error) {
       return response(500, error, "Server error", res);
     }
@@ -367,6 +378,252 @@ module.exports = {
       }
 
       const data = await OrganizationStructure.find();
+
+      return response(200, data, "berhasil update struktur organisasi", res);
+    } catch (error) {
+      console.log(error);
+
+      return response(500, error, "Server error", res);
+    }
+  },
+
+  updateTestimony: async (req, res) => {
+    try {
+      await Testimony.deleteMany();
+      const { countData } = req.fields;
+
+      const currentData = await Testimony.find();
+
+      let existing = [];
+      let registered = [];
+
+      currentData.map((data) => {
+        existing.push(data._id);
+      });
+
+      let j = 0;
+
+      for (let i = 0; i < countData; i++) {
+        const id = `id${i}`;
+        const name = `name${i}`;
+        const position = `position${i}`;
+        const testimony = `testimony${i}`;
+        const picture = `picture${i}`;
+
+        const dataId = req.fields[id];
+        const dataName = req.fields[name];
+        const dataPosition = req.fields[position];
+        const dataTestimony = req.fields[testimony];
+        const dataPicture = req.fields[picture];
+
+        if (dataId) {
+          const oldData = await Testimony.findById(dataId);
+
+          if (!oldData) {
+            return response(404, {}, "Data tidak ditemukan", res);
+          }
+
+          if (dataPicture == 1) {
+            await Testimony.findByIdAndUpdate(
+              dataId,
+              {
+                name: dataName,
+                position: dataPosition,
+                testimony: dataTestimony,
+              },
+              {
+                new: true,
+              }
+            );
+          } else {
+            if (req.files.picture[j] != null) {
+              const today = new Date().toISOString().slice(0, 10);
+
+              const folder = path.join(
+                __dirname,
+                "..",
+                "upload",
+                "testimony",
+                today
+              );
+
+              await fs.promises.mkdir(folder, { recursive: true });
+
+              const format = "YYYYMMDDHHmmss";
+
+              const date = new Date();
+
+              const dateName = moment(date).format(format);
+
+              let ext;
+
+              if (req.files.picture[j].type == "image/png") {
+                ext = "png";
+              } else if (req.files.picture[j].type == "image/jpg") {
+                ext = "jpg";
+              } else if (req.files.picture[j].type == "image/jpeg") {
+                ext = "jpeg";
+              }
+
+              const newPath =
+                folder + `/testimony${dateName}${i}${dateName}.${ext}`;
+
+              var oldPath = req.files.picture[j].path;
+
+              fs.promises.copyFile(oldPath, newPath, 0, function (err) {
+                if (err) throw err;
+              });
+
+              const picture = `${process.env.url}upload/testimony/${today}/testimony${dateName}${i}${dateName}.${ext}`;
+
+              await Testimony.findByIdAndUpdate(
+                dataId,
+                {
+                  picture,
+                  name: dataName,
+                  position: dataPosition,
+                  testimony: dataTestimony,
+                },
+                {
+                  new: true,
+                }
+              );
+
+              j++;
+            } else {
+              if (req.files.picture != null) {
+                const today = new Date().toISOString().slice(0, 10);
+
+                const folder = path.join(
+                  __dirname,
+                  "..",
+                  "upload",
+                  "testimony",
+                  today
+                );
+
+                await fs.promises.mkdir(folder, { recursive: true });
+
+                const format = "YYYYMMDDHHmmss";
+
+                const date = new Date();
+
+                const dateName = moment(date).format(format);
+
+                let ext;
+
+                if (req.files.picture.type == "image/png") {
+                  ext = "png";
+                } else if (req.files.picture.type == "image/jpg") {
+                  ext = "jpg";
+                } else if (req.files.picture.type == "image/jpeg") {
+                  ext = "jpeg";
+                }
+
+                const newPath =
+                  folder + `/testimony${dateName}${i}${dateName}.${ext}`;
+
+                var oldPath = req.files.picture.path;
+
+                fs.promises.copyFile(oldPath, newPath, 0, function (err) {
+                  if (err) throw err;
+                });
+
+                const picture = `${process.env.url}upload/testimony/${today}/testimony${dateName}${i}${dateName}.${ext}`;
+
+                await Testimony.findByIdAndUpdate(
+                  dataId,
+                  {
+                    picture,
+                    name: dataName,
+                    position: dataPosition,
+                    testimony: dataTestimony,
+                  },
+                  {
+                    new: true,
+                  }
+                );
+              } else {
+                return response(400, {}, "Mohon upload gambar", res);
+              }
+            }
+          }
+
+          registered.push(dataId);
+        } else {
+          if (req.files.picture[j] != null) {
+            const today = new Date().toISOString().slice(0, 10);
+
+            const folder = path.join(
+              __dirname,
+              "..",
+              "upload",
+              "testimony",
+              today
+            );
+
+            await fs.promises.mkdir(folder, { recursive: true });
+
+            const format = "YYYYMMDDHHmmss";
+
+            const date = new Date();
+
+            const dateName = moment(date).format(format);
+
+            let ext;
+
+            if (req.files.picture[j].type == "image/png") {
+              ext = "png";
+            } else if (req.files.picture[j].type == "image/jpg") {
+              ext = "jpg";
+            } else if (req.files.picture[j].type == "image/jpeg") {
+              ext = "jpeg";
+            }
+
+            const newPath =
+              folder + `/testimony${dateName}${i}${dateName}.${ext}`;
+
+            var oldPath = req.files.picture[j].path;
+
+            fs.promises.copyFile(oldPath, newPath, 0, function (err) {
+              if (err) throw err;
+            });
+
+            const picture = `${process.env.url}upload/testimony/${today}/testimony${dateName}${i}${dateName}.${ext}`;
+
+            const newData = await Testimony.create({
+              picture,
+              name: dataName,
+              position: dataPosition,
+              testimony: dataTestimony,
+            });
+
+            j++;
+
+            registered.push(newData._id);
+          } else {
+            return response(400, {}, "Mohon upload gambar", res);
+          }
+        }
+      }
+
+      if (existing.length > 0 && registered.length > 0) {
+        const tobeDeleted = await Testimony.find({
+          _id: {
+            $nin: registered,
+          },
+        });
+
+        console.log(tobeDeleted, registered);
+
+        if (tobeDeleted.length > 0) {
+          tobeDeleted.map(async (t) => {
+            await Testimony.findByIdAndDelete(t._id);
+          });
+        }
+      }
+
+      const data = await Testimony.find();
 
       return response(200, data, "berhasil update struktur organisasi", res);
     } catch (error) {

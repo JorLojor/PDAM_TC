@@ -21,6 +21,7 @@ const upload = multer({ storage });
 
 router.get("/", Controller.index);
 router.get("/organization-structure", Controller.organizationStructureList);
+router.get("/testimony", Controller.testimonyList);
 router.post(
   "/",
   auth.user,
@@ -45,6 +46,13 @@ router.post(
   auth.admin,
   formidable({ multiples: true }),
   Controller.updateOrganizationStructure
+);
+router.post(
+  "/testimony",
+  auth.user,
+  auth.admin,
+  formidable({ multiples: true }),
+  Controller.updateTestimony
 );
 
 module.exports = router;
