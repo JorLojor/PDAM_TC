@@ -42,5 +42,7 @@ router.delete("/:id", auth.instruktur, Controller.deleteMateri);
 router.get("/:id", auth.instruktur, Controller.getByGuruMateri);
 router.get("/sub/:slug", auth.user, Controller.getSubmateri);
 router.get("/react/select", auth.user, Controller.getAllMateriReactSelect);
+router.put("/copy-test/:id",auth.user,Controller.copyTest)
+
 
 module.exports = router;

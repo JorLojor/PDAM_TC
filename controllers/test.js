@@ -97,7 +97,7 @@ module.exports = {
           { upsert: true, new: true, session }
         );
       }
-      if (title != "null" && dataPertanyaan.type == "quiz") {
+      if (dataPertanyaan.type == "quiz") {
         await MateriModel.updateOne(
           { slug: slug, "items.title": title },
           { $set: { "items.$.quiz": tests._id } },
@@ -287,9 +287,9 @@ module.exports = {
       const { id } = req.params;
       const { kelas } = req.query;
 
-      if (!kelas) {
-        return response(404, id, "Mohon isi kelas", res);
-      }
+      // if (!kelas) {
+      //   return response(404, id, "Mohon isi kelas", res);
+      // }
 
       const result = await Test.findById(id).populate("pembuat");
 
@@ -587,4 +587,6 @@ module.exports = {
       response(500, error, "Server error", res);
     }
   },
+
+  
 };

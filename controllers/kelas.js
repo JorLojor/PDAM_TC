@@ -19,6 +19,7 @@ module.exports = {
 
       const data = await KelasModel.find()
         .skip((halaman - 1) * batas)
+        .sort({createdAt:-1})
         .limit(batas)
         .populate("materi kategori");
 
@@ -73,7 +74,7 @@ module.exports = {
     const id = req.params.id;
 
     try {
-      let kelas = await KelasModel.findById(id).populate("materi peserta");
+      let kelas = await KelasModel.findById(id).populate("materi peserta kategori");
 
       if (!kelas) {
         response(404, id, "Kelas tidak ditemukan", res);
@@ -213,6 +214,19 @@ module.exports = {
         return;
       }
 
+      let collectedAbsensi = []
+
+      if (!absensi) {
+        return response(400,null,'Data absensi belum diisi!',res)
+      }else{
+        collectedAbsensi = absensi.map((absen)=>{
+          return {
+            name:absen.jenis,
+            ...absen
+          }
+        })
+      }
+
       const getND = await axios.post(
         process.env.url_rab + "nd/global/check",
         {},
@@ -247,7 +261,7 @@ module.exports = {
         peserta,
         instruktur,
         materi: JSON.parse(materi),
-        absensi,
+        absensi:collectedAbsensi,
         jadwal,
         kelasType,
         kodeNotaDinas,
@@ -270,10 +284,74 @@ module.exports = {
   },
 
   updateKelasAdminSide: async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    const id = req.params.id;
+
     try {
-      const id = req.params.id;
-      const updated = req.body;
-      const result = await KelasModel.findByIdAndUpdate(id, updated, {
+      const {
+        kodeKelas,
+        nama,
+        harga,
+        kapasitasPeserta,
+        description,
+        methods,
+        kategori,
+        instruktur,
+        peserta = [],
+        materi,
+        jadwal,
+        kelasType,
+        kodeNotaDinas,
+        link,
+        absensi,
+      } = req.body;
+
+      const checkKelas = await KelasModel.findById(id)
+      
+
+      let status = "pending";
+
+      if (req.file) {
+        imageKelas = '/upload/' + req.file.path.split("/upload/")[1];
+      }
+
+      let collectedAbsensi = []
+
+      if (!absensi) {
+        return response(400,null,'Data absensi belum diisi!',res)
+      }else{
+        collectedAbsensi = absensi.map((absen)=>{
+          return {
+            name:absen.jenis,
+            ...absen
+          }
+        })
+      }
+
+      const kelas = {
+        kodeKelas,
+        nama,
+        slug: _.kebabCase(nama),
+        harga,
+        kapasitasPeserta,
+        description,
+        methods,
+        kategori,
+        peserta,
+        instruktur,
+        materi: JSON.parse(materi),
+        absensi:collectedAbsensi,
+        jadwal,
+        kelasType,
+        kodeNotaDinas,
+        image: imageKelas ? imageKelas : checkKelas.image,
+        linkPelatihan: link,
+        kategori,
+        status,
+      };
+
+      const result = await KelasModel.findByIdAndUpdate(id, kelas, {
         new: true,
       });
 
@@ -1017,4 +1095,24 @@ module.exports = {
       console.log(error);
     }
   },
+
+  checkNotaDinasKelas: async(req,res)=>{
+    const {kodeNotaDinas} = req.body
+    try {
+      const checkKelas = await KelasModel.findOne({ kodeNotaDinas });
+
+      if (checkKelas) {
+        return response(
+          403,
+          checkKelas,
+          `Kode Nota Dinas sudah terdaftar di kelas lain! (${checkKelas.nama})`,
+          res
+        );
+      }else{
+        return response(200,checkKelas,`Kode Nota Dinas ini bisa digunakkan!`,res)
+      }
+    } catch (error) {
+      response(500,error,error.message,res)
+    }
+  }
 };

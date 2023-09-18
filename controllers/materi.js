@@ -18,7 +18,7 @@ module.exports = {
       if (isPaginate === 0) {
         const data = await MateriModel.find().populate(
           "instruktur items.tugas"
-        );
+        ).sort({createdAt:-1});
 
         result = {
           data: data,
@@ -34,7 +34,9 @@ module.exports = {
       const data = await MateriModel.find()
         .populate("instruktur items.tugas")
         .skip((page - 1) * limits)
-        .limit(limits);
+        .limit(limits)
+        .sort({createdAt:-1})
+        
 
       result = {
         data: data,
@@ -417,11 +419,61 @@ module.exports = {
       const mapped = result.map((v, i) => {
         return {
           value: v._id,
-          label: v.section + " - " + `(${v.instruktur.name})`,
+          label: v.section + " - " + `(${v.instruktur[0].name})`,
         };
       });
 
       response(200, mapped, "Materi di dapat", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
+
+  copyTest: async (req, res) => {
+    const from = req.query.from;
+    const { id } = req.params;
+
+    try {
+      const checkMateri = await MateriModel.findOne({ _id: id });
+
+      if (!checkMateri) {
+        return response(404, null, "Tidak ada materi yang dimaksud", res);
+      }
+
+      if (from === "pre") {
+        const newTest = {
+          pre: checkMateri.test.post,
+          post: checkMateri.test.post,
+        };
+        const updateMateri = await MateriModel.findByIdAndUpdate(
+          id,
+          {
+            $set: {
+              test: newTest,
+            },
+          },
+          { new: true }
+        );
+
+        return response(200, updateMateri, "Pre test berhasil disalin", res);
+      }
+      if (from === "post") {
+        const newTest = {
+          pre: checkMateri.test.pre,
+          post: checkMateri.test.pre,
+        };
+        const updateMateri = await MateriModel.findByIdAndUpdate(
+          id,
+          {
+            $set: {
+              test: newTest,
+            },
+          },
+          { new: true }
+        );
+
+        return response(200, updateMateri, "Post test berhasil disalin", res);
+      }
     } catch (error) {
       response(500, error, error.message, res);
     }
