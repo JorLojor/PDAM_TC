@@ -5,11 +5,13 @@ const Controller = require("../controllers/setting");
 
 const path = require("path");
 const multer = require("multer");
+const formidable = require("express-formidable");
 
 const today = new Date().toISOString().slice(0, 10);
 
 const storage = multer.diskStorage({
   destination: path.join(__dirname, "..", "upload", "banners", today),
+
   filename: (req, file, cb) => {
     cb(null, file.originalname);
   },
@@ -41,20 +43,8 @@ router.post(
   "/organization-structure",
   auth.user,
   auth.admin,
-  upload.array('pictures'),
-  Controller.storeOrganizationStructure
-);
-router.put(
-  "/organization-structure/:id",
-  auth.user,
-  auth.admin,
+  formidable({ multiples: true }),
   Controller.updateOrganizationStructure
-);
-router.delete(
-  "/organization-structure/:id",
-  auth.user,
-  auth.admin,
-  Controller.deleteOrganizationStructure
 );
 
 module.exports = router;

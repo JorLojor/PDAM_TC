@@ -5,27 +5,19 @@ const organizationStructure = new Schema(
   {
     picture: {
       type: String,
-      required: false,
+      required: true,
     },
     name: {
       type: String,
-      required: false,
+      required: true,
     },
     position: {
       type: String,
-      required: false,
+      required: true,
     },
-    star: {
-      type: Number,
-      required: false,
-    },
-    class: {
-      type: Number,
-      required: false,
-    },
-    student: {
-      type: Number,
-      required: false,
+    bio: {
+      type: String,
+      required: true,
     },
   },
   { timestamps: true }

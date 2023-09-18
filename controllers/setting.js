@@ -2,6 +2,10 @@ const Setting = require("../models/setting");
 const OrganizationStructure = require("../models/organizationStructure");
 const User = require("../models/user");
 
+const fs = require("fs");
+const moment = require("moment");
+const path = require("path");
+
 const response = require("../respons/response");
 
 require("dotenv").config();
@@ -9,34 +13,15 @@ require("dotenv").config();
 module.exports = {
   index: async (req, res) => {
     try {
-      const data = await Setting.findOne()
-        .populate({
-          path: "instructors",
-          select:"-password",
-          populate: {
-            path:"rating"
-          }
-        })
+      const data = await Setting.findOne().populate({
+        path: "instructors",
+        select: "-password",
+        populate: {
+          path: "rating",
+        },
+      });
 
       return response(200, data, "berhasil get setting", res);
-    } catch (error) {
-      return response(500, error, "Server error", res);
-    }
-  },
-
-  deleteOrganizationStructure: async (req, res) => {
-    try {
-      const id = req.params.id;
-
-      const check = await OrganizationStructure.findById(id);
-
-      if (!check) {
-        return response(400, error, "Data tidak ditemukan", res);
-      }
-
-      await OrganizationStructure.findByIdAndRemove(id);
-
-      return response(200, null, "Struktur Organisasi berhasil dihapus", res);
     } catch (error) {
       return response(500, error, "Server error", res);
     }
@@ -47,37 +32,6 @@ module.exports = {
       const data = await OrganizationStructure.find();
 
       return response(200, data, "berhasil get struktur organisasi", res);
-    } catch (error) {
-      return response(500, error, "Server error", res);
-    }
-  },
-
-  storeOrganizationStructure: async (req, res) => {
-    try {
-    
-      const {name,position,star,classNumber,student} = req.body
-
-      if (!picture) picture = null;
-
-      if (req.files) {
-        console.log(req.files);
-      }
-
-      data = await OrganizationStructure.create({
-        picture,
-        name,
-        position,
-        star,
-        class: classNumber,
-        student,
-      });
-
-      return response(
-        200,
-        data,
-        "Struktur Organisasi berhasil ditambahkan",
-        res
-      );
     } catch (error) {
       return response(500, error, "Server error", res);
     }
@@ -126,7 +80,6 @@ module.exports = {
 
       let data;
 
-      
       instructors.map(async (row) => {
         const valid = await User.findById(row, {
           role: 2,
@@ -178,46 +131,247 @@ module.exports = {
 
   updateOrganizationStructure: async (req, res) => {
     try {
-      const id = req.params.id;
+      await OrganizationStructure.deleteMany();
+      const { countData } = req.fields;
 
-      const check = await OrganizationStructure.findById(id);
+      const currentData = await OrganizationStructure.find();
 
-      if (!check) {
-        return response(400, error, "Data tidak ditemukan", res);
+      let existing = [];
+      let registered = [];
+
+      currentData.map((data) => {
+        existing.push(data._id);
+      });
+
+      let j = 0;
+
+      for (let i = 0; i < countData; i++) {
+        const id = `id${i}`;
+        const name = `name${i}`;
+        const position = `position${i}`;
+        const bio = `bio${i}`;
+        const picture = `picture${i}`;
+
+        const dataId = req.fields[id];
+        const dataName = req.fields[name];
+        const dataPosition = req.fields[position];
+        const dataBio = req.fields[bio];
+        const dataPicture = req.fields[picture];
+
+        if (dataId) {
+          const oldData = await OrganizationStructure.findById(dataId);
+
+          if (!oldData) {
+            return response(404, {}, "Data tidak ditemukan", res);
+          }
+
+          if (dataPicture == 1) {
+            await OrganizationStructure.findByIdAndUpdate(
+              dataId,
+              {
+                name: dataName,
+                position: dataPosition,
+                bio: dataBio,
+              },
+              {
+                new: true,
+              }
+            );
+          } else {
+            if (req.files.picture[j] != null) {
+              const today = new Date().toISOString().slice(0, 10);
+
+              const folder = path.join(
+                __dirname,
+                "..",
+                "upload",
+                "organization-structure",
+                today
+              );
+
+              await fs.promises.mkdir(folder, { recursive: true });
+
+              const format = "YYYYMMDDHHmmss";
+
+              const date = new Date();
+
+              const dateName = moment(date).format(format);
+
+              let ext;
+
+              if (req.files.picture[j].type == "image/png") {
+                ext = "png";
+              } else if (req.files.picture[j].type == "image/jpg") {
+                ext = "jpg";
+              } else if (req.files.picture[j].type == "image/jpeg") {
+                ext = "jpeg";
+              }
+
+              const newPath =
+                folder + `/strukturOrganisasi${dateName}${i}${dateName}.${ext}`;
+
+              var oldPath = req.files.picture[j].path;
+
+              fs.promises.copyFile(oldPath, newPath, 0, function (err) {
+                if (err) throw err;
+              });
+
+              const picture = `${process.env.url}upload/organization-structure/${today}/strukturOrganisasi${dateName}${i}${dateName}.${ext}`;
+
+              await OrganizationStructure.findByIdAndUpdate(
+                dataId,
+                {
+                  picture,
+                  name: dataName,
+                  position: dataPosition,
+                  bio: dataBio,
+                },
+                {
+                  new: true,
+                }
+              );
+
+              j++;
+            } else {
+              if (req.files.picture != null) {
+                const today = new Date().toISOString().slice(0, 10);
+
+                const folder = path.join(
+                  __dirname,
+                  "..",
+                  "upload",
+                  "organization-structure",
+                  today
+                );
+
+                await fs.promises.mkdir(folder, { recursive: true });
+
+                const format = "YYYYMMDDHHmmss";
+
+                const date = new Date();
+
+                const dateName = moment(date).format(format);
+
+                let ext;
+
+                if (req.files.picture.type == "image/png") {
+                  ext = "png";
+                } else if (req.files.picture.type == "image/jpg") {
+                  ext = "jpg";
+                } else if (req.files.picture.type == "image/jpeg") {
+                  ext = "jpeg";
+                }
+
+                const newPath =
+                  folder +
+                  `/strukturOrganisasi${dateName}${i}${dateName}.${ext}`;
+
+                var oldPath = req.files.picture.path;
+
+                fs.promises.copyFile(oldPath, newPath, 0, function (err) {
+                  if (err) throw err;
+                });
+
+                const picture = `${process.env.url}upload/organization-structure/${today}/strukturOrganisasi${dateName}${i}${dateName}.${ext}`;
+
+                await OrganizationStructure.findByIdAndUpdate(
+                  dataId,
+                  {
+                    picture,
+                    name: dataName,
+                    position: dataPosition,
+                    bio: dataBio,
+                  },
+                  {
+                    new: true,
+                  }
+                );
+              } else {
+                return response(400, {}, "Mohon upload gambar", res);
+              }
+            }
+          }
+
+          registered.push(dataId);
+        } else {
+          if (req.files.picture[j] != null) {
+            const today = new Date().toISOString().slice(0, 10);
+
+            const folder = path.join(
+              __dirname,
+              "..",
+              "upload",
+              "organization-structure",
+              today
+            );
+
+            await fs.promises.mkdir(folder, { recursive: true });
+
+            const format = "YYYYMMDDHHmmss";
+
+            const date = new Date();
+
+            const dateName = moment(date).format(format);
+
+            let ext;
+
+            if (req.files.picture[j].type == "image/png") {
+              ext = "png";
+            } else if (req.files.picture[j].type == "image/jpg") {
+              ext = "jpg";
+            } else if (req.files.picture[j].type == "image/jpeg") {
+              ext = "jpeg";
+            }
+
+            const newPath =
+              folder + `/strukturOrganisasi${dateName}${i}${dateName}.${ext}`;
+
+            var oldPath = req.files.picture[j].path;
+
+            fs.promises.copyFile(oldPath, newPath, 0, function (err) {
+              if (err) throw err;
+            });
+
+            const picture = `${process.env.url}upload/organization-structure/${today}/strukturOrganisasi${dateName}${i}${dateName}.${ext}`;
+
+            const newData = await OrganizationStructure.create({
+              picture,
+              name: dataName,
+              position: dataPosition,
+              bio: dataBio,
+            });
+
+            j++;
+
+            registered.push(newData._id);
+          } else {
+            return response(400, {}, "Mohon upload gambar", res);
+          }
+        }
       }
 
-      let picture = req.body.picture;
+      if (existing.length > 0 && registered.length > 0) {
+        const tobeDeleted = await OrganizationStructure.find({
+          _id: {
+            $nin: registered,
+          },
+        });
 
-      const name = req.body.name;
-      const position = req.body.position;
-      const star = req.body.star;
-      const classNumber = req.body.class;
-      const student = req.body.student;
+        console.log(tobeDeleted, registered);
 
-      if (!picture) picture = null;
-
-      data = await OrganizationStructure.findByIdAndUpdate(
-        id,
-        {
-          picture,
-          name,
-          position,
-          star,
-          class: classNumber,
-          student,
-        },
-        {
-          new: true,
+        if (tobeDeleted.length > 0) {
+          tobeDeleted.map(async (t) => {
+            await OrganizationStructure.findByIdAndDelete(t._id);
+          });
         }
-      );
+      }
 
-      return response(
-        200,
-        data,
-        "Struktur Organisasi berhasil diperbaharui",
-        res
-      );
+      const data = await OrganizationStructure.find();
+
+      return response(200, data, "berhasil update struktur organisasi", res);
     } catch (error) {
+      console.log(error);
+
       return response(500, error, "Server error", res);
     }
   },
