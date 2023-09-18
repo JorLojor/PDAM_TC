@@ -54,15 +54,14 @@ module.exports = {
 
   storeOrganizationStructure: async (req, res) => {
     try {
-      let picture = req.body.picture;
-
-      const name = req.body.name;
-      const position = req.body.position;
-      const star = req.body.star;
-      const classNumber = req.body.class;
-      const student = req.body.student;
+    
+      const {name,position,star,classNumber,student} = req.body
 
       if (!picture) picture = null;
+
+      if (req.files) {
+        console.log(req.files);
+      }
 
       data = await OrganizationStructure.create({
         picture,

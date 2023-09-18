@@ -41,6 +41,7 @@ router.post(
   "/organization-structure",
   auth.user,
   auth.admin,
+  upload.array('pictures'),
   Controller.storeOrganizationStructure
 );
 router.put(
