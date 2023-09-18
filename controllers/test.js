@@ -41,10 +41,7 @@ function calculateGrade(answerArray, maxGrade) {
 
 module.exports = {
   store: async (req, res) => {
-    const session = await mongoose.startSession();
-
     try {
-      session.startTransaction();
 
       let { data } = req.body;
 
@@ -92,31 +89,29 @@ module.exports = {
 
       const tests = new Test(post);
 
-      tests.save({ session });
+      tests.save();
 
       if (dataPertanyaan.type == "pre") {
         await MateriModel.updateOne(
           { slug: slug },
           { $set: { "test.pre": tests._id } },
-          { upsert: true, new: true, session }
+          { upsert: true, new: true }
         );
       } else if (dataPertanyaan.type == "post") {
         await MateriModel.updateOne(
           { slug: slug },
           { $set: { "test.post": tests._id } },
-          { upsert: true, new: true, session }
+          { upsert: true, new: true }
         );
       } else if (dataPertanyaan.type == "quiz") {
         const materi = await MateriModel.updateOne(
-          { slug: slug, "items.title": title },
+          { slug: slug, "items._id": title },
           { $set: { "items.$.quiz": tests._id } },
-          { upsert: true, new: true, session }
+          { upsert: true, new: true }
         );
 
         console.log(materi);
       }
-
-      await session.commitTransaction();
 
       const materi = await MateriModel.findOne({
         slug: slug,
@@ -126,9 +121,6 @@ module.exports = {
     } catch (error) {
       console.log(error);
       response(500, error, error.message, res);
-      await session.abortTransaction();
-    } finally {
-      session.endSession();
     }
   },
 
