@@ -34,6 +34,12 @@ testRouter.post(
   Controller.store
 );
 testRouter.patch(
+  "/update-quiz/:id",
+  auth.user,
+  upload.array("images"),
+  Controller.updateQuiz
+);
+testRouter.patch(
   "/update/:id/",
   auth.user,
   auth.instruktur,
@@ -46,6 +52,7 @@ testRouter.delete(
   auth.instruktur,
   Controller.deleteTest
 );
+testRouter.delete("/quiz/:id", auth.user, Controller.deleteQuiz);
 testRouter.post("/submit", auth.user, Controller.answerTest);
 
 module.exports = testRouter;

@@ -487,6 +487,131 @@ module.exports = {
     }
   },
 
+  updateQuiz: async (req, res) => {
+    const session = await mongoose.startSession();
+
+    try {
+      const { id } = req.params;
+
+      const valid = await Test.findById(id);
+
+      if (!valid) {
+        return response(400, {}, "Data tidak ditemukan", res);
+      }
+
+      session.startTransaction();
+
+      let { data } = req.body;
+
+      let imageTest = "/uploads/test-image/";
+
+      const dataPertanyaan = JSON.parse(data);
+
+      if ((req.files && req.files.length > 0) || req.files != null) {
+        imageTest = "/upload/" + req.files[0].path.split("/upload/").pop();
+      }
+
+      const questions = dataPertanyaan.questions.map((data) => {
+        let path = null;
+
+        if (data.img != null) {
+          path = imageTest;
+        }
+
+        let answer = data.answer.map((answer) => {
+          let pathAnswer = null;
+          if (answer.img != null) {
+            pathAnswer = imageTest;
+          }
+          return {
+            value: answer.value,
+            isTrue: answer.isTrue,
+            img: pathAnswer,
+          };
+        });
+
+        return {
+          value: data.value,
+          type: data.type,
+          img: path,
+          kode: makeid(8),
+          answer,
+        };
+      });
+
+      const post = {
+        judul: dataPertanyaan.judul,
+        type: dataPertanyaan.type,
+        pembuat: dataPertanyaan.pembuat,
+        question: questions,
+      };
+
+      Test.findByIdAndUpdate(
+        id,
+        { post },
+        { upsert: true, new: true, session }
+      );
+
+      await session.commitTransaction();
+
+      const quiz = await Test.findById(id);
+
+      response(200, quiz, "Quiz Berhasil di perbaharui", res);
+    } catch (error) {
+      console.log(error);
+      response(500, error, error.message, res);
+      await session.abortTransaction();
+    } finally {
+      session.endSession();
+    }
+  },
+
+  deleteQuiz: async (req, res) => {
+    const session = await mongoose.startSession();
+
+    try {
+      session.startTransaction();
+
+      const { id } = req.params;
+
+      const { title } = req.query;
+
+      const valid = await Test.findById(id);
+
+      if (!valid) {
+        return response(400, {}, "Data tidak ditemukan", res);
+      }
+
+      let materi = await MateriModel.findOne({
+        items: {
+          $elemMatch: { quiz: id },
+        },
+      });
+
+      materi = await MateriModel.updateOne(
+        { _id: materi._id, "items.title": title },
+        { $set: { "items.$.quiz": null } },
+        { upsert: true, new: true, session }
+      );
+
+      const quiz = await Test.findByIdAndRemove(id);
+
+      await session.commitTransaction();
+
+      response(200, { materi, quiz }, "Quiz Berhasil di hapus", res);
+    } catch (error) {
+      if (session.inTransaction()) {
+        await session.abortTransaction();
+      }
+
+      console.log(error);
+
+      response(500, error, error.message, res);
+    } finally {
+      session.endSession();
+    }
+  },
+
   deleteTest: async (req, res) => {
     const session = await mongoose.startSession();
 
