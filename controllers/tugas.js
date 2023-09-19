@@ -215,7 +215,6 @@ module.exports = {
     try {
       const idTugas = req.params.id;
       const user = req.body.user; //id user yang mengumpulkan tugas
-      // const answerFile = req.file.path; //jawaban dari user
       const answer = req.body.answer; //jawaban dalam bentuk text
       const kelas = req.body.kelas; //kelas dalam bentuk slug
 

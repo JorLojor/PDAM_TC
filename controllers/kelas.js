@@ -850,7 +850,9 @@ module.exports = {
 
   getPesertaKelas: async (req, res) => {
     const { slug } = req.params;
+
     let totalData;
+
     const isPaginate = parseInt(req.query.paginate);
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
@@ -859,7 +861,9 @@ module.exports = {
 
     try {
       const getKelas = await KelasModel.findOne({ slug });
-      let pesertaIds = getKelas.peserta.map((v) => v.user);
+
+      //? Get All Peserta Id, Expected Output UserID[]
+      let pesertaIds = getKelas.peserta.map((v) => v.user); 
 
       if (isPaginate === 0) {
         let peserta;
@@ -886,12 +890,15 @@ module.exports = {
         return;
       }
 
+      //? Prepare an Empty Variable for Accepting Modified Peserta Data
       let peserta;
 
+      //? Get Data Peserta with Selected ID in pesertaIds, Expected Output User[]
       peserta = await UserModel.find({ _id: { $in: pesertaIds } })
         .skip((page - 1) * limit)
         .limit(limit);
 
+      //? If Query has Type then Modify the Peserta
       if (type) {
         peserta = await UserModel.find({
           _id: { $in: pesertaIds },
@@ -900,7 +907,6 @@ module.exports = {
           .skip((page - 1) * limit)
           .limit(limit);
       }
-      // .populate("instruktur");
 
       let checkKelasHasSome;
 
