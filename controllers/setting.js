@@ -306,7 +306,7 @@ module.exports = {
                 if (err) throw err;
               });
 
-              const picture = `${process.env.url}upload/organization-structure/${today}/strukturOrganisasi${dateName}${i}${dateName}.${ext}`;
+              const picture = `/upload/organization-structure/${today}/strukturOrganisasi${dateName}${i}${dateName}.${ext}`;
 
               await OrganizationStructure.findByIdAndUpdate(
                 dataId,
@@ -321,7 +321,7 @@ module.exports = {
                 }
               );
 
-              j++;
+              j = j + 1;
             } else {
               if (req.files.picture != null) {
                 const today = new Date().toISOString().slice(0, 10);
@@ -362,7 +362,7 @@ module.exports = {
                   if (err) throw err;
                 });
 
-                const picture = `${process.env.url}upload/organization-structure/${today}/strukturOrganisasi${dateName}${i}${dateName}.${ext}`;
+                const picture = `/upload/organization-structure/${today}/strukturOrganisasi${dateName}${i}${dateName}.${ext}`;
 
                 await OrganizationStructure.findByIdAndUpdate(
                   dataId,
@@ -422,7 +422,7 @@ module.exports = {
               if (err) throw err;
             });
 
-            const picture = `${process.env.url}upload/organization-structure/${today}/strukturOrganisasi${dateName}${i}${dateName}.${ext}`;
+            const picture = `/upload/organization-structure/${today}/strukturOrganisasi${dateName}${i}${dateName}.${ext}`;
 
             const newData = await OrganizationStructure.create({
               picture,
@@ -431,7 +431,7 @@ module.exports = {
               bio: dataBio,
             });
 
-            console.log({ newData });
+            j = j + 1;
 
             registered.push(newData._id);
           } else {
@@ -527,6 +527,8 @@ module.exports = {
         const dataChangepicture = req.fields[changepicture];
         const dataPicture = req.files[picture];
 
+        console.log(j);
+
         if (dataId) {
           const oldData = await Testimony.findById(dataId);
 
@@ -585,7 +587,7 @@ module.exports = {
                 if (err) throw err;
               });
 
-              const picture = `${process.env.url}upload/testimony/${today}/testimony${dateName}${i}${dateName}.${ext}`;
+              const picture = `/upload/testimony/${today}/testimony${dateName}${i}${dateName}.${ext}`;
 
               await Testimony.findByIdAndUpdate(
                 dataId,
@@ -600,7 +602,7 @@ module.exports = {
                 }
               );
 
-              j++;
+              j = j + 1;
             } else {
               if (req.files.picture != null) {
                 const today = new Date().toISOString().slice(0, 10);
@@ -640,7 +642,7 @@ module.exports = {
                   if (err) throw err;
                 });
 
-                const picture = `${process.env.url}upload/testimony/${today}/testimony${dateName}${i}${dateName}.${ext}`;
+                const picture = `/upload/testimony/${today}/testimony${dateName}${i}${dateName}.${ext}`;
 
                 await Testimony.findByIdAndUpdate(
                   dataId,
@@ -700,7 +702,7 @@ module.exports = {
               if (err) throw err;
             });
 
-            const picture = `${process.env.url}upload/testimony/${today}/testimony${dateName}${i}${dateName}.${ext}`;
+            const picture = `/upload/testimony/${today}/testimony${dateName}${i}${dateName}.${ext}`;
 
             const newData = await Testimony.create({
               picture,
@@ -709,7 +711,7 @@ module.exports = {
               testimony: dataTestimony,
             });
 
-            j++;
+            j = j + 1;
 
             registered.push(newData._id);
           } else {
