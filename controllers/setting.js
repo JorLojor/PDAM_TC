@@ -161,13 +161,13 @@ module.exports = {
         const name = `name${i}`;
         const position = `position${i}`;
         const bio = `bio${i}`;
-        const picture = `picture${i}`;
+        const changepicture = `change_picture${i}`;
 
         const dataId = req.fields[id];
         const dataName = req.fields[name];
         const dataPosition = req.fields[position];
         const dataBio = req.fields[bio];
-        const dataPicture = req.fields[picture];
+        const dataChangepicture = req.fields[changepicture];
 
         if (dataId) {
           const oldData = await OrganizationStructure.findById(dataId);
@@ -176,7 +176,7 @@ module.exports = {
             return response(404, {}, "Data tidak ditemukan", res);
           }
 
-          if (dataPicture == 1) {
+          if (dataChangepicture == 1) {
             await OrganizationStructure.findByIdAndUpdate(
               dataId,
               {
@@ -408,13 +408,13 @@ module.exports = {
         const name = `name${i}`;
         const position = `position${i}`;
         const testimony = `testimony${i}`;
-        const picture = `picture${i}`;
+        const changepicture = `change_picture${i}`;
 
         const dataId = req.fields[id];
         const dataName = req.fields[name];
         const dataPosition = req.fields[position];
         const dataTestimony = req.fields[testimony];
-        const dataPicture = req.fields[picture];
+        const dataChangepicture = req.fields[changepicture];
 
         if (dataId) {
           const oldData = await Testimony.findById(dataId);
@@ -423,7 +423,7 @@ module.exports = {
             return response(404, {}, "Data tidak ditemukan", res);
           }
 
-          if (dataPicture == 1) {
+          if (dataChangepicture == 1) {
             await Testimony.findByIdAndUpdate(
               dataId,
               {
