@@ -219,7 +219,6 @@ module.exports = {
 
   updateOrganizationStructure: async (req, res) => {
     try {
-      await OrganizationStructure.deleteMany();
       const { countData } = req.fields;
 
       const currentData = await OrganizationStructure.find();
@@ -239,7 +238,7 @@ module.exports = {
         const position = `position${i}`;
         const bio = `bio${i}`;
         const changepicture = `change_picture${i}`;
-        const picture = `picture${j}`;
+        const picture = `picture${i}`;
 
         const dataId = req.fields[id];
         const dataName = req.fields[name];
@@ -249,7 +248,7 @@ module.exports = {
         const dataPicture = req.files[picture];
 
         if (dataId) {
-          const oldData = await OrganizationStructure.findById(dataId);
+          const oldData = await OrganizationStructure.findById();
 
           if (!oldData) {
             return response(404, {}, "Data tidak ditemukan", res);
@@ -498,7 +497,6 @@ module.exports = {
 
   updateTestimony: async (req, res) => {
     try {
-      await Testimony.deleteMany();
       const { countData } = req.fields;
 
       const currentData = await Testimony.find();
@@ -518,7 +516,7 @@ module.exports = {
         const position = `position${i}`;
         const testimony = `testimony${i}`;
         const changepicture = `change_picture${i}`;
-        const picture = `picture${j}`;
+        const picture = `picture${i}`;
 
         const dataId = req.fields[id];
         const dataName = req.fields[name];
@@ -526,8 +524,6 @@ module.exports = {
         const dataTestimony = req.fields[testimony];
         const dataChangepicture = req.fields[changepicture];
         const dataPicture = req.files[picture];
-
-        console.log(j);
 
         if (dataId) {
           const oldData = await Testimony.findById(dataId);
