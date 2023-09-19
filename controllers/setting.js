@@ -247,7 +247,7 @@ module.exports = {
         const dataChangepicture = req.fields[changepicture];
         const dataPicture = req.files[picture];
 
-        if (dataId) {
+        if (dataId.length > 0) {
           const oldData = await OrganizationStructure.findById();
 
           if (!oldData) {
@@ -525,7 +525,7 @@ module.exports = {
         const dataChangepicture = req.fields[changepicture];
         const dataPicture = req.files[picture];
 
-        if (dataId) {
+        if (dataId.length > 0) {
           const oldData = await Testimony.findById(dataId);
 
           if (!oldData) {
