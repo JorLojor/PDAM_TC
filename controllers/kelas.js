@@ -19,7 +19,7 @@ module.exports = {
 
       const data = await KelasModel.find()
         .skip((halaman - 1) * batas)
-        .sort({createdAt:-1})
+        .sort({ createdAt: -1 })
         .limit(batas)
         .populate("materi kategori");
 
@@ -74,7 +74,9 @@ module.exports = {
     const id = req.params.id;
 
     try {
-      let kelas = await KelasModel.findById(id).populate("materi peserta kategori");
+      let kelas = await KelasModel.findById(id).populate(
+        "materi peserta kategori"
+      );
 
       if (!kelas) {
         response(404, id, "Kelas tidak ditemukan", res);
@@ -214,17 +216,17 @@ module.exports = {
         return;
       }
 
-      let collectedAbsensi = []
+      let collectedAbsensi = [];
 
       if (!absensi) {
-        return response(400,null,'Data absensi belum diisi!',res)
-      }else{
-        collectedAbsensi = absensi.map((absen)=>{
+        return response(400, null, "Data absensi belum diisi!", res);
+      } else {
+        collectedAbsensi = absensi.map((absen) => {
           return {
-            name:absen.jenis,
-            ...absen
-          }
-        })
+            name: absen.jenis,
+            ...absen,
+          };
+        });
       }
 
       const getND = await axios.post(
@@ -261,7 +263,7 @@ module.exports = {
         peserta,
         instruktur,
         materi: JSON.parse(materi),
-        absensi:collectedAbsensi,
+        absensi: collectedAbsensi,
         jadwal,
         kelasType,
         kodeNotaDinas,
@@ -307,26 +309,25 @@ module.exports = {
         absensi,
       } = req.body;
 
-      const checkKelas = await KelasModel.findById(id)
-      
+      const checkKelas = await KelasModel.findById(id);
 
       let status = "pending";
 
       if (req.files) {
-        imageKelas = '/upload/' + req.file.path.split("/upload/")[1];
+        imageKelas = "/upload/" + req.file.path.split("/upload/")[1];
       }
 
-      let collectedAbsensi = []
+      let collectedAbsensi = [];
 
       if (!absensi) {
-        return response(400,null,'Data absensi belum diisi!',res)
-      }else{
-        collectedAbsensi = absensi.map((absen)=>{
+        return response(400, null, "Data absensi belum diisi!", res);
+      } else {
+        collectedAbsensi = absensi.map((absen) => {
           return {
-            name:absen.jenis,
-            ...absen
-          }
-        })
+            name: absen.jenis,
+            ...absen,
+          };
+        });
       }
 
       const kelas = {
@@ -341,7 +342,7 @@ module.exports = {
         peserta,
         instruktur,
         materi: JSON.parse(materi),
-        absensi:collectedAbsensi,
+        absensi: collectedAbsensi,
         jadwal,
         kelasType,
         kodeNotaDinas,
@@ -863,59 +864,111 @@ module.exports = {
       const getKelas = await KelasModel.findOne({ slug });
 
       //? Get All Peserta Id, Expected Output UserID[]
-      let pesertaIds = getKelas.peserta.map((v) => v.user); 
+      let pesertaIds = getKelas.peserta.map((v) => v.user);
+
+      //? Prepare an Empty Variable for Accepting Modified Peserta Data
+      let peserta;
 
       if (isPaginate === 0) {
-        let peserta;
-
+        //? Get Data Peserta with Selected ID in pesertaIds, Expected Output User[]
         peserta = await UserModel.find({ _id: { $in: pesertaIds } });
-        if (type) {
+
+        let registered = peserta.map((p) => p);
+
+        //? If Query has Type then Modify the Peserta
+        if (type > -1) {
+          pesertaIds = [];
+
+          for (let i = 0; i < registered.length; i++) {
+            if (registered[i].userType == type) {
+              pesertaIds.push(registered[i]._id);
+            }
+          }
+
           peserta = await UserModel.find({
             _id: { $in: pesertaIds },
-            userType: type,
           });
         }
-        const checkKelasHasSome = peserta.filter((pes) => {
-          return pes.kelas.some((kelas) => kelas.status === status);
-        });
+
+        registered = peserta.map((p) => p);
+
+        if (status.length > 0) {
+          pesertaIds = [];
+
+          for (let i = 0; i < registered.length; i++) {
+            for (let j = 0; j < registered[i].kelas.length; j++) {
+              if (
+                registered[i].kelas[j].kelas.toString() ==
+                  getKelas._id.toString() &&
+                registered[i].kelas[j].status == status
+              ) {
+                pesertaIds.push(registered[i]._id);
+              }
+            }
+          }
+
+          peserta = await UserModel.find({
+            _id: { $in: pesertaIds },
+          });
+        }
         if (peserta) {
           totalData = peserta.length;
         }
 
         let result = {
-          data: checkKelasHasSome,
+          data: peserta,
           total: totalData,
         };
         response(200, result, "get Peserta", res);
         return;
       }
 
-      //? Prepare an Empty Variable for Accepting Modified Peserta Data
-      let peserta;
-
       //? Get Data Peserta with Selected ID in pesertaIds, Expected Output User[]
       peserta = await UserModel.find({ _id: { $in: pesertaIds } })
         .skip((page - 1) * limit)
         .limit(limit);
 
+      let registered = peserta.map((p) => p);
+
       //? If Query has Type then Modify the Peserta
-      if (type) {
+      if (type > -1) {
+        pesertaIds = [];
+
+        for (let i = 0; i < registered.length; i++) {
+          if (registered[i].userType == type) {
+            pesertaIds.push(registered[i]._id);
+          }
+        }
+
         peserta = await UserModel.find({
           _id: { $in: pesertaIds },
-          userType: type,
         })
           .skip((page - 1) * limit)
           .limit(limit);
       }
 
-      let checkKelasHasSome;
+      registered = peserta.map((p) => p);
 
-      checkKelasHasSome = peserta;
+      if (status.length > 0) {
+        pesertaIds = [];
 
-      if (status) {
-        checkKelasHasSome = peserta.filter((pes) => {
-          return pes.kelas.some((kelas) => kelas.status === status);
-        });
+        for (let i = 0; i < registered.length; i++) {
+          for (let j = 0; j < registered[i].kelas.length; j++) {
+            if (
+              registered[i].kelas[j].kelas.toString() ==
+                getKelas._id.toString() &&
+              registered[i].kelas[j].status == status
+            ) {
+              pesertaIds.push(registered[i]._id);
+            }
+          }
+        }
+
+        peserta = await UserModel.find({
+          _id: { $in: pesertaIds },
+        })
+          .skip((page - 1) * limit)
+          .limit(limit);
       }
 
       if (peserta) {
@@ -924,7 +977,7 @@ module.exports = {
 
       const result = {
         name: getKelas.nama,
-        peserta: checkKelasHasSome,
+        peserta,
         total: totalData,
         page: page,
         limit: limit,
@@ -1102,8 +1155,8 @@ module.exports = {
     }
   },
 
-  checkNotaDinasKelas: async(req,res)=>{
-    const {kodeNotaDinas} = req.body
+  checkNotaDinasKelas: async (req, res) => {
+    const { kodeNotaDinas } = req.body;
     try {
       const checkKelas = await KelasModel.findOne({ kodeNotaDinas });
 
@@ -1114,11 +1167,16 @@ module.exports = {
           `Kode Nota Dinas sudah terdaftar di kelas lain! (${checkKelas.nama})`,
           res
         );
-      }else{
-        return response(200,checkKelas,`Kode Nota Dinas ini bisa digunakkan!`,res)
+      } else {
+        return response(
+          200,
+          checkKelas,
+          `Kode Nota Dinas ini bisa digunakkan!`,
+          res
+        );
       }
     } catch (error) {
-      response(500,error,error.message,res)
+      response(500, error, error.message, res);
     }
-  }
+  },
 };
