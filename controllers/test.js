@@ -666,12 +666,16 @@ module.exports = {
   updateTest: async (req, res) => {
     const session = await mongoose.startSession();
     session.startTransaction();
+
     try {
       let { data } = req.body;
       const { id } = req.params;
-      // data = data.replaceAll("'", '"') cuma buat experiment
+
+      console.log(req.files);
+
       let imageTest = "/uploads/test-image/";
       const dataPertanyaan = JSON.parse(data);
+
 
       if (req.files.length > 0) {
         imageTest = req.files[0].path.split("/PDAM_TC/")[1];

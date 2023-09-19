@@ -312,7 +312,7 @@ module.exports = {
 
       let status = "pending";
 
-      if (req.file) {
+      if (req.files) {
         imageKelas = '/upload/' + req.file.path.split("/upload/")[1];
       }
 

@@ -52,10 +52,12 @@ module.exports = {
     try {
       const setting = await Setting.findOne();
 
-      let banner = [];
+      let banner = setting.banner.length !== 0 ? setting.banner : [];
 
-      if (req.files) {
-        req.files.map((row) => {
+      const bannerFiles = req.files["banners"];
+
+      if (bannerFiles) {
+        bannerFiles.map((row) => {
           banner.push(row.path.split("upload").pop());
         });
       }
@@ -63,43 +65,26 @@ module.exports = {
       const about = req.body.about;
       const our_class = req.body.our_class;
       // ieu dites make raw json
-      const instructors = req.files
-        ? JSON.parse(req.body.instructors)
-        : req.body.instructors;
+      const instructors = req.body.instructors;
       // ieu dites make raw json
       const youtube_link = req.body.youtube_link;
-      let testimony = req.body.testimoni;
       const class_count = req.body.class_count;
       const instructor_count = req.body.instructor_count;
       const participant_count = req.body.participant_count;
 
-      let array = testimony.split(/\s*\,\s*/g);
-
-      testimony = [];
-
-      array.map((a, i) => {
-        const name = a.substring(0, a.indexOf(" -"));
-        const title = a.substring(a.indexOf("- ") + 2, a.lastIndexOf(" ("));
-        const value = a.substring(a.indexOf("(") + 1, a.lastIndexOf(")"));
-
-        testimony.push({
-          name,
-          title,
-          value,
-        });
-      });
-
       let data;
 
-      instructors.map(async (row) => {
-        const valid = await User.findById(row, {
-          role: 2,
-        });
+      if (instructors && instructors.length !== 0) {
+        instructors.map(async (row) => {
+          const valid = await User.findById(row, {
+            role: 2,
+          });
 
-        if (!valid) {
-          return response(400, null, "Instruktur tidak terdaftar", res);
-        }
-      });
+          if (!valid) {
+            return response(400, null, "Instruktur tidak terdaftar", res);
+          }
+        });
+      }
 
       if (!setting) {
         data = await Setting.create({
@@ -117,15 +102,14 @@ module.exports = {
         data = await Setting.findByIdAndUpdate(
           setting._id,
           {
-            banner,
-            about,
-            our_class,
-            instructors,
-            youtube_link,
-            testimony,
-            class_count,
-            instructor_count,
-            participant_count,
+            banner: banner ?? setting.banner,
+            about: about ?? setting.about,
+            our_class: our_class ?? setting.our_class,
+            instructors: instructors ?? setting.instructors,
+            youtube_link: youtube_link ?? setting.youtube_link,
+            class_count: class_count ?? setting.class_count,
+            instructor_count: instructor_count ?? setting.instructor_count,
+            participant_count: participant_count ?? setting.participant_count,
           },
           {
             new: true,
@@ -137,6 +121,99 @@ module.exports = {
     } catch (error) {
       console.log(error);
       return response(500, null, error.message, res);
+    }
+  },
+
+  updateYoutubeLink: async (req, res) => {
+    const { youtube_link } = req.body;
+    try {
+      const getSetting = await Setting.find().select("instructors");
+
+      const oldSetting = getSetting[0];
+
+      const updateYoutubeLink = await Setting.findByIdAndUpdate(
+        oldSetting._id,
+        {
+          $set: {
+            youtube_link,
+          },
+        },
+        { new: true }
+      );
+
+      return response(
+        200,
+        updateYoutubeLink,
+        "Berhasil mengupdate youtube link",
+        res
+      );
+    } catch (error) {
+      response(500, null, error.message, res);
+    }
+  },
+
+  updateInstructors: async (req, res) => {
+    const { instructors } = req.body;
+    try {
+      const getSetting = await Setting.find().select("instructors");
+
+      const oldSetting = getSetting[0];
+
+      const updateInstructors = await Setting.findByIdAndUpdate(
+        oldSetting._id,
+        {
+          $set: {
+            instructors,
+          },
+        },
+        { new: true }
+      );
+
+      return response(
+        200,
+        updateInstructors,
+        "Berhasil mengupdate instruktur",
+        res
+      );
+    } catch (error) {
+      response(500, null, error.message, res);
+    }
+  },
+
+  updateAbout: async (req, res) => {
+    const { bigTitle, description, itemAbout } = req.body;
+
+    try {
+      const getSettings = await Setting.find().select("about");
+
+      let image = null;
+
+      const oldAbout = getSettings[0].about ?? null;
+
+      if (req.file) {
+        image = "/upload/" + req.file.path.split("/upload/").pop();
+      }
+
+      const newAbout = {
+        bigTitle,
+        description,
+        itemAbout: JSON.parse(itemAbout),
+        aboutImage: image ?? getSettings[0].about.aboutImage,
+      };
+
+      const updateAbout = await Setting.findByIdAndUpdate(
+        getSettings[0]._id,
+        {
+          $set: {
+            about: newAbout,
+          },
+        },
+        { new: true }
+      );
+
+      return response(201, updateAbout, "Berhasil mengupdate about!", res);
+    } catch (error) {
+      response(500, error, error.message, res);
     }
   },
 
@@ -352,6 +429,8 @@ module.exports = {
               bio: dataBio,
             });
 
+            console.log({ newData });
+
             j++;
 
             registered.push(newData._id);
@@ -384,6 +463,30 @@ module.exports = {
       console.log(error);
 
       return response(500, error, "Server error", res);
+    }
+  },
+
+  updateOthersSetting: async(req,res)=>{
+    const {others} = req.body
+
+    try {
+      const {jumlah_kelas, jumlah_instruktur, jumlah_peserta} = others
+
+      const getSetting = await Setting.find().select('class_count instructor_count participant_count')
+
+      const oldSetting = getSetting[0];
+      
+      const updateOthers = await Setting.findByIdAndUpdate(oldSetting._id,{
+        $set:{
+          participant_count:jumlah_peserta,
+          class_count:jumlah_kelas,
+          instructor_count:jumlah_instruktur
+        }
+      },{new:true})
+
+      return response(200,updateOthers,'Berhasil merubah data',res)
+    } catch (error) {
+      response(500, null, error.message, res);
     }
   },
 
@@ -630,6 +733,29 @@ module.exports = {
       console.log(error);
 
       return response(500, error, "Server error", res);
+    }
+  },
+
+  deleteBanner: async (req, res) => {
+    const { src } = req.query;
+    if (!src || src === "") {
+      return response(400, null, "Path src harus diisi!", res);
+    }
+    try {
+      const findBanner = await Setting.find().select("banner");
+      const banner = findBanner[0].banner;
+      const filteredBanner = banner.filter((v) => v !== src);
+
+      const updateBanner = await Setting.findOneAndUpdate(
+        findBanner[0]._id,
+        { $set: { banner: filteredBanner } },
+        { new: true }
+      );
+
+      response(200, updateBanner, "Berhasil merubah banner", res);
+    } catch (error) {
+      console.log(error);
+      response(500, error, error.message, res);
     }
   },
 };

@@ -40,6 +40,7 @@ router.post(
   ]),
   Controller.update
 );
+router.post('/about',auth.user,auth.admin,upload.single('aboutImage'),Controller.updateAbout)
 router.post(
   "/organization-structure",
   auth.user,
@@ -54,5 +55,9 @@ router.post(
   formidable({ multiples: true }),
   Controller.updateTestimony
 );
+router.post('/youtube',auth.user,auth.admin,Controller.updateYoutubeLink)
+router.post('/instructors',auth.user,auth.admin,Controller.updateInstructors)
+router.post('/others',auth.user,auth.admin,Controller.updateOthersSetting)
+router.delete('/',auth.user,auth.admin,Controller.deleteBanner)
 
 module.exports = router;
