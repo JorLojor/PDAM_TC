@@ -239,12 +239,14 @@ module.exports = {
         const position = `position${i}`;
         const bio = `bio${i}`;
         const changepicture = `change_picture${i}`;
+        const picture = `picture${j}`;
 
         const dataId = req.fields[id];
         const dataName = req.fields[name];
         const dataPosition = req.fields[position];
         const dataBio = req.fields[bio];
         const dataChangepicture = req.fields[changepicture];
+        const dataPicture = req.files[picture];
 
         if (dataId) {
           const oldData = await OrganizationStructure.findById(dataId);
@@ -266,7 +268,7 @@ module.exports = {
               }
             );
           } else {
-            if (req.files.picture[j] != null) {
+            if (dataPicture != null) {
               const today = new Date().toISOString().slice(0, 10);
 
               const folder = path.join(
@@ -287,18 +289,18 @@ module.exports = {
 
               let ext;
 
-              if (req.files.picture[j].type == "image/png") {
+              if (dataPicture.type == "image/png") {
                 ext = "png";
-              } else if (req.files.picture[j].type == "image/jpg") {
+              } else if (dataPicture.type == "image/jpg") {
                 ext = "jpg";
-              } else if (req.files.picture[j].type == "image/jpeg") {
+              } else if (dataPicture.type == "image/jpeg") {
                 ext = "jpeg";
               }
 
               const newPath =
                 folder + `/strukturOrganisasi${dateName}${i}${dateName}.${ext}`;
 
-              var oldPath = req.files.picture[j].path;
+              var oldPath = dataPicture.path;
 
               fs.promises.copyFile(oldPath, newPath, 0, function (err) {
                 if (err) throw err;
@@ -382,7 +384,7 @@ module.exports = {
 
           registered.push(dataId);
         } else {
-          if (req.files.picture[j] != null) {
+          if (dataPicture != null) {
             const today = new Date().toISOString().slice(0, 10);
 
             const folder = path.join(
@@ -403,18 +405,18 @@ module.exports = {
 
             let ext;
 
-            if (req.files.picture[j].type == "image/png") {
+            if (dataPicture.type == "image/png") {
               ext = "png";
-            } else if (req.files.picture[j].type == "image/jpg") {
+            } else if (dataPicture.type == "image/jpg") {
               ext = "jpg";
-            } else if (req.files.picture[j].type == "image/jpeg") {
+            } else if (dataPicture.type == "image/jpeg") {
               ext = "jpeg";
             }
 
             const newPath =
               folder + `/strukturOrganisasi${dateName}${i}${dateName}.${ext}`;
 
-            var oldPath = req.files.picture[j].path;
+            var oldPath = dataPicture.path;
 
             fs.promises.copyFile(oldPath, newPath, 0, function (err) {
               if (err) throw err;
@@ -430,8 +432,6 @@ module.exports = {
             });
 
             console.log({ newData });
-
-            j++;
 
             registered.push(newData._id);
           } else {
@@ -466,25 +466,31 @@ module.exports = {
     }
   },
 
-  updateOthersSetting: async(req,res)=>{
-    const {others} = req.body
+  updateOthersSetting: async (req, res) => {
+    const { others } = req.body;
 
     try {
-      const {jumlah_kelas, jumlah_instruktur, jumlah_peserta} = others
+      const { jumlah_kelas, jumlah_instruktur, jumlah_peserta } = others;
 
-      const getSetting = await Setting.find().select('class_count instructor_count participant_count')
+      const getSetting = await Setting.find().select(
+        "class_count instructor_count participant_count"
+      );
 
       const oldSetting = getSetting[0];
-      
-      const updateOthers = await Setting.findByIdAndUpdate(oldSetting._id,{
-        $set:{
-          participant_count:jumlah_peserta,
-          class_count:jumlah_kelas,
-          instructor_count:jumlah_instruktur
-        }
-      },{new:true})
 
-      return response(200,updateOthers,'Berhasil merubah data',res)
+      const updateOthers = await Setting.findByIdAndUpdate(
+        oldSetting._id,
+        {
+          $set: {
+            participant_count: jumlah_peserta,
+            class_count: jumlah_kelas,
+            instructor_count: jumlah_instruktur,
+          },
+        },
+        { new: true }
+      );
+
+      return response(200, updateOthers, "Berhasil merubah data", res);
     } catch (error) {
       response(500, null, error.message, res);
     }
@@ -512,12 +518,14 @@ module.exports = {
         const position = `position${i}`;
         const testimony = `testimony${i}`;
         const changepicture = `change_picture${i}`;
+        const picture = `picture${j}`;
 
         const dataId = req.fields[id];
         const dataName = req.fields[name];
         const dataPosition = req.fields[position];
         const dataTestimony = req.fields[testimony];
         const dataChangepicture = req.fields[changepicture];
+        const dataPicture = req.files[picture];
 
         if (dataId) {
           const oldData = await Testimony.findById(dataId);
@@ -539,7 +547,7 @@ module.exports = {
               }
             );
           } else {
-            if (req.files.picture[j] != null) {
+            if (dataPicture != null) {
               const today = new Date().toISOString().slice(0, 10);
 
               const folder = path.join(
@@ -560,18 +568,18 @@ module.exports = {
 
               let ext;
 
-              if (req.files.picture[j].type == "image/png") {
+              if (dataPicture.type == "image/png") {
                 ext = "png";
-              } else if (req.files.picture[j].type == "image/jpg") {
+              } else if (dataPicture.type == "image/jpg") {
                 ext = "jpg";
-              } else if (req.files.picture[j].type == "image/jpeg") {
+              } else if (dataPicture.type == "image/jpeg") {
                 ext = "jpeg";
               }
 
               const newPath =
                 folder + `/testimony${dateName}${i}${dateName}.${ext}`;
 
-              var oldPath = req.files.picture[j].path;
+              var oldPath = dataPicture.path;
 
               fs.promises.copyFile(oldPath, newPath, 0, function (err) {
                 if (err) throw err;
@@ -654,7 +662,7 @@ module.exports = {
 
           registered.push(dataId);
         } else {
-          if (req.files.picture[j] != null) {
+          if (dataPicture != null) {
             const today = new Date().toISOString().slice(0, 10);
 
             const folder = path.join(
@@ -675,18 +683,18 @@ module.exports = {
 
             let ext;
 
-            if (req.files.picture[j].type == "image/png") {
+            if (dataPicture.type == "image/png") {
               ext = "png";
-            } else if (req.files.picture[j].type == "image/jpg") {
+            } else if (dataPicture.type == "image/jpg") {
               ext = "jpg";
-            } else if (req.files.picture[j].type == "image/jpeg") {
+            } else if (dataPicture.type == "image/jpeg") {
               ext = "jpeg";
             }
 
             const newPath =
               folder + `/testimony${dateName}${i}${dateName}.${ext}`;
 
-            var oldPath = req.files.picture[j].path;
+            var oldPath = dataPicture.path;
 
             fs.promises.copyFile(oldPath, newPath, 0, function (err) {
               if (err) throw err;
