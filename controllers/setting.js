@@ -248,7 +248,7 @@ module.exports = {
         const dataPicture = req.files[picture];
 
         if (dataId.length > 0) {
-          const oldData = await OrganizationStructure.findById();
+          const oldData = await OrganizationStructure.findById(dataId);
 
           if (!oldData) {
             return response(404, {}, "Data tidak ditemukan", res);
