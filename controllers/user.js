@@ -1,6 +1,7 @@
 const mongoose = require("mongoose");
 const userModel = require("../models/user");
 const Kelas = require("../models/kelas");
+const Kategori = require("../models/kategori");
 const ratingModel = require("../models/rating");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -432,10 +433,15 @@ module.exports = {
     const { id } = req.params;
 
     try {
-      const get = await userModel
-        .findOne({ _id: id })
+      let get = await userModel
+        .findById(id)
         .populate("kelas.kelas")
         .select("kelas");
+
+      get = await Kategori.populate(get, {
+        path: "kelas.kelas.kategori",
+      });
+
       response(200, get, "Data ditemukan", res);
     } catch (error) {
       response(500, error, error.message, res);
@@ -608,23 +614,26 @@ module.exports = {
       session.endSession();
     }
   },
-  forcedUpdate:async(req,res)=>{
-    const { id } = req.params
-    const {password} = req.body
+  forcedUpdate: async (req, res) => {
+    const { id } = req.params;
+    const { password } = req.body;
     try {
-
       const hashedPassword = bcrypt.hashSync(password, 10);
-      
-      const forceUpdate = await userModel.findByIdAndUpdate(id,{password:hashedPassword},{new:true})
+
+      const forceUpdate = await userModel.findByIdAndUpdate(
+        id,
+        { password: hashedPassword },
+        { new: true }
+      );
       res.json({
-        message:'Berhasil',
-        data:forceUpdate
-      })
+        message: "Berhasil",
+        data: forceUpdate,
+      });
     } catch (error) {
       res.json({
-        message:error.message,
-        data:[]
-      })
+        message: error.message,
+        data: [],
+      });
     }
-  }
+  },
 };
