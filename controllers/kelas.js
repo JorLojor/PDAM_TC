@@ -2,6 +2,8 @@ const mongoose = require("mongoose");
 const KelasModel = require("../models/kelas");
 const UserModel = require("../models/user");
 const MateriModel = require("../models/materi");
+const Test = require("../models/test");
+const TestAnswer = require("../models/testAnswer");
 const calonPesertaSchema = require("../models/calonpeserta");
 const RecentClass = require("../models/recentClass");
 const response = require("../respons/response");
@@ -167,6 +169,300 @@ module.exports = {
 
       return response(200, data, "Kelas berhasil ditemukan", res);
     } catch (error) {
+      return response(500, null, error.message, res);
+    }
+  },
+
+  getPesertaByInstruktur: async (req, res) => {
+    const { instruktur } = req.params;
+
+    const { kelasId, materiId } = req.query;
+
+    try {
+      let data = [];
+
+      let materiContainer = [];
+      let materiDetailContainer = [];
+      let kelasContainer = [];
+
+      let materis;
+
+      if (materiId) {
+        materis = await MateriModel.findOne({
+          instruktur: instruktur,
+          $and: [
+            {
+              _id: materiId,
+            },
+          ],
+        });
+      } else {
+        materis = await MateriModel.find({ instruktur: instruktur });
+      }
+
+      if (materiId) {
+        materiContainer = materis._id;
+      } else {
+        if (materis.length > 0) {
+          materis.map((materi) => {
+            if (materi.test?.pre) {
+              materiContainer.push(materi._id);
+
+              materiDetailContainer.push({
+                id: materi._id,
+                items: materi.items ?? null,
+                test: materi.test ?? null,
+              });
+            }
+          });
+        }
+      }
+
+      let kelas;
+
+      if (materiId) {
+        kelas = await KelasModel.find({
+          materi: {
+            $in: [materiContainer],
+          },
+        });
+
+        if (kelasId) {
+          kelas.map((k) => {
+            if (k._id == kelasId) {
+              kelasContainer.push({
+                _id: k._id,
+                nama: k.nama,
+                peserta: k.peserta ?? null,
+                materi: k.materi ?? null,
+              });
+            }
+          });
+        } else {
+          kelas.map((k) => {
+            kelasContainer.push({
+              _id: k._id,
+              nama: k.nama,
+              peserta: k.peserta ?? null,
+              materi: k.materi ?? null,
+            });
+          });
+        }
+      } else {
+        if (materiContainer.length > 0) {
+          for (let i = 0; i < materiContainer.length; i++) {
+            kelas = await KelasModel.find({
+              materi: {
+                $in: materiContainer[i],
+              },
+            });
+
+            if (kelasId) {
+              kelas.map((k) => {
+                if (k._id == kelasId) {
+                  kelasContainer.push({
+                    _id: k._id,
+                    nama: k.nama,
+                    peserta: k.peserta ?? null,
+                    materi: k.materi ?? null,
+                  });
+                }
+              });
+            } else {
+              kelas.map((k) => {
+                kelasContainer.push({
+                  _id: k._id,
+                  nama: k.nama,
+                  peserta: k.peserta ?? null,
+                  materi: k.materi ?? null,
+                });
+              });
+            }
+          }
+        }
+      }
+
+      if (kelasContainer.length > 0) {
+        for (let i = 0; i < kelasContainer.length; i++) {
+          let peserta = [];
+          let materi;
+
+          if (
+            kelasContainer[i].peserta.length > 0 &&
+            kelasContainer[i].materi.length > 0
+          ) {
+            console.log("ada peserta dan materi");
+            for (let k = 0; k < kelasContainer[i].materi.length; k++) {
+              if (materiId) {
+                if (kelasContainer[i].materi[k] == materiId) {
+                  materi = await MateriModel.findById(
+                    kelasContainer[i].materi[k]
+                  );
+                }
+              } else {
+                materi = await MateriModel.findById(
+                  kelasContainer[i].materi[k]
+                );
+              }
+
+              for (let j = 0; j < kelasContainer[i].peserta.length; j++) {
+                const user = await UserModel.findById(
+                  kelasContainer[i].peserta[j].user
+                );
+
+                let passPre = false;
+                let passPost = false;
+                let passQuiz = false;
+
+                if (materi.items.length > 0) {
+                  let passingGrade = 0;
+
+                  materi.items.map(async (item) => {
+                    if (item.quiz) {
+                      const quiz = await Test.findById(item.quiz);
+
+                      if (quiz) {
+                        const done = await TestAnswer.findOne({
+                          test: item.quiz,
+                          $and: [
+                            {
+                              user: user._id,
+                            },
+                          ],
+                        });
+
+                        if (done) {
+                          passingGrade = passingGrade + 1;
+                        }
+                      }
+                    } else {
+                      passingGrade = passingGrade + 1;
+                    }
+
+                    if (passingGrade == materi.items.length > 0) {
+                      passQuiz = true;
+                    }
+                  });
+                } else {
+                  passQuiz = true;
+                }
+
+                const pre = await Test.findById(materi.test?.pre);
+                const post = await Test.findById(materi.test?.post);
+
+                if (pre) {
+                  const donePre = await TestAnswer.findOne({
+                    test: pre._id,
+                    $and: [
+                      {
+                        user: user._id,
+                      },
+                    ],
+                  });
+
+                  if (donePre) {
+                    passPre = true;
+                  }
+                } else {
+                  passPre = true;
+                }
+
+                if (post) {
+                  const donePost = await TestAnswer.findOne({
+                    test: post._id,
+                    $and: [
+                      {
+                        user: user._id,
+                      },
+                    ],
+                  });
+
+                  if (donePost) {
+                    passPost = true;
+                  }
+                } else {
+                  passPost = true;
+                }
+
+                if (passQuiz && passPost && passPre) {
+                  peserta.push(user);
+                }
+              }
+            }
+
+            if (materiId) {
+              if (materi._id == materiId) {
+                data.push({
+                  id_kelas: kelasContainer[i]._id,
+                  kelas: kelasContainer[i].nama,
+                  id_materi: materi._id,
+                  materi: materi.section,
+                  peserta,
+                });
+              }
+            } else {
+              data.push({
+                id_kelas: kelasContainer[i]._id,
+                kelas: kelasContainer[i].nama,
+                id_materi: materi._id,
+                materi: materi.section,
+                peserta,
+              });
+            }
+          } else {
+            console.log("ada materi");
+            if (kelasContainer[i].materi.length > 0) {
+              for (let j = 0; j < kelasContainer[i].materi.length; j++) {
+                if (materiId) {
+                  if (kelasContainer[i].materi[j] == materiId) {
+                    materi = await MateriModel.findById(
+                      kelasContainer[i].materi[j]
+                    );
+                  } else {
+                    continue;
+                  }
+                } else {
+                  materi = await MateriModel.findById(
+                    kelasContainer[i].materi[j]
+                  );
+                }
+
+                if (materiId) {
+                  if (materi._id == materiId) {
+                    data.push({
+                      id_kelas: kelasContainer[i]._id,
+                      kelas: kelasContainer[i].nama,
+                      id_materi: materi._id,
+                      materi: materi.section,
+                      peserta: [],
+                    });
+                  }
+                } else {
+                  data.push({
+                    id_kelas: kelasContainer[i]._id,
+                    kelas: kelasContainer[i].nama,
+                    id_materi: materi._id,
+                    materi: materi.section,
+                    peserta: [],
+                  });
+                }
+              }
+            } else {
+              data.push({
+                id_kelas: kelasContainer[i]._id,
+                kelas: kelasContainer[i].nama,
+                id_materi: null,
+                materi: null,
+                peserta: [],
+              });
+            }
+          }
+        }
+      }
+
+      return response(200, data, "Peserta berhasil ditemukan", res);
+    } catch (error) {
+      console.log(error);
       return response(500, null, error.message, res);
     }
   },
@@ -451,7 +747,7 @@ module.exports = {
       const id = req.params.id;
       const result = await KelasModel.findByIdAndUpdate(
         id,
-        { isActive: false },
+        { isActive: true },
         { new: true }
       );
 

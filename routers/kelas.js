@@ -26,13 +26,23 @@ const upload = multer({ storage });
 // router.get("/", auth.user, Controller.getAllKelas);
 router.get("/", Controller.getAllKelas); //testing
 router.get("/latest", auth.user, auth.onlyStudent, Controller.getRecentClass);
+router.get(
+  "/peserta-by-instruktur/:instruktur",
+  auth.instruktur,
+  Controller.getPesertaByInstruktur
+);
 router.get("/:id", auth.user, Controller.getOneKelas);
 router.get("/slug/:slug", auth.user, Controller.getOneKelasBySlug);
 router.post("/nd/", auth.server, Controller.getOneKelasByND);
 router.get("/materi/:slug", auth.user, Controller.getMateriKelas);
 router.post("/peserta/:slug", auth.user, Controller.getPesertaKelas);
 router.post("/filtered", auth.user, Controller.getWithFilter);
-router.put("/admin/:id", auth.admin,upload.single('featured_image'), Controller.updateKelasAdminSide);
+router.put(
+  "/admin/:id",
+  auth.admin,
+  upload.single("featured_image"),
+  Controller.updateKelasAdminSide
+);
 router.put("/adminSlug/:slug", auth.admin, Controller.updateKelasAdminSlug);
 router.put("/status/nd", auth.server, Controller.updateKelasWithND);
 router.put("/approval/:slug/:iduser", auth.admin, Controller.approvePeserta);
@@ -61,6 +71,6 @@ router.get("/list/absen/:iduser", auth.user, Controller.listKelasAbsenUser);
 router.delete("/:id", auth.admin, Controller.deleteKelas);
 router.put("/deactivate/:id", auth.admin, Controller.deactivatedKelas); // deactive kelas
 router.put("/activate/:id", auth.admin, Controller.activateKelas); // deactive kelas
-router.post("/check-nd",auth.admin,Controller.checkNotaDinasKelas)
+router.post("/check-nd", auth.admin, Controller.checkNotaDinasKelas);
 
 module.exports = router;
