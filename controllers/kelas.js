@@ -603,11 +603,16 @@ module.exports = {
         kodeNotaDinas,
         link,
         absensi,
+        status,
       } = req.body;
 
       const checkKelas = await KelasModel.findById(id);
 
-      let status = "pending";
+      let newStatus = status;
+
+      let newAbsensi = absensi ? absensi : []
+
+      let imageKelas;
 
       if (req.files) {
         imageKelas = "/upload/" + req.file.path.split("/upload/")[1];
@@ -615,10 +620,8 @@ module.exports = {
 
       let collectedAbsensi = [];
 
-      if (!absensi) {
-        return response(400, null, "Data absensi belum diisi!", res);
-      } else {
-        collectedAbsensi = absensi.map((absen) => {
+      if (newAbsensi.length !== 0) {
+        collectedAbsensi = newAbsensi.map((absen) => {
           return {
             name: absen.jenis,
             ...absen,
@@ -627,25 +630,24 @@ module.exports = {
       }
 
       const kelas = {
-        kodeKelas,
-        nama,
-        slug: _.kebabCase(nama),
-        harga,
-        kapasitasPeserta,
-        description,
-        methods,
-        kategori,
-        peserta,
-        instruktur,
-        materi: JSON.parse(materi),
-        absensi: collectedAbsensi,
-        jadwal,
-        kelasType,
-        kodeNotaDinas,
+        kodeKelas: kodeKelas ?? checkKelas.kodeKelas,
+        nama: nama ?? checkKelas.nama,
+        slug: nama ? _.kebabCase(nama) : checkKelas.slug,
+        harga: harga ?? checkKelas.harga,
+        kapasitasPeserta: kapasitasPeserta ?? checkKelas.kapasitasPeserta,
+        description: description ?? checkKelas.description,
+        methods: methods ?? checkKelas.methods,
+        kategori: kategori ?? checkKelas.kategori,
+        peserta: peserta ?? checkKelas.peserta,
+        materi: materi ? JSON.parse(materi) : checkKelas.materi,
+        absensi: collectedAbsensi.length !== 0 ? collectedAbsensi : checkKelas.absensi,
+        jadwal:jadwal ?? checkKelas.jadwal,
+        kelasType:kelasType ?? checkKelas.kelasType,
+        kodeNotaDinas: kodeNotaDinas ?? checkKelas.kodeNotaDinas,
         image: imageKelas ? imageKelas : checkKelas.image,
-        linkPelatihan: link,
-        kategori,
-        status,
+        linkPelatihan: link ?? checkKelas.linkPelatihan,
+        kategori:kategori ?? checkKelas.kategori,
+        status:newStatus ?? checkKelas.status,
       };
 
       const result = await KelasModel.findByIdAndUpdate(id, kelas, {
@@ -654,7 +656,7 @@ module.exports = {
 
       response(200, result, "Kelas berhasil di update", res);
     } catch (error) {
-      response(500, error, "Server error", res);
+      response(500, error, error.message, res);
     }
   },
 
@@ -763,7 +765,9 @@ module.exports = {
       const id = req.params.id;
       const result = await KelasModel.findByIdAndUpdate(
         id,
-        { isActive: true },
+        { $set:{
+          status:'draft'
+        } },
         { new: true }
       );
 

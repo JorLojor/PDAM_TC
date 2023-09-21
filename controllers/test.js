@@ -352,58 +352,68 @@ module.exports = {
 
   answerTest: async (req, res) => {
     const { user, test, kelas, answers } = req.body;
-
+  
     try {
       const validUser = await User.findById(user);
-
-      if (!validUser) return response(400, null, "User tidak ditemukan", res);
-
+      if (!validUser) {
+        return response(400, null, "User not found", res);
+      }
+  
       const validTest = await Test.findById(test);
-
-      if (!validTest) return response(400, null, "Test tidak ditemukan", res);
-
-      const validKelas = await Kelas.findById(kelas);
-
-      if (!validKelas) return response(400, null, "Kelas tidak ditemukan", res);
-
+      if (!validTest) {
+        return response(400, null, "Test not found", res);
+      }
+  
+      const validKelas = await Kelas.findOne({ slug: kelas });
+      if (!validKelas) {
+        return response(400, null, "Kelas not found", res);
+      }
+  
       const questions = validTest.question;
-
+  
       let correct = 0;
       let passGrade = 0;
-
+  
+      if (answers.length !== questions.length) {
+        return response(400, null, "Number of answers does not match the number of questions", res);
+      }
+  
       await Promise.all(
         answers.map(async (row, index) => {
           const question = questions[index].answer;
+          console.log(`User's answer: ${row.answer}`);
+      
+          const checkAnswer = question.find((o) => o.value === row.answer && o.isTrue === true);
 
-          const checkAnswer = question.find((o) => o.value === row.answer);
-
-          if (checkAnswer.isTrue == true) {
+          if (checkAnswer.value) {
             correct = correct + 1;
           }
-
+      
           passGrade = passGrade + 1;
         })
       );
-
-      const nilai = (correct / passGrade) * 100;
-
+      
+      const nilai = passGrade === 0 ? 0 : (correct / passGrade) * 100;
+  
+      // const nilai = passGrade === 0 ? 0 : (correct / passGrade) * 100;
+  
       const answer = new testAnswer({
         user,
         test,
-        class: kelas,
+        class: validKelas._id,
         answers,
         nilai,
       });
-
+  
       const save = await answer.save();
-
-      return response(200, save, "Jawaban telah disimpan!", res);
+  
+      return response(200, save, "Answers have been saved!", res);
     } catch (error) {
-      console.log(error);
-
-      return response(500, error, error.message, res);
+      console.error(error);
+      return response(500, null, "Internal server error", res);
     }
   },
+  
 
   getTestAnswerFiltered: async (req, res) => {
     try {

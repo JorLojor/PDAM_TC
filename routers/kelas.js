@@ -70,7 +70,7 @@ router.get("/list/absen/:iduser", auth.user, Controller.listKelasAbsenUser);
 
 router.delete("/:id", auth.admin, Controller.deleteKelas);
 router.put("/deactivate/:id", auth.admin, Controller.deactivatedKelas); // deactive kelas
-router.put("/activate/:id", auth.admin, Controller.activateKelas); // deactive kelas
+router.put("/activate/:id", auth.admin, Controller.activateKelas); // active kelas
 router.post("/check-nd", auth.admin, Controller.checkNotaDinasKelas);
 
 module.exports = router;

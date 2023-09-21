@@ -105,7 +105,8 @@ module.exports = {
       return;
     }
 
-    let desain = req.file.path.split("/PDAM_TC/")[1];
+    let desain = '/upload/' + req.file.path.split("/upload/")[1];
+
 
     try {
       const sertifikat = new sertifikatModel({
