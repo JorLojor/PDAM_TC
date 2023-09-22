@@ -42,7 +42,6 @@ function calculateGrade(answerArray, maxGrade) {
 module.exports = {
   store: async (req, res) => {
     try {
-
       let { data } = req.body;
 
       const { slug, title } = req.params;
@@ -352,51 +351,58 @@ module.exports = {
 
   answerTest: async (req, res) => {
     const { user, test, kelas, answers } = req.body;
-  
+
     try {
       const validUser = await User.findById(user);
       if (!validUser) {
         return response(400, null, "User not found", res);
       }
-  
+
       const validTest = await Test.findById(test);
       if (!validTest) {
         return response(400, null, "Test not found", res);
       }
-  
+
       const validKelas = await Kelas.findOne({ slug: kelas });
       if (!validKelas) {
         return response(400, null, "Kelas not found", res);
       }
-  
+
       const questions = validTest.question;
-  
+
       let correct = 0;
       let passGrade = 0;
-  
+
       if (answers.length !== questions.length) {
-        return response(400, null, "Number of answers does not match the number of questions", res);
+        return response(
+          400,
+          null,
+          "Number of answers does not match the number of questions",
+          res
+        );
       }
-  
+
       await Promise.all(
         answers.map(async (row, index) => {
           const question = questions[index].answer;
           console.log(`User's answer: ${row.answer}`);
-      
-          const checkAnswer = question.find((o) => o.value === row.answer && o.isTrue === true);
+
+          const checkAnswer = question.find(
+            (o) => o.value === row.answer && o.isTrue === true
+          );
 
           if (checkAnswer.value) {
             correct = correct + 1;
           }
-      
+
           passGrade = passGrade + 1;
         })
       );
-      
+
       const nilai = passGrade === 0 ? 0 : (correct / passGrade) * 100;
-  
+
       // const nilai = passGrade === 0 ? 0 : (correct / passGrade) * 100;
-  
+
       const answer = new testAnswer({
         user,
         test,
@@ -404,29 +410,46 @@ module.exports = {
         answers,
         nilai,
       });
-  
+
       const save = await answer.save();
-  
+
       return response(200, save, "Answers have been saved!", res);
     } catch (error) {
       console.error(error);
       return response(500, null, "Internal server error", res);
     }
   },
-  
 
   getTestAnswerFiltered: async (req, res) => {
+    const { type, page, perPage } = req.body;
     try {
       const data = await testAnswer
-        .find({ ...req.body })
+        .find()
         .populate("user")
-        .populate("test");
+        .populate("test")
+        .populate("class");
 
       if (!data) {
         return response(400, null, "Data tidak ditemukan", res);
       }
 
-      return response(200, data, "Data ditemukan", res);
+      const filteredData = data.filter((v) => v.test.type === type);
+
+      // Calculate the starting index for pagination
+      const startIndex = (page - 1) * perPage;
+
+      // Use slice to get a portion of the filtered data based on pagination
+      const paginatedData = filteredData.slice(
+        startIndex,
+        startIndex + perPage
+      );
+
+      const payload = {
+        data:paginatedData,
+        totalData:data.length
+      }
+
+      return response(200, payload, "Data ditemukan", res);
     } catch (error) {
       console.log(error);
 
@@ -685,7 +708,6 @@ module.exports = {
 
       let imageTest = "/uploads/test-image/";
       const dataPertanyaan = JSON.parse(data);
-
 
       if (req.files.length > 0) {
         imageTest = req.files[0].path.split("/PDAM_TC/")[1];
