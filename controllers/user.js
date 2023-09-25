@@ -283,13 +283,16 @@ module.exports = {
     try {
       const id = req.user.id;
 
+      const kelasName =
+        req.query.kelas && req.query.kelas.length > 0 ? req.query.kelas : null;
+
       const user = await userModel.findById(id);
 
       let data = [];
       let kelas = [];
 
       if (user.kelas.length > 0) {
-        user.kelas.map(async (m) => {
+        user.kelas.map((m) => {
           if (m.isDone == true) {
             kelas.push(m.kelas);
           }
@@ -299,6 +302,12 @@ module.exports = {
       if (kelas.length > 0) {
         for (let i = 0; i < kelas.length; i++) {
           const detailKelas = await Kelas.findById(kelas[i]);
+
+          if (kelasName) {
+            if (!detailKelas.nama.includes(kelasName)) {
+              continue;
+            }
+          }
 
           const sertifikat = await Sertifikat.findById(
             detailKelas.desainSertifikat.peserta
