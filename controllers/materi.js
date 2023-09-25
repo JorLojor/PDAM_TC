@@ -165,14 +165,15 @@ module.exports = {
           if (req.files) {
             req.files.map((file) => {
               const [context, related, parentCode] =
-                file.originalname.split(" --- ");
+                file.originalname.split("---");
               if (
                 context === "Materi" &&
                 title === related &&
                 parentCode.split(".")[0] === kodeMateri
               ) {
-                const [base, attachmentPath] = file.path.split("/api/");
-                attachmentFiles.push(attachmentPath);
+                const [base, attachmentPath] = file.path.split("/upload/");
+                const cleanedAttachmentPath = '/upload/' + attachmentPath.replace(/\s/g, '');
+                attachmentFiles.push('/upload/' + cleanedAttachmentPath);
               }
             });
           }
@@ -206,8 +207,6 @@ module.exports = {
           instruktur: instruktur,
         });
       });
-
-      console.log(tugasList);
 
       const saveMateri = await MateriModel.insertMany(materi, { session });
 
@@ -298,12 +297,49 @@ module.exports = {
     const idMaterial = req.params.id;
     const { data } = req.body;
 
-    const extractedData = JSON.parse(data);
+    let extractedData = JSON.parse(data);
+    const {items} = extractedData
+
 
     try {
+      const checkMateri = await MateriModel.findById(idMaterial)
+
+      if (!checkMateri) {
+        return response(404, null, 'Materi tidak ditemukan!',res)
+      }
+
+      const newItems = items.map((val,idx)=>{
+        let attachmentFiles = [...checkMateri.items[idx].attachment]
+        if (req.files) {
+          req.files.map((file) => {
+            const [context, related, parentCode] =
+              file.filename.split("---");
+            if (
+              val.attachment.index === idx
+            ) {
+              const [base, attachmentPath] = file.path.split("/upload/");
+              const cleanedAttachmentPath = attachmentPath.replace(/\s/g, '');
+              attachmentFiles.push('/upload/' + cleanedAttachmentPath);
+            }
+          });
+        }
+        return {
+          ...val,
+          attachment:attachmentFiles.length === 0 ? checkMateri.items[idx].attachment : attachmentFiles        
+        }
+      })
+
+      extractedData.items = newItems
+
+
       const materi = await MateriModel.findByIdAndUpdate(
         idMaterial,
-        extractedData,
+        {$set:{
+          section:extractedData.section ?? checkMateri.section,
+          description:extractedData.description ?? checkMateri.description,
+          items:extractedData.items ?? checkMateri.items,
+          instruktur:extractedData.instruktur ?? checkMateri.instruktur
+        }},
         {
           new: true,
         }

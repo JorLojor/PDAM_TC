@@ -73,7 +73,7 @@ module.exports = {
         return {
           value: data.value,
           type: data.type,
-          img: path,
+          img: path ? path : null,
           kode: makeid(8),
           answer,
         };
@@ -401,8 +401,6 @@ module.exports = {
 
       const nilai = passGrade === 0 ? 0 : (correct / passGrade) * 100;
 
-      // const nilai = passGrade === 0 ? 0 : (correct / passGrade) * 100;
-
       const answer = new testAnswer({
         user,
         test,
@@ -416,7 +414,7 @@ module.exports = {
       return response(200, save, "Answers have been saved!", res);
     } catch (error) {
       console.error(error);
-      return response(500, null, "Internal server error", res);
+      return response(500, null,error.message, res);
     }
   },
 

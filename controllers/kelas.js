@@ -1174,9 +1174,10 @@ module.exports = {
         peserta = await UserModel.find({ _id: { $in: pesertaIds } });
 
         let registered = peserta.map((p) => p);
+        console.log(registered);
 
         //? If Query has Type then Modify the Peserta
-        if (type > -1) {
+        if (type && type > -1) {
           pesertaIds = [];
 
           for (let i = 0; i < registered.length; i++) {
@@ -1188,11 +1189,13 @@ module.exports = {
           peserta = await UserModel.find({
             _id: { $in: pesertaIds },
           });
+
+          return response(200,peserta,'Peserta ditemukan',res)
         }
 
         registered = peserta.map((p) => p);
 
-        if (status.length > 0) {
+        if (status) {
           pesertaIds = [];
 
           for (let i = 0; i < registered.length; i++) {
@@ -1211,7 +1214,8 @@ module.exports = {
             _id: { $in: pesertaIds },
           });
         }
-        if (peserta) {
+        
+        if (peserta.length !== 0) {
           totalData = peserta.length;
         }
 
