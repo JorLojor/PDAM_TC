@@ -21,6 +21,7 @@ const upload = multer({ storage });
 
 //router.get('/all' ,userController.getAllUser);// note
 router.get("/all", userController.getAllUser);
+router.get("/certificate", auth.student, userController.getCertificate);
 router.post("/my", userController.getSingleUser);
 
 router.get("/need-approval", auth.admin, userController.getStatusPendingUser); // get status pending userå
@@ -53,6 +54,6 @@ router.put("/forgot/pass", userController.forgotPassword);
 router.get("/reset-password/:code", userController.checkUserResetPassword);
 router.put("/reset/:id/:code", userController.resetPassword);
 router.put("/instruktur/rating/:id", auth.user, userController.rate);
-router.put("/forced/:id",auth.server,userController.forcedUpdate)
+router.put("/forced/:id", auth.server, userController.forcedUpdate);
 
 module.exports = router;

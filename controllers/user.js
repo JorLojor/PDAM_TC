@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const userModel = require("../models/user");
+const Sertifikat = require("../models/sertifikat");
 const Kelas = require("../models/kelas");
 const Kategori = require("../models/kategori");
 const ratingModel = require("../models/rating");
@@ -274,6 +275,43 @@ module.exports = {
       });
       response(200, user, "Berhasil update user", res);
     } catch (error) {
+      res.status(500).json({ error: "Internal server error, coba lagi" });
+    }
+  },
+
+  getCertificate: async (req, res) => {
+    try {
+      const id = req.user.id;
+
+      const user = await userModel.findById(id);
+
+      let data = [];
+      let kelas = [];
+
+      if (user.kelas.length > 0) {
+        user.kelas.map(async (m) => {
+          if (m.isDone == true) {
+            kelas.push(m.kelas);
+          }
+        });
+      }
+
+      if (kelas.length > 0) {
+        for (let i = 0; i < kelas.length; i++) {
+          const detailKelas = await Kelas.findById(kelas[i]);
+
+          const sertifikat = await Sertifikat.findById(
+            detailKelas.desainSertifikat.peserta
+          );
+
+          data.push(sertifikat);
+        }
+      }
+
+      response(200, data, "Data sertifikat", res);
+    } catch (error) {
+      console.log(error.message);
+
       res.status(500).json({ error: "Internal server error, coba lagi" });
     }
   },
