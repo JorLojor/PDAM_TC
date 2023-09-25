@@ -304,7 +304,7 @@ module.exports = {
             detailKelas.desainSertifikat.peserta
           );
 
-          data.push(sertifikat);
+          data.push({ sertifikat, kelas: detailKelas.nama });
         }
       }
 
