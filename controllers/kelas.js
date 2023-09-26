@@ -164,9 +164,19 @@ module.exports = {
               model: "Tugas",
             });
 
-          if (name && kelas && kelas.nama.includes(name)) {
-            data.push({ kelas });
-          } else {
+          if (name && kelas) {
+            let kelas1 = [];
+
+            kelas.map((k) => {
+              if (k.nama.includes(name)) {
+                kelas1.push(k);
+              }
+            });
+
+            if (kelas1.length > 0) {
+              data.push({ kelas: kelas1 });
+            }
+          } else if (kelas.length > 0) {
             data.push({ kelas });
           }
         }
