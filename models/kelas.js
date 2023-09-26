@@ -15,7 +15,7 @@ const kelasSchema = new Schema(
     description: { type: String, required: true },
     methods: {
       type: String,
-      enum: ["online", "offline", "onlineMeeting"],
+      enum: ["online", "offline", "onlineMeeting", "hybrid"],
       required: true,
     },
     materi: [{ type: mongoose.Schema.Types.ObjectId, ref: "Materi" }],
