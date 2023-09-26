@@ -136,7 +136,8 @@ module.exports = {
 
   getKelasByInstruktur: async (req, res) => {
     const { instruktur } = req.params;
-
+    const name =
+      req.query.kelas && req.query.kelas.length > 0 ? req.query.kelas : null;
     try {
       let data = [];
 
@@ -163,7 +164,11 @@ module.exports = {
               model: "Tugas",
             });
 
-          data.push({ kelas });
+          if (name && kelas.nama.includes(name)) {
+            data.push({ kelas });
+          } else {
+            data.push({ kelas });
+          }
         }
       }
 
@@ -610,7 +615,7 @@ module.exports = {
 
       let newStatus = status;
 
-      let newAbsensi = absensi ? absensi : []
+      let newAbsensi = absensi ? absensi : [];
 
       let imageKelas;
 
@@ -629,7 +634,7 @@ module.exports = {
         });
       }
 
-      const parsedJadwal = JSON.parse(jadwalBaru)
+      const parsedJadwal = JSON.parse(jadwalBaru);
 
       const kelas = {
         kodeKelas: kodeKelas ?? checkKelas.kodeKelas,
@@ -642,14 +647,15 @@ module.exports = {
         kategori: kategori ?? checkKelas.kategori,
         peserta: peserta ?? checkKelas.peserta,
         materi: materi ? JSON.parse(materi) : checkKelas.materi,
-        absensi: collectedAbsensi.length !== 0 ? collectedAbsensi : checkKelas.absensi,
-        jadwal:parsedJadwal ?? checkKelas.jadwal,
-        kelasType:kelasType ?? checkKelas.kelasType,
+        absensi:
+          collectedAbsensi.length !== 0 ? collectedAbsensi : checkKelas.absensi,
+        jadwal: parsedJadwal ?? checkKelas.jadwal,
+        kelasType: kelasType ?? checkKelas.kelasType,
         kodeNotaDinas: kodeNotaDinas ?? checkKelas.kodeNotaDinas,
         image: imageKelas ? imageKelas : checkKelas.image,
         linkPelatihan: link ?? checkKelas.linkPelatihan,
-        kategori:kategori ?? checkKelas.kategori,
-        status:newStatus ?? checkKelas.status,
+        kategori: kategori ?? checkKelas.kategori,
+        status: newStatus ?? checkKelas.status,
       };
 
       const result = await KelasModel.findByIdAndUpdate(id, kelas, {
@@ -767,9 +773,11 @@ module.exports = {
       const id = req.params.id;
       const result = await KelasModel.findByIdAndUpdate(
         id,
-        { $set:{
-          status:'draft'
-        } },
+        {
+          $set: {
+            status: "draft",
+          },
+        },
         { new: true }
       );
 
@@ -1192,7 +1200,7 @@ module.exports = {
             _id: { $in: pesertaIds },
           });
 
-          return response(200,peserta,'Peserta ditemukan',res)
+          return response(200, peserta, "Peserta ditemukan", res);
         }
 
         registered = peserta.map((p) => p);
@@ -1216,7 +1224,7 @@ module.exports = {
             _id: { $in: pesertaIds },
           });
         }
-        
+
         if (peserta.length !== 0) {
           totalData = peserta.length;
         }
