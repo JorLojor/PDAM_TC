@@ -164,7 +164,7 @@ module.exports = {
               model: "Tugas",
             });
 
-          if (name && kelas.nama.includes(name)) {
+          if (name && kelas && kelas.nama.includes(name)) {
             data.push({ kelas });
           } else {
             data.push({ kelas });
