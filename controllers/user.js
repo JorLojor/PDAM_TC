@@ -214,7 +214,7 @@ module.exports = {
         .find()
         .skip((page - 1) * limit)
         .limit(limit)
-        .sort({createdAt:-1});
+        .sort({ createdAt: -1 });
       // .populate("kelas")
 
       result = {
@@ -434,14 +434,11 @@ module.exports = {
   getWithFilter: async (req, res) => {
     try {
       const isPaginate = parseInt(req.query.paginate);
-      let totalData;
+
+      let totalData = await userModel.find({ ...req.body }).countDocuments();
 
       if (isPaginate === 0) {
         const data = await userModel.find({ ...req.body }).select("-password");
-
-        if (data) {
-          totalData = data.length;
-        }
 
         result = {
           data: data,
@@ -456,15 +453,11 @@ module.exports = {
 
       const data = await userModel
         .find({ ...req.body })
-        .sort({createdAt:-1})
+        .sort({ createdAt: -1 })
         .select("-password")
         .skip((page - 1) * limit)
-        .limit(limit)
+        .limit(limit);
       // .populate("kelas")
-
-      if (data) {
-        totalData = data.length;
-      }
 
       result = {
         data: data,
