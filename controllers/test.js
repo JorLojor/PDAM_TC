@@ -388,10 +388,10 @@ module.exports = {
           console.log(`User's answer: ${row.answer}`);
 
           const checkAnswer = question.find(
-            (o) => o.value === row.answer && o.isTrue === true
+            (o) => o.value === row.answer
           );
 
-          if (checkAnswer.value) {
+          if (checkAnswer.isTrue) {
             correct = correct + 1;
           }
 
