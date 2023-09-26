@@ -595,10 +595,10 @@ module.exports = {
         description,
         methods,
         kategori,
-        instruktur,
         peserta = [],
         materi,
         jadwal,
+        jadwalBaru,
         kelasType,
         kodeNotaDinas,
         link,
@@ -614,7 +614,7 @@ module.exports = {
 
       let imageKelas;
 
-      if (req.files) {
+      if (req.file) {
         imageKelas = "/upload/" + req.file.path.split("/upload/")[1];
       }
 
@@ -629,6 +629,8 @@ module.exports = {
         });
       }
 
+      const parsedJadwal = JSON.parse(jadwalBaru)
+
       const kelas = {
         kodeKelas: kodeKelas ?? checkKelas.kodeKelas,
         nama: nama ?? checkKelas.nama,
@@ -641,7 +643,7 @@ module.exports = {
         peserta: peserta ?? checkKelas.peserta,
         materi: materi ? JSON.parse(materi) : checkKelas.materi,
         absensi: collectedAbsensi.length !== 0 ? collectedAbsensi : checkKelas.absensi,
-        jadwal:jadwal ?? checkKelas.jadwal,
+        jadwal:parsedJadwal ?? checkKelas.jadwal,
         kelasType:kelasType ?? checkKelas.kelasType,
         kodeNotaDinas: kodeNotaDinas ?? checkKelas.kodeNotaDinas,
         image: imageKelas ? imageKelas : checkKelas.image,

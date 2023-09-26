@@ -213,7 +213,8 @@ module.exports = {
       const data = await userModel
         .find()
         .skip((page - 1) * limit)
-        .limit(limit);
+        .limit(limit)
+        .sort({createdAt:-1});
       // .populate("kelas")
 
       result = {
@@ -455,9 +456,10 @@ module.exports = {
 
       const data = await userModel
         .find({ ...req.body })
+        .sort({createdAt:-1})
         .select("-password")
         .skip((page - 1) * limit)
-        .limit(limit);
+        .limit(limit)
       // .populate("kelas")
 
       if (data) {
