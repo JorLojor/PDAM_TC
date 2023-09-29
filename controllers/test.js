@@ -204,9 +204,8 @@ module.exports = {
         });
       }
 
-      const users = await User.find({
-        role: 3,
-      }).countDocuments();
+      let users = 0;
+      let userId = [];
 
       let data = [];
 
@@ -242,6 +241,18 @@ module.exports = {
               if (answer.test.type == "pre") {
                 preType = preType + 1;
                 preTotalValue = preTotalValue + answer.nilai;
+
+                if (userId.length == 0) {
+                  userId.push(answer.user);
+
+                  users = users + 1;
+                } else {
+                  if (!userId.includes(answer.user)) {
+                    userId.push(answer.user);
+
+                    users = users + 1;
+                  }
+                }
               } else {
                 postType = postType + 1;
                 postTotalValue = postTotalValue + answer.nilai;
