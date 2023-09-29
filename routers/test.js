@@ -24,6 +24,7 @@ testRouter.get("/graphic", auth.user, Controller.getGraphic);
 testRouter.get("/:id", auth.user, Controller.getTest);
 testRouter.get("/quiz/:slug", auth.user, Controller.getQuiz);
 testRouter.post("/answered", auth.user, Controller.getTestAnswerFiltered);
+testRouter.post("/checkAnswer", auth.user, Controller.testCheck);
 testRouter.post("/nilai/:id", auth.user, Controller.nilai);
 
 //buat yang bisa post test

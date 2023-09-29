@@ -16,9 +16,9 @@ module.exports = {
       const totalData = await MateriModel.countDocuments();
 
       if (isPaginate === 0) {
-        const data = await MateriModel.find().populate(
-          "instruktur items.tugas items.quiz"
-        ).sort({createdAt:-1});
+        const data = await MateriModel.find()
+          .populate("instruktur items.tugas items.quiz")
+          .sort({ createdAt: -1 });
 
         result = {
           data: data,
@@ -35,8 +35,7 @@ module.exports = {
         .populate("instruktur items.tugas items.quiz")
         .skip((page - 1) * limits)
         .limit(limits)
-        .sort({createdAt:-1})
-
+        .sort({ createdAt: -1 });
 
       result = {
         data: data,
@@ -172,8 +171,9 @@ module.exports = {
                 parentCode.split(".")[0] === kodeMateri
               ) {
                 const [base, attachmentPath] = file.path.split("/upload/");
-                const cleanedAttachmentPath = '/upload/' + attachmentPath.replace(/\s/g, '');
-                attachmentFiles.push('/upload/' + cleanedAttachmentPath);
+                const cleanedAttachmentPath =
+                  "/upload/" + attachmentPath.replace(/\s/g, "");
+                attachmentFiles.push("/upload/" + cleanedAttachmentPath);
               }
             });
           }
@@ -298,48 +298,48 @@ module.exports = {
     const { data } = req.body;
 
     let extractedData = JSON.parse(data);
-    const {items} = extractedData
-
+    const { items } = extractedData;
 
     try {
-      const checkMateri = await MateriModel.findById(idMaterial)
+      const checkMateri = await MateriModel.findById(idMaterial);
 
       if (!checkMateri) {
-        return response(404, null, 'Materi tidak ditemukan!',res)
+        return response(404, null, "Materi tidak ditemukan!", res);
       }
 
-      const newItems = items.map((val,idx)=>{
-        let attachmentFiles = [...checkMateri.items[idx].attachment]
+      const newItems = items.map((val, idx) => {
+        let attachmentFiles = [...checkMateri.items[idx].attachment];
         if (req.files) {
           req.files.map((file) => {
-            const [context, related, parentCode] =
-              file.filename.split("---");
-            if (
-              val.attachment.index === idx
-            ) {
+            const [context, related, parentCode] = file.filename.split("---");
+            if (val.attachment.index === idx) {
               const [base, attachmentPath] = file.path.split("/upload/");
-              const cleanedAttachmentPath = attachmentPath.replace(/\s/g, '');
-              attachmentFiles.push('/upload/' + cleanedAttachmentPath);
+              const cleanedAttachmentPath = attachmentPath.replace(/\s/g, "");
+              attachmentFiles.push("/upload/" + cleanedAttachmentPath);
             }
           });
         }
         return {
           ...val,
-          attachment:attachmentFiles.length === 0 ? checkMateri.items[idx].attachment : attachmentFiles        
-        }
-      })
+          attachment:
+            attachmentFiles.length === 0
+              ? checkMateri.items[idx].attachment
+              : attachmentFiles,
+        };
+      });
 
-      extractedData.items = newItems
-
+      extractedData.items = newItems;
 
       const materi = await MateriModel.findByIdAndUpdate(
         idMaterial,
-        {$set:{
-          section:extractedData.section ?? checkMateri.section,
-          description:extractedData.description ?? checkMateri.description,
-          items:extractedData.items ?? checkMateri.items,
-          instruktur:extractedData.instruktur ?? checkMateri.instruktur
-        }},
+        {
+          $set: {
+            section: extractedData.section ?? checkMateri.section,
+            description: extractedData.description ?? checkMateri.description,
+            items: extractedData.items ?? checkMateri.items,
+            instruktur: extractedData.instruktur ?? checkMateri.instruktur,
+          },
+        },
         {
           new: true,
         }

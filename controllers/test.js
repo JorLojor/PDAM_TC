@@ -8,6 +8,7 @@ const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
 const moment = require("moment");
+const TestAnswer = require("../models/testAnswer");
 
 function makeid(length) {
   let result = "";
@@ -247,7 +248,15 @@ module.exports = {
 
                   users = users + 1;
                 } else {
-                  if (!userId.includes(answer.user)) {
+                  let valid = false;
+
+                  for (let i = 0; i < userId.length; i++) {
+                    if (answer.user == userId[i]) {
+                      valid = true;
+                    }
+                  }
+
+                  if (valid) {
                     userId.push(answer.user);
 
                     users = users + 1;
@@ -262,7 +271,15 @@ module.exports = {
 
                   users = users + 1;
                 } else {
-                  if (!userId.includes(answer.user)) {
+                  let valid = false;
+
+                  for (let i = 0; i < userId.length; i++) {
+                    if (answer.user == userId[i]) {
+                      valid = true;
+                    }
+                  }
+
+                  if (valid) {
                     userId.push(answer.user);
 
                     users = users + 1;
@@ -272,10 +289,10 @@ module.exports = {
             });
 
             let nilaiPre =
-              preType > 1 ? (preTotalValue * preType) / 100 : preTotalValue;
+              preType > 1 ? preTotalValue / preType : preTotalValue;
 
             let nilaiPost =
-              postType > 1 ? (postType * postTotalValue) / 100 : postTotalValue;
+              postType > 1 ? postType / postTotalValue : postTotalValue;
 
             nilaiPre = nilaiPre / users;
             nilaiPost = nilaiPost / users;
@@ -773,6 +790,35 @@ module.exports = {
     } catch (error) {
       await session.abortTransaction();
       session.endSession();
+      response(500, error, "Server error", res);
+    }
+  },
+
+  testCheck: async (req, res) => {
+    try {
+      let { user, test } = req.body;
+
+      let data = {
+        result: false,
+      };
+
+      const answer = await TestAnswer.findOne({
+        test,
+        $and: [
+          {
+            user,
+          },
+        ],
+      });
+
+      if (answer) {
+        data = {
+          result: false,
+        };
+      }
+
+      return response(200, data, "Pengecekan berhasil", res);
+    } catch (error) {
       response(500, error, "Server error", res);
     }
   },
