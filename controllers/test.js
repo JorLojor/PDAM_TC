@@ -204,9 +204,6 @@ module.exports = {
         });
       }
 
-      let users = 0;
-      let userId = [];
-
       let data = [];
 
       await Promise.all(
@@ -236,6 +233,9 @@ module.exports = {
             let postTotalValue = 0;
             let preType = 0;
             let postType = 0;
+
+            let users = 0;
+            let userId = [];
 
             answers.map((answer) => {
               if (answer.test.type == "pre") {
