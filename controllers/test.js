@@ -215,8 +215,8 @@ module.exports = {
           let answers = await testAnswer
             .find({
               createdAt: {
-                $gte: m.startDate,
-                $lte: m.endDate,
+                $gte: m.startDate.toDate(),
+                $lte: m.endDate.toDate(),
               },
             })
             .populate("test", "type");
@@ -387,9 +387,7 @@ module.exports = {
           const question = questions[index].answer;
           console.log(`User's answer: ${row.answer}`);
 
-          const checkAnswer = question.find(
-            (o) => o.value === row.answer
-          );
+          const checkAnswer = question.find((o) => o.value === row.answer);
 
           if (checkAnswer.isTrue) {
             correct = correct + 1;
@@ -414,7 +412,7 @@ module.exports = {
       return response(200, save, "Answers have been saved!", res);
     } catch (error) {
       console.error(error);
-      return response(500, null,error.message, res);
+      return response(500, null, error.message, res);
     }
   },
 
@@ -443,9 +441,9 @@ module.exports = {
       );
 
       const payload = {
-        data:paginatedData,
-        totalData:data.length
-      }
+        data: paginatedData,
+        totalData: data.length,
+      };
 
       return response(200, payload, "Data ditemukan", res);
     } catch (error) {
