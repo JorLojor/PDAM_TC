@@ -813,7 +813,7 @@ module.exports = {
 
       if (answer) {
         data = {
-          result: false,
+          result: true,
         };
       }
 
