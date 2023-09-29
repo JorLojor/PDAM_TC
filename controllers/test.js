@@ -256,6 +256,18 @@ module.exports = {
               } else {
                 postType = postType + 1;
                 postTotalValue = postTotalValue + answer.nilai;
+
+                if (userId.length == 0) {
+                  userId.push(answer.user);
+
+                  users = users + 1;
+                } else {
+                  if (!userId.includes(answer.user)) {
+                    userId.push(answer.user);
+
+                    users = users + 1;
+                  }
+                }
               }
             });
 
