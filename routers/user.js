@@ -23,6 +23,26 @@ const upload = multer({ storage });
 router.get("/all", userController.getAllUser);
 router.get("/certificate", auth.student, userController.getCertificate);
 router.post("/my", userController.getSingleUser);
+router.get(
+  "/class-resolvement",
+  auth.admin,
+  userController.submitClassResolvementList
+);
+router.post(
+  "/class-resolvement/deny",
+  auth.admin,
+  userController.denySubmitClassResolvement
+);
+router.post(
+  "/class-resolvement/approve",
+  auth.admin,
+  userController.approveSubmitClassResolvement
+);
+router.post(
+  "/class-resolvement",
+  auth.student,
+  userController.submitClassResolvement
+);
 
 router.get("/need-approval", auth.admin, userController.getStatusPendingUser); // get status pending userå
 router.get("/role/:role", auth.admin, userController.getByRole); // get status pending userå

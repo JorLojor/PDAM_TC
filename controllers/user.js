@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const ClassResolvementRequest = require("../models/classResolvementRequest");
 const userModel = require("../models/user");
 const Sertifikat = require("../models/sertifikat");
 const Kelas = require("../models/kelas");
@@ -326,6 +327,188 @@ module.exports = {
     }
   },
 
+  submitClassResolvementList: async (req, res) => {
+    try {
+      const data = await ClassResolvementRequest.find()
+        .populate("user")
+        .populate("kelas")
+        .sort({ createdAt: -1 });
+
+      return response(200, data, "List Permohonan", res);
+    } catch (error) {
+      console.log(error.message);
+
+      return res
+        .status(500)
+        .json({ error: "Internal server error, coba lagi" });
+    }
+  },
+
+  submitClassResolvement: async (req, res) => {
+    try {
+      const { kelas } = req.body;
+
+      if (!kelas) {
+        return response(400, {}, "Mohon isi kelas", res);
+      }
+
+      const validKelas = await Kelas.findOne({
+        slug: kelas,
+      });
+
+      if (!validKelas) {
+        return response(404, {}, "Kelas tidak ditemukan", res);
+      }
+
+      const user = await userModel.findById(req.user.id);
+
+      const haveSubmitted = await ClassResolvementRequest.findOne({
+        kelas: validKelas._id,
+        $and: [
+          {
+            user: req.user.id,
+          },
+        ],
+      });
+
+      if (haveSubmitted) {
+        return response(
+          400,
+          {},
+          "Anda sudah melakukan permohonan pada kelas ini",
+          res
+        );
+      }
+
+      let valid = false;
+
+      user.kelas.map((m) => {
+        if (m.kelas.toHexString() == validKelas._id.toHexString()) {
+          if (m.isDone == true) {
+            return response(400, {}, "Anda sudah menyelesaikan kelas ini", res);
+          }
+
+          valid = true;
+        }
+      });
+
+      if (valid) {
+        const data = await ClassResolvementRequest.create({
+          user: req.user.id,
+          kelas: validKelas._id,
+        });
+
+        return response(
+          201,
+          data,
+          "Permohonan penyelesaian kelas berhasil diajukan",
+          res
+        );
+      } else {
+        return response(400, {}, "Anda tidak terdaftar di kelas ini", res);
+      }
+    } catch (error) {
+      console.log(error.message);
+
+      return res
+        .status(500)
+        .json({ error: "Internal server error, coba lagi" });
+    }
+  },
+
+  approveSubmitClassResolvement: async (req, res) => {
+    try {
+      const { id } = req.body;
+
+      if (!id) {
+        return response(400, {}, "Mohon isi id", res);
+      }
+
+      const valid = await ClassResolvementRequest.findById(id);
+
+      if (!valid) {
+        return response(404, {}, "Permohonan tidak ditemukan", res);
+      }
+
+      const kelasId = valid.kelas;
+
+      const user = await userModel.findById(valid.user);
+
+      let kelas = [];
+
+      user.kelas.map((m) => {
+        if (m.kelas.toHexString() == kelasId.toHexString()) {
+          kelas.push({
+            kelas: m.kelas,
+            status: m.status,
+            isDone: true,
+            _id: m._id,
+            createdAt: m.createdAt,
+            updatedAt: m.updatedAt,
+          });
+        } else {
+          kelas.push(m);
+        }
+      });
+
+      const data = await userModel.findByIdAndUpdate(
+        valid.user,
+        {
+          kelas,
+        },
+        {
+          new: true,
+        }
+      );
+
+      await ClassResolvementRequest.findByIdAndDelete(id);
+
+      return response(
+        200,
+        data,
+        "Permohonan penyelesaian kelas berhasil disetujui",
+        res
+      );
+    } catch (error) {
+      console.log(error.message);
+
+      return res
+        .status(500)
+        .json({ error: "Internal server error, coba lagi" });
+    }
+  },
+
+  denySubmitClassResolvement: async (req, res) => {
+    try {
+      const { id } = req.body;
+
+      if (!id) {
+        return response(400, {}, "Mohon isi id", res);
+      }
+
+      const valid = await ClassResolvementRequest.findById(id);
+
+      if (!valid) {
+        return response(404, {}, "Permohonan tidak ditemukan", res);
+      }
+
+      await ClassResolvementRequest.findByIdAndDelete(id);
+
+      return response(
+        200,
+        {},
+        "Permohonan penyelesaian kelas berhasil ditolak",
+        res
+      );
+    } catch (error) {
+      console.log(error.message);
+
+      return res
+        .status(500)
+        .json({ error: "Internal server error, coba lagi" });
+    }
+  },
+
   deleteUser: async (req, res) => {
     const idUser = req.params.id;
 
@@ -471,6 +654,7 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   getUserClass: async (req, res) => {
     const { id } = req.params;
 
@@ -489,6 +673,7 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
   updatePassword: async (req, res) => {
     const { id } = req.params;
 
@@ -518,6 +703,7 @@ module.exports = {
       console.log(error);
     }
   },
+
   resetPassword: async (req, res) => {
     const { id, code } = req.params;
 
@@ -546,6 +732,7 @@ module.exports = {
       console.log(error);
     }
   },
+
   forgotPassword: async (req, res) => {
     const { email } = req.body;
 
@@ -579,6 +766,7 @@ module.exports = {
       session.endSession();
     }
   },
+
   checkUserResetPassword: async (req, res) => {
     const { code } = req.params;
 
@@ -595,6 +783,7 @@ module.exports = {
       response(500, null, error.message, res);
     }
   },
+
   rate: async (req, res) => {
     const session = await mongoose.startSession();
 
@@ -656,6 +845,7 @@ module.exports = {
       session.endSession();
     }
   },
+
   forcedUpdate: async (req, res) => {
     const { id } = req.params;
     const { password } = req.body;
