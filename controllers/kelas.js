@@ -649,7 +649,6 @@ module.exports = {
         parsedJadwal = JSON.parse(jadwalBaru);
       }
 
-
       const kelas = {
         kodeKelas: kodeKelas ?? checkKelas.kodeKelas,
         nama: nama ?? checkKelas.nama,
@@ -675,6 +674,45 @@ module.exports = {
       const result = await KelasModel.findByIdAndUpdate(id, kelas, {
         new: true,
       });
+
+      if (newStatus && newStatus == "ended") {
+        const user = await UserModel.find({
+          role: 3,
+        });
+
+        Promise.all(
+          user.map(async (u) => {
+            if (u.kelas.length > 0) {
+              let kelas = [];
+
+              u.kelas.map((m) => {
+                if (m.kelas.toHexString() == id) {
+                  kelas.push({
+                    kelas: m.kelas,
+                    status: m.status,
+                    isDone: true,
+                    _id: m._id,
+                    createdAt: m.createdAt,
+                    updatedAt: m.updatedAt,
+                  });
+                } else {
+                  kelas.push(m);
+                }
+              });
+
+              await UserModel.findByIdAndUpdate(
+                u._id,
+                {
+                  kelas,
+                },
+                {
+                  new: true,
+                }
+              );
+            }
+          })
+        );
+      }
 
       response(200, result, "Kelas berhasil di update", res);
     } catch (error) {
