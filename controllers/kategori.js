@@ -83,8 +83,8 @@ module.exports = {
     try {
       const { name } = req.body;
       const kategori = new kategoriModel({
-        sampul: req.files[0].path.split("/PDAM_TC/")[1],
-        icon: req.files[1].path.split("/PDAM_TC/")[1],
+        sampul: 'upload/' + req.files[0].path.split("/upload/").pop(),
+        icon: 'upload/' + req.files[1].path.split("/upload/").pop(),
         name,
       });
 

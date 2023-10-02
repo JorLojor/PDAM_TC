@@ -8,6 +8,7 @@ const uploadFile = require("../middleware/filepath");
 const multer = require("multer");
 const response = require("../respons/response");
 const _ = require("lodash");
+const Test = require("../models/test");
 
 module.exports = {
   getAllMateri: async (req, res) => {
@@ -477,10 +478,25 @@ module.exports = {
       }
 
       if (from === "pre") {
+        
+        const findPostTest = await Test.findById(checkMateri.test.post).lean()
+        
+        if (!findPostTest) {
+          return response(404,null,'Tidak ada test yang dimaksud',res)
+        }
+
+        const {type, _id, ...rest} = findPostTest
+
+        const createDuplicate = await Test.create({
+          ...rest,
+          type:'pre'
+        })
+
         const newTest = {
-          pre: checkMateri.test.post,
+          pre: createDuplicate._id,
           post: checkMateri.test.post,
         };
+
         const updateMateri = await MateriModel.findByIdAndUpdate(
           id,
           {
@@ -494,9 +510,23 @@ module.exports = {
         return response(200, updateMateri, "Pre test berhasil disalin", res);
       }
       if (from === "post") {
+
+        const findPreTest = await Test.findById(checkMateri.test.pre).lean()
+        
+        if (!findPreTest) {
+          return response(404,null,'Tidak ada test yang dimaksud',res)
+        }
+
+        const {type, _id, ...rest} = findPreTest
+
+        const createDuplicate = await Test.create({
+          ...rest,
+          type:'post'
+        })
+
         const newTest = {
           pre: checkMateri.test.pre,
-          post: checkMateri.test.pre,
+          post: createDuplicate._id,
         };
         const updateMateri = await MateriModel.findByIdAndUpdate(
           id,

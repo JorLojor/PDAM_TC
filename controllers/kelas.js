@@ -644,7 +644,11 @@ module.exports = {
         });
       }
 
-      const parsedJadwal = JSON.parse(jadwalBaru);
+      let parsedJadwal;
+      if (jadwalBaru) {
+        parsedJadwal = JSON.parse(jadwalBaru);
+      }
+
 
       const kelas = {
         kodeKelas: kodeKelas ?? checkKelas.kodeKelas,
