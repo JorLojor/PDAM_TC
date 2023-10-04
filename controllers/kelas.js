@@ -11,6 +11,7 @@ const uploadImage = require("../middleware/imagepath");
 const multer = require("multer");
 const _ = require("lodash");
 const { default: axios } = require("axios");
+const { sendClassEnrollmentMail } = require("../service/mail/config");
 
 module.exports = {
   getAllKelas: async (req, res) => {
@@ -1096,6 +1097,8 @@ module.exports = {
         { $set: { kelas: mergeKelasList } },
         { new: true, session }
       );
+
+      await sendClassEnrollmentMail(getUser.email, get.nama, getUser.username);
 
       await session.commitTransaction();
 

@@ -8,9 +8,11 @@ const ratingModel = require("../models/rating");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const response = require("../respons/response");
-const user = require("../models/user");
 const tokenGenerator = require("../service/mail/tokenGenerator");
-const sendConfirmationEmail = require("../service/mail/config");
+const {
+  sendConfirmationEmail,
+  sendUserStatusMail,
+} = require("../service/mail/config");
 
 module.exports = {
   createUser: async (req, res) => {
@@ -543,6 +545,9 @@ module.exports = {
         { status: status },
         { new: true }
       );
+
+      await sendUserStatusMail(result.email, status, result.username);
+
       response(200, result, "Berhasil get status pending user", res);
     } catch (error) {
       console.log(error.message);
