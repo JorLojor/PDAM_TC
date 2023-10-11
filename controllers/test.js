@@ -462,7 +462,7 @@ module.exports = {
                 .find()
                 .populate("user")
                 .populate("test")
-                .populate("class");
+                .populate("class")
 
             if (!data) {
                 return response(400, null, "Data tidak ditemukan", res);
@@ -470,18 +470,8 @@ module.exports = {
 
             const filteredData = data.filter((v) => v.test.type === type);
 
-            // Calculate the starting index for pagination
-            const startIndex = (page - 1) * perPage;
-
-            // Use slice to get a portion of the filtered data based on pagination
-            const paginatedData = filteredData.slice(
-                startIndex,
-                startIndex + perPage
-            );
-
             const payload = {
-                data: paginatedData,
-                totalData: data.length,
+                data: filteredData,
             };
 
             return response(200, payload, "Data ditemukan", res);
@@ -511,7 +501,7 @@ module.exports = {
 
             response(200, materi, "Test di dapat", res);
         } catch (error) {
-            response(500, error, "Server error", res);
+            response(500, error,error.message, res);
         }
     },
 
@@ -521,7 +511,6 @@ module.exports = {
         try {
             const { id } = req.params;
             let { data } = req.body;
-            // data = data.replaceAll("'", '"') cuma buat test
             const dataJawaban = JSON.parse(data);
             let jawaban = dataJawaban.answer.map((answer) => {
                 return answer.value;
