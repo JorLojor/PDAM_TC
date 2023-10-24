@@ -513,20 +513,20 @@ module.exports = {
         imageKelas = req.file.path.split("/PDAM_TC/")[1];
       }
 
-      const checkKelas = await KelasModel.findOne({ kodeNotaDinas }).session(
-        session
-      );
+      // const checkKelas = await KelasModel.findOne({ kodeNotaDinas }).session(
+      //   session
+      // );
 
-      if (checkKelas) {
-        response(
-          403,
-          checkKelas,
-          `Kode Nota Dinas sudah terdaftar di kelas lain! (${checkKelas.nama})`,
-          res
-        );
-        await session.abortTransaction();
-        return;
-      }
+      // if (checkKelas) {
+      //   response(
+      //     403,
+      //     checkKelas,
+      //     `Kode Nota Dinas sudah terdaftar di kelas lain! (${checkKelas.nama})`,
+      //     res
+      //   );
+      //   await session.abortTransaction();
+      //   return;
+      // }
 
       let collectedAbsensi = [];
 
@@ -541,27 +541,27 @@ module.exports = {
         });
       }
 
-      const getND = await axios.post(
-        process.env.url_rab + "nd/global/check",
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${process.env.key_for_grant_access}`,
-          },
-        }
-      );
+      // const getND = await axios.post(
+      //   process.env.url_rab + "nd/global/check",
+      //   {},
+      //   {
+      //     headers: {
+      //       Authorization: `Bearer ${process.env.key_for_grant_access}`,
+      //     },
+      //   }
+      // );
 
-      if (getND.data) {
-        const filtered = getND.data.filter((v) => v.kodeND === kodeNotaDinas);
-        if (filtered.length !== 0) {
-          status =
-            filtered[0].status === "pending"
-              ? "pending"
-              : filtered[0].status === "Approved"
-              ? "draft"
-              : "declined";
-        }
-      }
+      // if (getND.data) {
+      //   const filtered = getND.data.filter((v) => v.kodeND === kodeNotaDinas);
+      //   if (filtered.length !== 0) {
+      //     status =
+      //       filtered[0].status === "pending"
+      //         ? "pending"
+      //         : filtered[0].status === "Approved"
+      //         ? "draft"
+      //         : "declined";
+      //   }
+      // }
 
       const kelas = new KelasModel({
         kodeKelas,
@@ -578,7 +578,7 @@ module.exports = {
         absensi: collectedAbsensi,
         jadwal,
         kelasType,
-        kodeNotaDinas,
+        // kodeNotaDinas,
         image: imageKelas,
         linkPelatihan: link,
         kategori,
