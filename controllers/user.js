@@ -619,6 +619,29 @@ module.exports = {
     }
   },
 
+  getInstructor: async (req, res) => {
+    const { id } = req.params;
+
+    try {
+      let data = await userModel.findById(id);
+
+      if (!data) {
+        return response(400, [], "data tidak ditemukan", res);
+      } else if (data.role !== 2) {
+        return response(400, [], "data tidak ditemukan", res);
+      }
+
+      data = await userModel
+        .findById(id)
+        .select("-password")
+        .populate("rating", "rating comment createdAt");
+
+      return response(200, data, "data ditemukan", res);
+    } catch (error) {
+      return response(500, [], error.message, res);
+    }
+  },
+
   getWithFilter: async (req, res) => {
     try {
       const isPaginate = parseInt(req.query.paginate);

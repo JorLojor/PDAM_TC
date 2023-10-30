@@ -73,6 +73,7 @@ router.delete("/:id", auth.admin, userController.deleteUser);
 router.put("/forgot/pass", userController.forgotPassword);
 router.get("/reset-password/:code", userController.checkUserResetPassword);
 router.put("/reset/:id/:code", userController.resetPassword);
+router.get("/instruktur/:id", auth.user, userController.getInstructor); // get instructor
 router.put("/instruktur/rating/:id", auth.user, userController.rate);
 router.put("/forced/:id", auth.server, userController.forcedUpdate);
 
