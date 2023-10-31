@@ -13,10 +13,42 @@ require("dotenv").config();
 module.exports = {
   index: async (req, res) => {
     try {
-      const data = await News.find().populate({
-        path: "user",
-        select: "-password",
-      });
+      let { page, limits, isPaginate } = req.query;
+
+      const totalData = await News.countDocuments();
+
+      if (isPaginate === 0) {
+        const data = await News.find()
+          .populate({
+            path: "user",
+            select: "-password",
+          })
+          .sort({ createdAt: -1 });
+
+        result = {
+          data: data,
+          "total data": totalData,
+        };
+
+        return response(200, results, "get berita");
+      }
+
+      page = parseInt(page) || 1;
+      limits = parseInt(limits) || 4;
+
+      const data = await News.find()
+        .populate({
+          path: "user",
+          select: "-password",
+        })
+        .skip((page - 1) * limits)
+        .limit(limits)
+        .sort({ createdAt: -1 });
+
+      result = {
+        data: data,
+        "total data": totalData,
+      };
 
       return response(200, data, "berhasil get berita", res);
     } catch (error) {
@@ -38,12 +70,48 @@ module.exports = {
 
   publishedNewsList: async (req, res) => {
     try {
+      let { page, limits, isPaginate } = req.query;
+
+      const totalData = await News.find({
+        status: 1,
+      }).countDocuments();
+
+      if (isPaginate === 0) {
+        const data = await News.find({
+          status: 1,
+        })
+          .populate({
+            path: "user",
+            select: "-password",
+          })
+          .sort({ createdAt: -1 });
+
+        result = {
+          data: data,
+          "total data": totalData,
+        };
+
+        return response(200, results, "get berita");
+      }
+
+      page = parseInt(page) || 1;
+      limits = parseInt(limits) || 4;
+
       const data = await News.find({
         status: 1,
-      }).populate({
-        path: "user",
-        select: "-password",
-      });
+      })
+        .populate({
+          path: "user",
+          select: "-password",
+        })
+        .skip((page - 1) * limits)
+        .limit(limits)
+        .sort({ createdAt: -1 });
+
+      result = {
+        data: data,
+        "total data": totalData,
+      };
 
       return response(200, data, "berhasil get berita", res);
     } catch (error) {
