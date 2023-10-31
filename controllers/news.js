@@ -84,7 +84,8 @@ module.exports = {
             path: "user",
             select: "-password",
           })
-          .sort({ createdAt: -1 });
+          .sort({ createdAt: -1 })
+          .limit(4);
 
         result = {
           data: data,
