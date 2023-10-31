@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const ClassResolvementRequest = require("../models/classResolvementRequest");
+const Materi = require("../models/materi");
 const userModel = require("../models/user");
 const Sertifikat = require("../models/sertifikat");
 const Kelas = require("../models/kelas");
@@ -29,14 +30,18 @@ module.exports = {
         nipp,
         bio,
       } = req.body;
+
       const cekUser = await userModel.findOne({
         $or: [{ username }, { email }],
       });
+
       if (cekUser) {
         response(400, username, "Username atau email sudah terdaftar", res);
         return;
       }
+
       const passwordHash = bcrypt.hashSync(password, 10);
+
       const user = new userModel({
         name,
         email,
@@ -526,8 +531,22 @@ module.exports = {
     const idUser = req.params.id;
 
     try {
+      const hasMateri = await Materi.find({
+        instruktur: idUser,
+      });
+
+      if (hasMateri) {
+        return response(
+          400,
+          {},
+          "Tidak dapat menghapus user: user memiliki materi",
+          res
+        );
+      }
+
       const user = await userModel.findByIdAndRemove(idUser);
-      response(200, user, "Berhasil delete user", res);
+
+      return response(200, user, "Berhasil delete user", res);
     } catch (error) {
       res.status(500).json({ error: "Internal server error, coba lagi" });
     }
