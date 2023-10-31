@@ -40,6 +40,7 @@ const testRoutes = require("./routers/test");
 const absenRoutes = require("./routers/absensi");
 const settingRoutes = require("./routers/setting");
 const newsRoute = require("./routers/news");
+const captchaRoute = require("./routers/captcha");
 const { getNotifIo, storeIo } = require("./controllers/chat");
 const { storeRecentClassIO } = require("./controllers/kelas");
 const { log } = require("console");
@@ -57,6 +58,7 @@ app.use("/test/", testRoutes);
 app.use("/absen/", absenRoutes);
 app.use("/setting/", settingRoutes);
 app.use("/news/", newsRoute);
+app.use("/captcha/", captchaRoute);
 
 const uploadsDirectory = path.join(__dirname, "upload");
 

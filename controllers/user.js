@@ -26,6 +26,7 @@ module.exports = {
         userType,
         instansi,
         nipp,
+        bio
       } = req.body;
       const cekUser = await userModel.findOne({
         $or: [{ username }, { email }],
@@ -45,6 +46,7 @@ module.exports = {
         status: "approved",
         instansi,
         nipp,
+        bio
       });
       await user.save();
 
