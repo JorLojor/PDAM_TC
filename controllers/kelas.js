@@ -1190,9 +1190,8 @@ module.exports = {
           "total data": totalData,
         };
         return response(200, result, "get kelas", res);
-      }
-
-      const page = parseInt(req.query.page) || 1;
+      }else{
+        const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
 
       const data = await KelasModel.find({ ...req.body })
@@ -1219,6 +1218,7 @@ module.exports = {
       };
 
       return response(200, result, "Berhasil get filtered kelas", res);
+      }
     } catch (error) {
       return response(500, error, error.message, res);
     }
