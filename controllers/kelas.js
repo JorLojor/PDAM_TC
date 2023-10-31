@@ -12,7 +12,6 @@ const multer = require("multer");
 const _ = require("lodash");
 const { default: axios } = require("axios");
 const { sendClassEnrollmentMail } = require("../service/mail/config");
-const { sendClassEnrollmentMail } = require("../service/mail/config");
 
 module.exports = {
   getAllKelas: async (req, res) => {
