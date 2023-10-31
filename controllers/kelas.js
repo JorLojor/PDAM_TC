@@ -12,6 +12,7 @@ const multer = require("multer");
 const _ = require("lodash");
 const { default: axios } = require("axios");
 const { sendClassEnrollmentMail } = require("../service/mail/config");
+const { sendClassEnrollmentMail } = require("../service/mail/config");
 
 module.exports = {
   getAllKelas: async (req, res) => {
@@ -888,6 +889,12 @@ module.exports = {
 
           await session.commitTransaction();
           session.endSession();
+
+          await sendClassEnrollmentMail(
+            resultUser.email,
+            resultkelas.nama,
+            resultUser.username
+          );
 
           response(200, resultkelas, "Berhasil enroll", res);
         } else {

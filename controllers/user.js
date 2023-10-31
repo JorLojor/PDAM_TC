@@ -12,6 +12,7 @@ const tokenGenerator = require("../service/mail/tokenGenerator");
 const {
   sendConfirmationEmail,
   sendUserStatusMail,
+  sendClassResolvementMail,
 } = require("../service/mail/config");
 
 module.exports = {
@@ -26,7 +27,7 @@ module.exports = {
         userType,
         instansi,
         nipp,
-        bio
+        bio,
       } = req.body;
       const cekUser = await userModel.findOne({
         $or: [{ username }, { email }],
@@ -46,7 +47,7 @@ module.exports = {
         status: "approved",
         instansi,
         nipp,
-        bio
+        bio,
       });
       await user.save();
 
@@ -440,6 +441,8 @@ module.exports = {
 
       let kelas = [];
 
+      let chosenClass = await Kelas.findById(kelasId);
+
       user.kelas.map((m) => {
         if (m.kelas.toHexString() == kelasId.toHexString()) {
           kelas.push({
@@ -466,6 +469,12 @@ module.exports = {
       );
 
       await ClassResolvementRequest.findByIdAndDelete(id);
+
+      await sendClassResolvementMail(
+        user.email,
+        chosenClass.nama,
+        user.username
+      );
 
       return response(
         200,
