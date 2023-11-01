@@ -172,9 +172,8 @@ module.exports = {
                 parentCode.split(".")[0] === kodeMateri
               ) {
                 const [base, attachmentPath] = file.path.split("/upload/");
-                const cleanedAttachmentPath =
-                  "/upload/" + attachmentPath.replace(/\s/g, "");
-                attachmentFiles.push("/upload/" + cleanedAttachmentPath);
+                const cleanedAttachmentPath = attachmentPath.replace(/\s/g, "");
+                attachmentFiles.push(cleanedAttachmentPath);
               }
             });
           }
@@ -478,19 +477,18 @@ module.exports = {
       }
 
       if (from === "pre") {
-        
-        const findPostTest = await Test.findById(checkMateri.test.post).lean()
-        
+        const findPostTest = await Test.findById(checkMateri.test.post).lean();
+
         if (!findPostTest) {
-          return response(404,null,'Tidak ada test yang dimaksud',res)
+          return response(404, null, "Tidak ada test yang dimaksud", res);
         }
 
-        const {type, _id, ...rest} = findPostTest
+        const { type, _id, ...rest } = findPostTest;
 
         const createDuplicate = await Test.create({
           ...rest,
-          type:'pre'
-        })
+          type: "pre",
+        });
 
         const newTest = {
           pre: createDuplicate._id,
@@ -510,19 +508,18 @@ module.exports = {
         return response(200, updateMateri, "Pre test berhasil disalin", res);
       }
       if (from === "post") {
+        const findPreTest = await Test.findById(checkMateri.test.pre).lean();
 
-        const findPreTest = await Test.findById(checkMateri.test.pre).lean()
-        
         if (!findPreTest) {
-          return response(404,null,'Tidak ada test yang dimaksud',res)
+          return response(404, null, "Tidak ada test yang dimaksud", res);
         }
 
-        const {type, _id, ...rest} = findPreTest
+        const { type, _id, ...rest } = findPreTest;
 
         const createDuplicate = await Test.create({
           ...rest,
-          type:'post'
-        })
+          type: "post",
+        });
 
         const newTest = {
           pre: checkMateri.test.pre,
