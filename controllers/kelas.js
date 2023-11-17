@@ -889,6 +889,12 @@ module.exports = {
           await session.commitTransaction();
           session.endSession();
 
+          await sendClassEnrollmentMail(
+            resultUser.email,
+            resultkelas.nama,
+            resultUser.username
+          );
+
           response(200, resultkelas, "Berhasil enroll", res);
         } else {
           response(
@@ -1060,6 +1066,8 @@ module.exports = {
         .select("peserta")
         .session(session);
 
+      const kelas = await KelasModel.findOne({ slug });
+
       const extracted = [...get.peserta];
 
       const selectPeserta = extracted.filter(
@@ -1069,7 +1077,9 @@ module.exports = {
         (v) => v.user.toString() !== iduser
       );
 
-      selectPeserta[0].status = status;
+      if (selectPeserta.length > 0) {
+        selectPeserta[0].status = status;
+      }
 
       const mergePesertaList = [...withoutSelected, ...selectPeserta];
 
@@ -1079,7 +1089,9 @@ module.exports = {
         { new: true, session }
       );
 
-      const getUser = await UserModel.findOne({ _id: iduser })
+      const getUser = await UserModel.findOne({
+        _id: iduser,
+      })
         .select("kelas")
         .session(session);
 
@@ -1102,13 +1114,17 @@ module.exports = {
         { new: true, session }
       );
 
-      await sendClassEnrollmentMail(getUser.email, get.nama, getUser.username);
+      const user = await UserModel.findOne({
+        _id: iduser,
+      });
 
       await session.commitTransaction();
 
+      await sendClassEnrollmentMail(user.email, kelas.nama, user.username);
+
       response(200, resp, "Berhasil merubah status", res);
     } catch (error) {
-      console.log(error.message);
+      console.log(error);
       response(500, error, "Server error", res);
       await session.abortTransaction();
     } finally {
@@ -1184,35 +1200,35 @@ module.exports = {
           "total data": totalData,
         };
         return response(200, result, "get kelas", res);
+      } else {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
+
+        const data = await KelasModel.find({ ...req.body })
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .populate("materi")
+          .populate("kategori")
+          .populate({
+            path: "desainSertifikat.peserta",
+            model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
+          })
+          .populate({
+            path: "desainSertifikat.instruktur",
+            model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+          });
+
+        if (data) {
+          totalData = data.length;
+        }
+
+        result = {
+          data: data,
+          "total data": totalData,
+        };
+
+        return response(200, result, "Berhasil get filtered kelas", res);
       }
-
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
-
-      const data = await KelasModel.find({ ...req.body })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .populate("materi")
-        .populate("kategori")
-        .populate({
-          path: "desainSertifikat.peserta",
-          model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
-        })
-        .populate({
-          path: "desainSertifikat.instruktur",
-          model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
-        });
-
-      if (data) {
-        totalData = data.length;
-      }
-
-      result = {
-        data: data,
-        "total data": totalData,
-      };
-
-      return response(200, result, "Berhasil get filtered kelas", res);
     } catch (error) {
       return response(500, error, error.message, res);
     }

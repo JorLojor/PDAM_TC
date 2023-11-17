@@ -83,8 +83,8 @@ module.exports = {
     try {
       const { name } = req.body;
       const kategori = new kategoriModel({
-        sampul: 'upload/' + req.files[0].path.split("/upload/").pop(),
-        icon: 'upload/' + req.files[1].path.split("/upload/").pop(),
+        sampul: "upload/" + req.files[0].path.split("/upload/").pop(),
+        icon: "upload/" + req.files[1].path.split("/upload/").pop(),
         name,
       });
 
@@ -104,17 +104,25 @@ module.exports = {
       return;
     }
 
+    const checkKategori = await kategoriModel.findById(id);
+
     const body = {
-      sampul: req.files[0].path.split("/PDAM_TC/")[1],
-      icon: req.files[1].path.split("/PDAM_TC/")[1],
-      name,
+      sampul:
+        req.files.length !== 0
+          ? req.files[0].path.split("/PDAM_TC/")[1]
+          : checkKategori.sampul,
+      icon:
+        req.files.length !== 0
+          ? req.files[1].path.split("/PDAM_TC/")[1]
+          : checkKategori.icon,
+      name: name ?? checkKategori.name,
     };
 
     try {
       const kategori = await kategoriModel.findByIdAndUpdate(id, body, {
         new: true,
       });
-      response(200, kategori, "kategori berhasil di update", res);
+      response(200, kategori, "Kategori berhasil di update", res);
     } catch (error) {
       response(500, error, "Server error failed to update", res);
     }

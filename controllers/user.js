@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const ClassResolvementRequest = require("../models/classResolvementRequest");
+const Materi = require("../models/materi");
 const userModel = require("../models/user");
 const Sertifikat = require("../models/sertifikat");
 const Kelas = require("../models/kelas");
@@ -12,6 +13,7 @@ const tokenGenerator = require("../service/mail/tokenGenerator");
 const {
   sendConfirmationEmail,
   sendUserStatusMail,
+  sendClassResolvementMail,
 } = require("../service/mail/config");
 
 module.exports = {
@@ -23,30 +25,34 @@ module.exports = {
         username,
         password,
         role,
-        userType,
+        tipe,
         instansi,
         nipp,
-        bio
+        bio,
       } = req.body;
+
       const cekUser = await userModel.findOne({
         $or: [{ username }, { email }],
       });
+
       if (cekUser) {
         response(400, username, "Username atau email sudah terdaftar", res);
         return;
       }
+
       const passwordHash = bcrypt.hashSync(password, 10);
+
       const user = new userModel({
         name,
         email,
         username,
         password: passwordHash,
         role,
-        userType,
+        userType: parseInt(tipe),
         status: "approved",
         instansi,
         nipp,
-        bio
+        bio,
       });
       await user.save();
 
@@ -440,6 +446,8 @@ module.exports = {
 
       let kelas = [];
 
+      let chosenClass = await Kelas.findById(kelasId);
+
       user.kelas.map((m) => {
         if (m.kelas.toHexString() == kelasId.toHexString()) {
           kelas.push({
@@ -466,6 +474,12 @@ module.exports = {
       );
 
       await ClassResolvementRequest.findByIdAndDelete(id);
+
+      await sendClassResolvementMail(
+        user.email,
+        chosenClass.nama,
+        user.username
+      );
 
       return response(
         200,
@@ -517,8 +531,22 @@ module.exports = {
     const idUser = req.params.id;
 
     try {
+      const hasMateri = await Materi.find({
+        instruktur: idUser,
+      });
+
+      if (hasMateri) {
+        return response(
+          400,
+          {},
+          "Tidak dapat menghapus user: user memiliki materi",
+          res
+        );
+      }
+
       const user = await userModel.findByIdAndRemove(idUser);
-      response(200, user, "Berhasil delete user", res);
+
+      return response(200, user, "Berhasil delete user", res);
     } catch (error) {
       res.status(500).json({ error: "Internal server error, coba lagi" });
     }
