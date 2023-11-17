@@ -1,8 +1,10 @@
 const Kelas = require("../models/kelas");
+const User = require("../models/user");
 const Absensi = require("../models/absensiPeserta");
 const response = require("../respons/response");
 const mongoose = require("mongoose");
 const moment = require("moment");
+const convertDate = require("../service/index");
 
 module.exports = {
   index: async (req, res) => {
@@ -563,6 +565,43 @@ module.exports = {
         .populate("user", "name")
         .populate("kelas", "nama");
       return response(200, absenPeserta, "Absensi berhasil didapat", res);
+    } catch (error) {
+      return response(500, error, error.message, res);
+    }
+  },
+
+  todayDataByClass: async (req, res) => {
+    try {
+      const { kelas } = req.params;
+
+      const classAvailable = await Kelas.findById(kelas);
+
+      if (!classAvailable) {
+        return response(404, {}, "Kelas tidak ditemukan", res);
+      }
+
+      const today = new Date();
+
+      let data = [];
+
+      await Promise.all(
+        classAvailable.peserta.map(async (p) => {
+          const user = await User.findById(p.user);
+
+          const hadir = await Absensi.findOne({
+            date: convertDate(today),
+            kelas,
+            user: p.user,
+          });
+
+          data.push({
+            name: user.name,
+            hadir: hadir ? true : false,
+          });
+        })
+      );
+
+      return response(200, data, "Absensi hari ini berhasil didapat", res);
     } catch (error) {
       return response(500, error, error.message, res);
     }
