@@ -29,6 +29,9 @@ module.exports = {
         instansi,
         nipp,
         bio,
+        pendidikan,
+        kompetensi,
+        bidang
       } = req.body;
 
       const cekUser = await userModel.findOne({
@@ -39,6 +42,10 @@ module.exports = {
         response(400, username, "Username atau email sudah terdaftar", res);
         return;
       }
+
+      let valuePendidikan = JSON.parse(pendidikan)
+      let valueKompetensi = JSON.parse(kompetensi)
+      let valueBidang = JSON.parse(bidang)
 
       const passwordHash = bcrypt.hashSync(password, 10);
 
@@ -53,6 +60,24 @@ module.exports = {
         instansi,
         nipp,
         bio,
+        pendidikan : valuePendidikan,
+        kompetensi : valueKompetensi,
+        bidang: valueBidang
+      });
+      console.log({
+        name,
+        email,
+        username,
+        password: passwordHash,
+        role,
+        userType: parseInt(tipe),
+        status: "approved",
+        instansi,
+        nipp,
+        bio,
+        pendidikan: valuePendidikan,
+        kompetensi: valueKompetensi,
+        bidang: valueBidang
       });
       await user.save();
 
