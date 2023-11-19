@@ -298,6 +298,9 @@ module.exports = {
       ...req.body,
     };
 
+body.bidang = JSON.parse(body.bidang)
+body.pendidikan = JSON.parse(body.pendidikan)
+body.kompetensi = JSON.parse(body.kompetensi)
     if (req.file) {
       const imageProfile = req.file.path.split("/PDAM_TC/")[1];
       body = {

@@ -11,7 +11,7 @@ const userSchema = new Schema(
     instansi: { type: String, required: false },
     bio: { type: String, required: false },
     pendidikan: [{ type: String, required: false }],
-    kompentensi: [{ type: String, required: false }],
+    kompetensi: [{ type: String, required: false }],
     bidang: [{ type: String, required: false }],
     nipp: { type: String, required: false },
     userImage: { type: String, required: false },
