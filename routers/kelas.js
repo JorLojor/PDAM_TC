@@ -25,6 +25,7 @@ const upload = multer({ storage });
 
 // router.get("/", auth.user, Controller.getAllKelas);
 router.get("/", Controller.getAllKelas); //testing
+router.get("/today", Controller.getTodayClass); //testing
 router.get("/latest", auth.user, auth.onlyStudent, Controller.getRecentClass);
 router.get(
   "/peserta-by-instruktur/:instruktur",

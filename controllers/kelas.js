@@ -9,6 +9,8 @@ const RecentClass = require("../models/recentClass");
 const response = require("../respons/response");
 const uploadImage = require("../middleware/imagepath");
 const multer = require("multer");
+const moment = require("moment");
+const convertDate = require("../service/index");
 const _ = require("lodash");
 const { default: axios } = require("axios");
 const { sendClassEnrollmentMail } = require("../service/mail/config");
@@ -44,6 +46,61 @@ module.exports = {
       };
 
       response(200, result, "berhasil Get all kelas", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
+
+  getTodayClass: async (req, res) => {
+    try {
+      var today =
+        moment().format("ddd MMM DD YYYY") +
+        "07:00:00 GMT+0700 (Western Indonesia Time)";
+
+      var today2 = new Date();
+
+      today2 = convertDate(today2) + "T00:00:00.000Z";
+
+      var ids = [];
+
+      const kelas = await KelasModel.find();
+
+      kelas.map((k) => {
+        for (var i = 0; i < k.jadwal.length; i++) {
+          if (k.jadwal[i].tanggal == today || k.jadwal[i].tanggal == today2) {
+            ids.push(k._id);
+
+            break;
+          }
+        }
+      });
+
+      const data = await KelasModel.find({
+        _id: { $in: ids },
+      }).populate("materi kategori");
+
+      const totalData = await KelasModel.find({
+        _id: { $in: ids },
+      }).countDocuments();
+
+      for (const kelas of data) {
+        for (let i = 0; i < kelas.peserta.length; i++) {
+          const peserta = kelas.peserta[i];
+          const userData = await UserModel.findOne({
+            _id: peserta.user,
+          });
+          if (userData) {
+            kelas.peserta[i].user = userData;
+          }
+        }
+      }
+
+      result = {
+        data: data,
+        "total data": totalData,
+      };
+
+      response(200, result, "berhasil Get all kelas hari ini", res);
     } catch (error) {
       response(500, error, error.message, res);
     }
