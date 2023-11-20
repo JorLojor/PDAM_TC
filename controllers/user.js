@@ -31,7 +31,9 @@ module.exports = {
         bio,
         pendidikan,
         kompetensi,
-        bidang
+        bidang,
+        link_cv,
+        phone
       } = req.body;
 
       const cekUser = await userModel.findOne({
@@ -43,9 +45,9 @@ module.exports = {
         return;
       }
 
-      let valuePendidikan = JSON.parse(pendidikan)
-      let valueKompetensi = JSON.parse(kompetensi)
-      let valueBidang = JSON.parse(bidang)
+      let valuePendidikan = pendidikan ? JSON.parse(pendidikan) : []
+      let valueKompetensi = kompetensi ? JSON.parse(kompetensi) : []
+      let valueBidang = bidang ? JSON.parse(bidang) : []
 
       const passwordHash = bcrypt.hashSync(password, 10);
 
@@ -60,24 +62,11 @@ module.exports = {
         instansi,
         nipp,
         bio,
-        pendidikan : valuePendidikan,
-        kompetensi : valueKompetensi,
-        bidang: valueBidang
-      });
-      console.log({
-        name,
-        email,
-        username,
-        password: passwordHash,
-        role,
-        userType: parseInt(tipe),
-        status: "approved",
-        instansi,
-        nipp,
-        bio,
         pendidikan: valuePendidikan,
         kompetensi: valueKompetensi,
-        bidang: valueBidang
+        bidang: valueBidang,
+        link_cv,
+        phone
       });
       await user.save();
 
@@ -298,9 +287,9 @@ module.exports = {
       ...req.body,
     };
 
-body.bidang = JSON.parse(body.bidang)
-body.pendidikan = JSON.parse(body.pendidikan)
-body.kompetensi = JSON.parse(body.kompetensi)
+    body.bidang = body.bidang ? JSON.parse(body.bidang) : []
+    body.pendidikan = body.pendidikan ? JSON.parse(body.pendidikan) : []
+    body.kompetensi = body.kompetensi ? JSON.parse(body.kompetensi) : []
     if (req.file) {
       const imageProfile = req.file.path.split("/PDAM_TC/")[1];
       body = {
@@ -661,9 +650,8 @@ body.kompetensi = JSON.parse(body.kompetensi)
       let user = data.map((val, idx) => {
         return {
           value: val._id,
-          label: `${val.name} (${val.username}) - ${
-            val.userType === 1 ? "Internal" : "Eksternal"
-          }`,
+          label: `${val.name} (${val.username}) - ${val.userType === 1 ? "Internal" : "Eksternal"
+            }`,
         };
       });
 

@@ -29,6 +29,10 @@ const setting = new Schema(
       type: String,
       required: false,
     },
+    video_trailer: {
+      type: String,
+      required: false,
+    },
     testimony: [
       {
         type: {},
