@@ -16,8 +16,16 @@ const storage = multer.diskStorage({
     cb(null, file.originalname);
   },
 });
+const storageVd = multer.diskStorage({
+  destination: path.join(__dirname, "..", "upload", "video_trailer"),
+
+  filename: (req, file, cb) => {
+    cb(null, file.originalname);
+  },
+});
 
 const upload = multer({ storage });
+const uploadVd = multer({ storage: storageVd });
 
 router.get("/", Controller.index);
 router.get("/organization-structure", Controller.organizationStructureList);
@@ -61,7 +69,7 @@ router.post(
   formidable({ multiples: true }),
   Controller.updateTestimony
 );
-router.post("/youtube", auth.user, auth.admin, Controller.updateYoutubeLink);
+router.post("/youtube", auth.user, auth.admin, uploadVd.single('video_trailer'), Controller.updateYoutubeLink);
 router.post(
   "/instructors",
   auth.user,

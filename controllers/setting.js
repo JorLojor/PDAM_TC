@@ -126,15 +126,28 @@ module.exports = {
 
   updateYoutubeLink: async (req, res) => {
     const { youtube_link } = req.body;
+    const video_trailer = req.file
+    const today = new Date().toISOString().slice(0, 10);
     try {
       const getSetting = await Setting.find().select("instructors");
-
+      const destinationPath = path.join(__dirname, "..", "upload", "video_trailer");
       const oldSetting = getSetting[0];
+      const fileExtension = path.extname(video_trailer.originalname);
+
+      // Generate a new file name with a timestamp to avoid collisions
+      const newFileName = `video_${today}${fileExtension}`;
+
+      // Rename the uploaded file
+      const oldPath = video_trailer.path;
+      const newPath = path.join(destinationPath, newFileName);
+
+      fs.renameSync(oldPath, newPath);
 
       const updateYoutubeLink = await Setting.findByIdAndUpdate(
         oldSetting._id,
         {
           $set: {
+            video_trailer: newPath.split("upload")[1].replaceAll("\\", "/"),
             youtube_link,
           },
         },

@@ -691,7 +691,9 @@ module.exports = {
   getWithFilter: async (req, res) => {
     try {
       const isPaginate = parseInt(req.query.paginate);
-
+      if(req.body.name != undefined && req.body.name != null && req.body.name.trim() != ""){
+        req.body.name = { $regex: '^' + req.body.name , $options: 'i' }
+      }
       let totalData = await userModel.find({ ...req.body }).countDocuments();
 
       if (isPaginate === 0) {
