@@ -1260,6 +1260,7 @@ module.exports = {
       } else {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
+        const rawData = await KelasModel.find({ ...req.body })
 
         const data = await KelasModel.find({ ...req.body })
           .skip((page - 1) * limit)
@@ -1276,7 +1277,7 @@ module.exports = {
           });
 
         if (data) {
-          totalData = data.length;
+          totalData = rawData.length;
         }
 
         result = {

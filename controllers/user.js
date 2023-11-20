@@ -551,8 +551,7 @@ module.exports = {
       const hasMateri = await Materi.find({
         instruktur: idUser,
       });
-
-      if (hasMateri) {
+      if (hasMateri.length > 0) {
         return response(
           400,
           {},
