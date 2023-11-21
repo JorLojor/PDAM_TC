@@ -711,7 +711,7 @@ module.exports = {
 
       const data = await userModel
         .find({ ...req.body })
-        .sort({ createdAt: -1 })
+        .sort({ name: 1 })
         .select("-password")
         .skip((page - 1) * limit)
         .limit(limit);
