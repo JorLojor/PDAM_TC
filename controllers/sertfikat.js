@@ -105,8 +105,7 @@ module.exports = {
       return;
     }
 
-    let desain = '/upload/' + req.file.path.split("/upload/")[1];
-
+    let desain = "/upload/" + req.file.path.split("/upload/")[1];
 
     try {
       const sertifikat = new sertifikatModel({
@@ -127,11 +126,55 @@ module.exports = {
 
   updateSertifikat: async (req, res) => {
     const id = req.params.id;
-    const update = req.body;
+
+    let { nama, namePosition, kelasPosition, fotoPosition } = req.body;
+
+    const oldData = await sertifikatModel.findById(id);
+
+    let desain;
+
+    if (req.file) {
+      desain = "/upload/" + req.file.path.split("/upload/")[1];
+    } else {
+      desain = oldData.desain;
+    }
+
+    if (!nama) {
+      nama = oldData.name;
+    }
+
+    if (!namePosition) {
+      namePosition = oldData.name;
+    } else {
+      namePosition = JSON.parse(namePosition);
+    }
+
+    if (!kelasPosition) {
+      kelasPosition = oldData.name;
+    } else {
+      kelasPosition = JSON.parse(kelasPosition);
+    }
+
+    if (!fotoPosition) {
+      fotoPosition = oldData.name;
+    } else {
+      fotoPosition = JSON.parse(fotoPosition);
+    }
+
     try {
-      const sertifikat = await sertifikatModel.findByIdAndUpdate(id, update, {
-        new: true,
-      });
+      const sertifikat = await sertifikatModel.findByIdAndUpdate(
+        id,
+        {
+          nama,
+          desain,
+          namePosition,
+          kelasPosition,
+          fotoPosition,
+        },
+        {
+          new: true,
+        }
+      );
       response(200, sertifikat, "sertifikat berhasil di update", res);
     } catch (error) {
       response(500, error, "Server error failed to update", res);
