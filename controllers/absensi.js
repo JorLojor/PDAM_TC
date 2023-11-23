@@ -552,6 +552,67 @@ module.exports = {
     }
   },
 
+  update: async (req, res) => {
+    try {
+      const id = req.params.id;
+
+      let { user, kelas, absenName, time } = req.body;
+
+      const oldData = await Absensi.findById(id);
+
+      if (!user) {
+        user = oldData.user;
+      }
+
+      if (!kelas) {
+        kelas = oldData.kelas;
+      }
+
+      if (!absenName) {
+        absenName = oldData.absenName;
+      }
+
+      if (!time) {
+        time = oldData.time;
+      }
+
+      await Absensi.findByIdAndUpdate(
+        id,
+        {
+          user,
+          kelas,
+          absenName,
+          time,
+        },
+        {
+          new: true,
+        }
+      );
+
+      return response(200, {}, "Absensi berhasil diperbaharui", res);
+    } catch (error) {
+      session.abortTransaction();
+      return response(500, error, error.message, res);
+    } finally {
+      session.endSession();
+    }
+  },
+
+  destroy: async (req, res) => {
+    try {
+      const id = req.params.id;
+
+      await Absensi.findByIdAndRemove(id);
+
+      return response(200, {}, "Absensi berhasil diperbaharui", res);
+    } catch (error) {
+      session.abortTransaction();
+      return response(500, error, error.message, res);
+    } finally {
+      session.endSession();
+    }
+  },
+
   getData: async (req, res) => {
     try {
       const { date, kelas } = req.params;
