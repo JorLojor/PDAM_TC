@@ -410,14 +410,12 @@ module.exports = {
             if (u.name.substring(0, len) == user) {
               ids.push(u._id);
             }
+
+            if (u.email.substring(0, len) == user) {
+              ids.push(u._id);
+            }
           });
         }
-
-        userData.map((u) => {
-          if (u.email.substring(0, len) == user) {
-            ids.push(u._id);
-          }
-        });
       }
 
       let data = await ClassResolvementRequest.find()
@@ -425,7 +423,7 @@ module.exports = {
         .populate("kelas")
         .sort({ createdAt: -1 });
 
-      if (ids.length > 0) {
+      if (user) {
         data = await ClassResolvementRequest.find({
           user: { $in: ids },
         })
@@ -657,9 +655,7 @@ module.exports = {
           if (u.name.substring(0, len) == user) {
             ids.push(u._id);
           }
-        });
 
-        userData.map((u) => {
           if (u.email.substring(0, len) == user) {
             ids.push(u._id);
           }
@@ -668,7 +664,7 @@ module.exports = {
 
       let data = await userModel.find();
 
-      if (ids.length > 0) {
+      if (user) {
         data = await userModel.find({
           _id: { $in: ids },
         });
