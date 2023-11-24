@@ -18,6 +18,22 @@ const {
 } = require("../service/mail/config");
 
 module.exports = {
+  getbyEmail: async (req, res) => {
+    try {
+      const { email } = req.body;
+
+      const data = await userModel
+        .find({
+          email,
+        })
+        .select("email name role");
+
+      response(200, data, "get user by email", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
+
   createUser: async (req, res) => {
     try {
       const {
@@ -867,6 +883,7 @@ module.exports = {
         { new: true, session }
       );
       await sendConfirmationEmail(email, update.access_token, update.username);
+
       await session.commitTransaction();
 
       response(200, update, "Berhasil mengirim konfirmasi reset password", res);

@@ -55,6 +55,7 @@ router.post("/filtered", auth.admin, userController.getWithFilter); // get with 
 router.get("/classes/:id", auth.student, userController.getUserClass); // get only user's class
 
 router.post("/create", auth.admin, userController.createUser);
+router.post("/email", userController.getbyEmail);
 router.post(
   `/creation/${process.env.key_for_grant_access}`,
   userController.createUser
