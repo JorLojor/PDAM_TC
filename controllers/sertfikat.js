@@ -139,28 +139,6 @@ module.exports = {
       desain = oldData.desain;
     }
 
-    if (!nama) {
-      nama = oldData.name;
-    }
-
-    if (!namePosition) {
-      namePosition = oldData.name;
-    } else {
-      namePosition = JSON.parse(namePosition);
-    }
-
-    if (!kelasPosition) {
-      kelasPosition = oldData.name;
-    } else {
-      kelasPosition = JSON.parse(kelasPosition);
-    }
-
-    if (!fotoPosition) {
-      fotoPosition = oldData.name;
-    } else {
-      fotoPosition = JSON.parse(fotoPosition);
-    }
-
     try {
       const sertifikat = await sertifikatModel.findByIdAndUpdate(
         id,
