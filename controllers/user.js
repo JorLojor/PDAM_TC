@@ -104,8 +104,16 @@ module.exports = {
       const { name, email, username, password, is_enrollment, kelas } =
         req.body;
 
+      // const cekUser = await userModel.findOne({
+      //   $or: [{ username }, { email }],
+      // });
       const cekUser = await userModel.findOne({
-        $or: [{ username }, { email }],
+        email,
+        $and: [
+          {
+            role: 3,
+          },
+        ],
       });
 
       if (cekUser) {
