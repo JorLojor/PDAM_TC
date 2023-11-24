@@ -853,16 +853,29 @@ module.exports = {
   },
 
   forgotPassword: async (req, res) => {
-    const { email } = req.body;
+    const { email, username } = req.body;
 
     const session = await mongoose.startSession();
     session.startTransaction();
 
     try {
-      const check = await userModel.findOne({ email }).session(session);
+      let check = await userModel.findOne({ email }).session(session);
 
       if (!check) {
         response(400, check, `User dengan email ${email} tidak ada!`, res);
+        await session.abortTransaction();
+        return;
+      }
+
+      check = await userModel.findOne({ username }).session(session);
+
+      if (!check) {
+        response(
+          400,
+          check,
+          `User dengan username ${username} tidak ada!`,
+          res
+        );
         await session.abortTransaction();
         return;
       }
