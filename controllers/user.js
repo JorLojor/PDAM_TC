@@ -37,11 +37,25 @@ module.exports = {
       } = req.body;
 
       const cekUser = await userModel.findOne({
-        $or: [{ username }, { email }],
+        username,
       });
 
       if (cekUser) {
-        response(400, username, "Username atau email sudah terdaftar", res);
+        response(400, username, "Username sudah terdaftar", res);
+        return;
+      }
+
+      const checkEmail = await userModel.findOne({
+        email,
+        $and: [
+          {
+            role,
+          },
+        ],
+      });
+
+      if (checkEmail) {
+        response(400, email, "E-mail sudah terdaftar", res);
         return;
       }
 
