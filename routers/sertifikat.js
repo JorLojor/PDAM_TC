@@ -38,6 +38,7 @@ router.put(
   upload.single("desain"),
   Controller.updateSertifikat
 );
+router.delete("/kelas/:id", auth.user, Controller.deleteSertifikatKelas);
 router.delete("/:id", auth.user, Controller.deleteSertifikat);
 
 module.exports = router;

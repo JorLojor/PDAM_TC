@@ -195,4 +195,25 @@ module.exports = {
       session.endSession();
     }
   },
+
+  deleteSertifikatKelas: async (req, res) => {
+    const id = req.params.id;
+    try {
+      const check = await KelasModel.findById(id);
+
+      if (!check) {
+        return response(400, {}, "kelas tidak ditemukan", res);
+      }
+
+      await KelasModel.findByIdAndUpdate(
+        id,
+        { desainSertifikat: null },
+        { new: true, session }
+      );
+
+      response(200, result, "sertifikat berhasil di hapus", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
 };
