@@ -26,7 +26,7 @@ module.exports = {
         .skip((halaman - 1) * batas)
         .sort({ createdAt: -1 })
         .limit(batas)
-        .populate("materi kategori");
+        .populate("materi kategori trainingMethod");
 
       for (const kelas of data) {
         for (let i = 0; i < kelas.peserta.length; i++) {
@@ -77,7 +77,7 @@ module.exports = {
 
       const data = await KelasModel.find({
         _id: { $in: ids },
-      }).populate("materi kategori");
+      }).populate("materi kategori trainingMethod");
 
       const totalData = await KelasModel.find({
         _id: { $in: ids },
@@ -135,7 +135,7 @@ module.exports = {
 
     try {
       let kelas = await KelasModel.findById(id).populate(
-        "materi peserta kategori"
+        "materi peserta kategori trainingMethod"
       );
 
       if (!kelas) {
@@ -153,7 +153,7 @@ module.exports = {
 
     try {
       let kelas = await KelasModel.findOne({ slug: slug })
-        .populate("materi peserta kategori")
+        .populate("materi peserta kategori trainingMethod")
         .populate({
           path: "desainSertifikat.peserta",
           model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
@@ -179,7 +179,7 @@ module.exports = {
     try {
       let kelas = await KelasModel.findOne({
         kodeNotaDinas: kodeNotaDinas,
-      }).populate("materi peserta kategori status");
+      }).populate("materi peserta kategori trainingMethod status");
 
       if (!kelas) {
         res.status(404).json(kelas);
@@ -216,7 +216,7 @@ module.exports = {
               $in: materiContainer[i],
             },
           })
-            .populate("materi kategori")
+            .populate("materi kategori trainingMethod")
             .populate({
               path: "materi.items.tugas",
               model: "Tugas",
@@ -734,7 +734,7 @@ module.exports = {
         linkPelatihan: link ?? checkKelas.linkPelatihan,
         kategori: kategori ?? checkKelas.kategori,
         status: newStatus ?? checkKelas.status,
-        status: trainingMethod ?? checkKelas.trainingMethod,
+        trainingMethod: trainingMethod ?? checkKelas.trainingMethod,
       };
 
       const result = await KelasModel.findByIdAndUpdate(id, kelas, {
@@ -1223,6 +1223,9 @@ module.exports = {
             model: "Test",
           },
         })
+        .populate({
+          path: "trainingMethod",
+        })
         .select("materi nama")
         .exec();
 
@@ -1252,6 +1255,9 @@ module.exports = {
           .populate({
             path: "desainSertifikat.instruktur",
             model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+          })
+          .populate({
+            path: "trainingMethod",
           });
         if (data) {
           totalData = data.length;
@@ -1278,6 +1284,9 @@ module.exports = {
           .populate({
             path: "desainSertifikat.instruktur",
             model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+          })
+          .populate({
+            path: "trainingMethod",
           });
 
         if (data) {
