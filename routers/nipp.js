@@ -6,7 +6,7 @@ const Controller = require("../controllers/nipp");
 const formidable = require("express-formidable");
 
 router.get("/", auth.user, Controller.index);
-router.get("/get/:nipp", auth.user, Controller.showByNipp);
+router.get("/get/:nipp", Controller.showByNipp);
 router.get("/:id", auth.user, Controller.show);
 router.post("/", auth.user, Controller.store);
 router.post("/import", formidable(), auth.user, Controller.import);
