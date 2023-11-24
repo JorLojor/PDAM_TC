@@ -395,12 +395,12 @@ module.exports = {
 
   submitClassResolvementList: async (req, res) => {
     try {
-      const { user, email } = req.query;
+      const { user } = req.query;
 
       let ids = [];
       let len = 0;
 
-      if (user || email) {
+      if (user) {
         const userData = await userModel.find();
 
         if (user) {
@@ -413,15 +413,11 @@ module.exports = {
           });
         }
 
-        if (email) {
-          len = email.length;
-
-          userData.map((u) => {
-            if (u.email.substring(0, len) == email) {
-              ids.push(u._id);
-            }
-          });
-        }
+        userData.map((u) => {
+          if (u.email.substring(0, len) == user) {
+            ids.push(u._id);
+          }
+        });
       }
 
       let data = await ClassResolvementRequest.find()
@@ -647,33 +643,27 @@ module.exports = {
 
   getStatusPendingUser: async (req, res) => {
     try {
-      const { user, email } = req.query;
+      const { user } = req.query;
 
       let ids = [];
       let len = 0;
 
-      if (user || email) {
+      if (user) {
         const userData = await userModel.find();
 
-        if (user) {
-          len = user.length;
+        len = user.length;
 
-          userData.map((u) => {
-            if (u.name.substring(0, len) == user) {
-              ids.push(u._id);
-            }
-          });
-        }
+        userData.map((u) => {
+          if (u.name.substring(0, len) == user) {
+            ids.push(u._id);
+          }
+        });
 
-        if (email) {
-          len = email.length;
-
-          userData.map((u) => {
-            if (u.email.substring(0, len) == email) {
-              ids.push(u._id);
-            }
-          });
-        }
+        userData.map((u) => {
+          if (u.email.substring(0, len) == user) {
+            ids.push(u._id);
+          }
+        });
       }
 
       let data = await userModel.find();
