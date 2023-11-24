@@ -41,6 +41,7 @@ const absenRoutes = require("./routers/absensi");
 const settingRoutes = require("./routers/setting");
 const newsRoute = require("./routers/news");
 const captchaRoute = require("./routers/captcha");
+const trainingMethodRoute = require("./routers/trainingMethod");
 const { getNotifIo, storeIo } = require("./controllers/chat");
 const { storeRecentClassIO } = require("./controllers/kelas");
 const { log } = require("console");
@@ -59,6 +60,7 @@ app.use("/absen/", absenRoutes);
 app.use("/setting/", settingRoutes);
 app.use("/news/", newsRoute);
 app.use("/captcha/", captchaRoute);
+app.use("/training-method/", trainingMethodRoute);
 
 const uploadsDirectory = path.join(__dirname, "upload");
 

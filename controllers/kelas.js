@@ -561,6 +561,7 @@ module.exports = {
         kodeNotaDinas,
         link,
         absensi,
+        trainingMethod,
       } = req.body;
 
       let imageKelas = null;
@@ -643,6 +644,7 @@ module.exports = {
         image: imageKelas,
         linkPelatihan: link,
         kategori,
+        trainingMethod,
         status,
       });
 
@@ -681,6 +683,7 @@ module.exports = {
         link,
         absensi,
         status,
+        trainingMethod,
       } = req.body;
 
       const checkKelas = await KelasModel.findById(id);
@@ -731,6 +734,7 @@ module.exports = {
         linkPelatihan: link ?? checkKelas.linkPelatihan,
         kategori: kategori ?? checkKelas.kategori,
         status: newStatus ?? checkKelas.status,
+        status: trainingMethod ?? checkKelas.trainingMethod,
       };
 
       const result = await KelasModel.findByIdAndUpdate(id, kelas, {
@@ -1260,7 +1264,7 @@ module.exports = {
       } else {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
-        const rawData = await KelasModel.find({ ...req.body })
+        const rawData = await KelasModel.find({ ...req.body });
 
         const data = await KelasModel.find({ ...req.body })
           .skip((page - 1) * limit)

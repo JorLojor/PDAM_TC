@@ -31,6 +31,10 @@ const kelasSchema = new Schema(
     kelasType: { type: Number, required: false, enum: [0, 1], default: 1 },
     jadwal: [jadwalSchema],
     kategori: { type: mongoose.Schema.Types.ObjectId, ref: "Kategori" },
+    trainingMethod: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "TrainingMethod",
+    },
     kelasStatus: { type: Number, required: true, default: 0 },
     image: { type: String, required: false },
     linkPelatihan: { type: String, required: false },
