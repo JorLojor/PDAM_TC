@@ -126,11 +126,16 @@ module.exports = {
 
   updateYoutubeLink: async (req, res) => {
     const { youtube_link } = req.body;
-    const video_trailer = req.file
+    const video_trailer = req.file;
     const today = new Date().toISOString().slice(0, 10);
     try {
       const getSetting = await Setting.find().select("instructors");
-      const destinationPath = path.join(__dirname, "..", "upload", "video_trailer");
+      const destinationPath = path.join(
+        __dirname,
+        "..",
+        "upload",
+        "video_trailer"
+      );
       const oldSetting = getSetting[0];
       const fileExtension = path.extname(video_trailer.originalname);
 

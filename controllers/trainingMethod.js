@@ -19,7 +19,7 @@ module.exports = {
           data: data,
           "total data": totalData,
         };
-        response(200, result, "get sertifikat berhasil", res);
+        response(200, result, "get metode pelatihan berhasil", res);
         return;
       }
 

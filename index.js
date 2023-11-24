@@ -43,6 +43,7 @@ const newsRoute = require("./routers/news");
 const captchaRoute = require("./routers/captcha");
 const trainingMethodRoute = require("./routers/trainingMethod");
 const nippRoute = require("./routers/nipp");
+const documentationRoute = require("./routers/documentation");
 const { getNotifIo, storeIo } = require("./controllers/chat");
 const { storeRecentClassIO } = require("./controllers/kelas");
 const { log } = require("console");
@@ -63,6 +64,7 @@ app.use("/news/", newsRoute);
 app.use("/captcha/", captchaRoute);
 app.use("/training-method/", trainingMethodRoute);
 app.use("/nipp/", nippRoute);
+app.use("/documentation/", documentationRoute);
 
 const uploadsDirectory = path.join(__dirname, "upload");
 
