@@ -26,7 +26,7 @@ module.exports = {
         .find({
           email,
         })
-        .select("email name role");
+        .select("email username name role");
 
       response(200, data, "get user by email", res);
     } catch (error) {
