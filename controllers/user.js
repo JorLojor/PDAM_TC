@@ -6,6 +6,7 @@ const Sertifikat = require("../models/sertifikat");
 const Kelas = require("../models/kelas");
 const Kategori = require("../models/kategori");
 const ratingModel = require("../models/rating");
+const Nipp = require("../models/nipp");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const response = require("../respons/response");
@@ -25,7 +26,6 @@ module.exports = {
         username,
         password,
         role,
-        tipe,
         instansi,
         nipp,
         bio,
@@ -33,7 +33,7 @@ module.exports = {
         kompetensi,
         bidang,
         link_cv,
-        phone
+        phone,
       } = req.body;
 
       const cekUser = await userModel.findOne({
@@ -45,11 +45,19 @@ module.exports = {
         return;
       }
 
-      let valuePendidikan = pendidikan ? JSON.parse(pendidikan) : []
-      let valueKompetensi = kompetensi ? JSON.parse(kompetensi) : []
-      let valueBidang = bidang ? JSON.parse(bidang) : []
+      let valuePendidikan = pendidikan ? JSON.parse(pendidikan) : [];
+      let valueKompetensi = kompetensi ? JSON.parse(kompetensi) : [];
+      let valueBidang = bidang ? JSON.parse(bidang) : [];
 
       const passwordHash = bcrypt.hashSync(password, 10);
+
+      let userType = 0;
+
+      const checkNipp = await Nipp.findOne({ nipp: nipp });
+
+      if (checkNipp) {
+        userType = 1;
+      }
 
       const user = new userModel({
         name,
@@ -57,7 +65,7 @@ module.exports = {
         username,
         password: passwordHash,
         role,
-        userType: parseInt(tipe),
+        userType,
         status: "approved",
         instansi,
         nipp,
@@ -66,8 +74,9 @@ module.exports = {
         kompetensi: valueKompetensi,
         bidang: valueBidang,
         link_cv,
-        phone
+        phone,
       });
+
       await user.save();
 
       response(200, user, "Register berhasil", res);
@@ -287,9 +296,9 @@ module.exports = {
       ...req.body,
     };
 
-    body.bidang = body.bidang ? JSON.parse(body.bidang) : []
-    body.pendidikan = body.pendidikan ? JSON.parse(body.pendidikan) : []
-    body.kompetensi = body.kompetensi ? JSON.parse(body.kompetensi) : []
+    body.bidang = body.bidang ? JSON.parse(body.bidang) : [];
+    body.pendidikan = body.pendidikan ? JSON.parse(body.pendidikan) : [];
+    body.kompetensi = body.kompetensi ? JSON.parse(body.kompetensi) : [];
     if (req.file) {
       const imageProfile = req.file.path.split("/PDAM_TC/")[1];
       body = {
@@ -649,8 +658,9 @@ module.exports = {
       let user = data.map((val, idx) => {
         return {
           value: val._id,
-          label: `${val.name} (${val.username}) - ${val.userType === 1 ? "Internal" : "Eksternal"
-            }`,
+          label: `${val.name} (${val.username}) - ${
+            val.userType === 1 ? "Internal" : "Eksternal"
+          }`,
         };
       });
 
@@ -690,8 +700,12 @@ module.exports = {
   getWithFilter: async (req, res) => {
     try {
       const isPaginate = parseInt(req.query.paginate);
-      if(req.body.name != undefined && req.body.name != null && req.body.name.trim() != ""){
-        req.body.name = { $regex: '^' + req.body.name , $options: 'i' }
+      if (
+        req.body.name != undefined &&
+        req.body.name != null &&
+        req.body.name.trim() != ""
+      ) {
+        req.body.name = { $regex: "^" + req.body.name, $options: "i" };
       }
       let totalData = await userModel.find({ ...req.body }).countDocuments();
 
