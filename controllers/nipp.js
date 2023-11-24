@@ -112,6 +112,22 @@ module.exports = {
     }
   },
 
+  showByNipp: async (req, res) => {
+    try {
+      const nipp = req.params.nipp;
+
+      const data = await Nipp.findOne({ nipp });
+
+      if (data) {
+        response(200, data, "Berhasil get single Nipp", res);
+      } else {
+        response(400, data, "Nipp tidak ditemukan", res);
+      }
+    } catch (error) {
+      response(500, error, "Server error", res);
+    }
+  },
+
   store: async (req, res) => {
     const { name, nipp } = req.body;
 
