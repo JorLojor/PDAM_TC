@@ -36,12 +36,16 @@ module.exports = {
     }
   },
   ubahStatus: async (req, res) => {
-    const { id } = req.params
-    const { status } = req.body
+    const { id } = req.params;
+    const { status } = req.body;
     try {
-      const user = await userModel.findByIdAndUpdate(id, { status }, {
-        new: true,
-      });
+      const user = await userModel.findByIdAndUpdate(
+        id,
+        { status },
+        {
+          new: true,
+        }
+      );
       response(200, user, "Berhasil update status user", res);
     } catch (error) {
       res.status(500).json({ error: "Internal server error, coba lagi" });
@@ -338,8 +342,8 @@ module.exports = {
   updateUser: async (req, res) => {
     const idUser = req.params.id;
     const updatedUser = req.body;
-    const picture = req.files['userImage']
-    const cvFile = req.files['cv']
+    const picture = req.files["userImage"];
+    const cvFile = req.files["cv"];
 
     console.log(picture, cvFile);
     console.log(req.fields);
@@ -351,13 +355,19 @@ module.exports = {
     };
     const today = new Date().toISOString().slice(0, 10);
 
-    const folderImage = path.join(__dirname, "..", "upload", "profile-image", today);
+    const folderImage = path.join(
+      __dirname,
+      "..",
+      "upload",
+      "profile-image",
+      today
+    );
     const folderCV = path.join(__dirname, "..", "upload", "cv", today);
     await fs.promises.mkdir(folderImage, { recursive: true });
     const format = "YYYYMMDDHHmmss";
     const date = new Date();
     const dateName = moment(date).format(format);
-    console.log(folderCV.type)
+    console.log(folderCV.type);
 
     let ext;
 
@@ -864,6 +874,16 @@ module.exports = {
         );
 
         response(200, result, "Berhasil ubah status user", res);
+      } else {
+        id.map(async (i) => {
+          await userModel.findOneAndUpdate(
+            { _id: i, role: 3 },
+            { status: status },
+            { new: true }
+          );
+        });
+
+        response(200, "Berhasil ubah status user", res);
       }
     } catch (error) {
       console.log(error.message);
@@ -919,8 +939,9 @@ module.exports = {
       let user = data.map((val, idx) => {
         return {
           value: val._id,
-          label: `${val.name} (${val.username}) - ${val.userType === 1 ? "Internal" : "Eksternal"
-            }`,
+          label: `${val.name} (${val.username}) - ${
+            val.userType === 1 ? "Internal" : "Eksternal"
+          }`,
         };
       });
 
