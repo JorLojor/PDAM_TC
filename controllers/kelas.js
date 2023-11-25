@@ -708,8 +708,8 @@ module.exports = {
               filtered[0].status === "pending"
                 ? "pending"
                 : filtered[0].status === "Approved"
-                ? "draft"
-                : "declined";
+                  ? "draft"
+                  : "declined";
           }
         }
       }
@@ -964,7 +964,7 @@ module.exports = {
       const id = req.params.id;
       const result = await KelasModel.findByIdAndUpdate(
         id,
-        { isActive: true },
+        { isActive: false },
         { new: true }
       );
 
@@ -983,6 +983,7 @@ module.exports = {
         {
           $set: {
             status: "draft",
+            isActive: true
           },
         },
         { new: true }
@@ -1332,9 +1333,12 @@ module.exports = {
     try {
       const isPaginate = parseInt(req.query.paginate);
       let totalData;
+      if (req.body.isActive == null || req.body.isActive == undefined) {
+        req.body.isActive = true
+      }
 
       if (isPaginate === 0) {
-        const data = await KelasModel.find({ ...req.body })
+        let data = await KelasModel.find({ ...req.body })
           .populate("materi")
           .populate("kategori")
           .populate({
@@ -1348,6 +1352,15 @@ module.exports = {
           .populate({
             path: "trainingMethod",
           });
+        if (req.body.bulan != null) {
+          data = data.filter((val, idx) => {
+            const isoDate = new Date(val.jadwal[0].tanggal);
+            const isoDateMonth = isoDate.getUTCMonth() + 1;
+            const numericMonth = parseInt(req.body.bulan);
+  
+            return numericMonth === isoDateMonth
+          })
+        }
         if (data) {
           totalData = data.length;
         }
@@ -1447,7 +1460,7 @@ module.exports = {
             for (let j = 0; j < registered[i].kelas.length; j++) {
               if (
                 registered[i].kelas[j].kelas.toString() ==
-                  getKelas._id.toString() &&
+                getKelas._id.toString() &&
                 registered[i].kelas[j].status == status
               ) {
                 pesertaIds.push(registered[i]._id);
@@ -1505,7 +1518,7 @@ module.exports = {
           for (let j = 0; j < registered[i].kelas.length; j++) {
             if (
               registered[i].kelas[j].kelas.toString() ==
-                getKelas._id.toString() &&
+              getKelas._id.toString() &&
               registered[i].kelas[j].status == status
             ) {
               pesertaIds.push(registered[i]._id);

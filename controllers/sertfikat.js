@@ -198,6 +198,8 @@ module.exports = {
 
   deleteSertifikatKelas: async (req, res) => {
     const id = req.params.id;
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
       const check = await KelasModel.findById(id);
 
@@ -210,10 +212,13 @@ module.exports = {
         { desainSertifikat: null },
         { new: true, session }
       );
-
       response(200, result, "sertifikat berhasil di hapus", res);
+      await session.commitTransaction();
     } catch (error) {
       response(500, error, error.message, res);
+      await session.abortTransaction();
+    } finally {
+      session.endSession();
     }
   },
 };
