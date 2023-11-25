@@ -6,7 +6,6 @@ const evaluationFormQuestion = new Schema(
     name: {
       type: String,
       index: true,
-      unique: true,
     },
     evaluationForm: {
       type: mongoose.Schema.Types.ObjectId,

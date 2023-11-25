@@ -1,5 +1,8 @@
 const EvaluationForm = require("../models/evaluationForm");
+const EvaluationFormAnswer = require("../models/evaluationFormAnswer");
 const EvaluationFormQuestion = require("../models/evaluationFormQuestion");
+const EvaluationFormResult = require("../models/evaluationFormResult");
+const Kelas = require("../models/kelas");
 
 const response = require("../respons/response");
 
@@ -20,6 +23,94 @@ module.exports = {
       return response(500, error, "Server error", res);
     }
   },
+  answer: async (req, res) => {
+    try {
+      const {
+        kelas,
+        evaluationForm,
+        evaluationFormQuestion,
+        instructor,
+        value,
+      } = req.body;
+
+      const user = req.user.id;
+
+      if (!kelas) {
+        return response(400, {}, "mohon isi kelas", res);
+      } else if (!evaluationForm) {
+        return response(400, {}, "mohon isi id form", res);
+      } else if (!evaluationFormQuestion) {
+        return response(400, {}, "mohon isi id pertanyaan", res);
+      } else if (!value) {
+        return response(400, {}, "mohon isi id jawaban", res);
+      } else if (value.length !== evaluationFormQuestion.length) {
+        return response(
+          400,
+          {},
+          "jumlah jawaban dan pertanyaan tidak sesuai",
+          res
+        );
+      }
+
+      const validClass = await Kelas.findById(kelas);
+
+      if (!validClass) {
+        return response(400, {}, "kelas tidak ditemukan", res);
+      }
+
+      const validForm = await EvaluationForm.findById(evaluationForm);
+
+      if (!validForm) {
+        return response(400, {}, "form tidak ditemukan", res);
+      }
+
+      let isRegistered = false;
+
+      user.kelas.map((m) => {
+        if (m.kelas.toHexString() == validClass._id.toHexString()) {
+          if (m.isDone == true) {
+            isRegistered = true;
+          } else {
+            return response(400, {}, "Anda belum menyelesaikan kelas ini", res);
+          }
+        }
+      });
+
+      if (!isRegistered) {
+        return response(400, {}, "Anda tidak terdaftar di kelas ini", res);
+      }
+
+      for (let i = 0; i < value.length; i++) {
+        const validQuestion = await EvaluationFormQuestion.findOne({
+          _id: evaluationFormQuestion[i],
+          $and: [
+            {
+              evaluationForm,
+            },
+          ],
+        });
+
+        if (!validQuestion) {
+          return response(400, {}, "Pertanyaan tidak terdaftar", res);
+        }
+      }
+
+      for (let i = 0; i < value.length; i++) {
+        await EvaluationFormAnswer.create({
+          kelas,
+          user,
+          evaluationForm,
+          evaluationFormQuestion: evaluationFormQuestion[i],
+          instructor,
+          value: value[i],
+        });
+      }
+
+      return response(200, {}, "Berhasil menjawab pertanyaan", res);
+    } catch (error) {
+      return response(500, error, "Server error", res);
+    }
+  },
   destroy: async (req, res) => {
     try {
       const id = req.params.id;
@@ -27,6 +118,128 @@ module.exports = {
       const result = await EvaluationFormQuestion.findByIdAndRemove(id);
 
       return response(200, result, "Berhasil hapus pertanyaan", res);
+    } catch (error) {
+      return response(500, error, "Server error", res);
+    }
+  },
+  generateResult: async (req, res) => {
+    try {
+      const { kelas } = req.body;
+
+      const user = req.user.id;
+
+      if (!kelas) {
+        return response(400, {}, "mohon isi kelas", res);
+      }
+
+      const validClass = await Kelas.findById(kelas);
+
+      if (!validClass) {
+        return response(400, {}, "kelas tidak ditemukan", res);
+      }
+
+      const form = await EvaluationForm.find();
+
+      await Promise.all(
+        form.map(async (f) => {
+          const question = await EvaluationFormQuestion.find({
+            evaluationForm: f._id,
+          }).countDocuments();
+
+          const answer = await EvaluationFormAnswer.find({
+            evaluationForm: f._id,
+            $and: [
+              {
+                user,
+              },
+              {
+                kelas,
+              },
+            ],
+          });
+
+          let answerValue = 0;
+
+          answer.map((a) => {
+            answerValue = answerValue + a.value;
+          });
+
+          const hasResult = await EvaluationFormResult.findOne({
+            kelas,
+            $and: [
+              {
+                user,
+              },
+            ],
+          });
+
+          if (f.name == "Sapras") {
+            if (!hasResult) {
+              await EvaluationFormResult.create({
+                kelas,
+                user,
+                sapras: answerValue / question,
+              });
+            } else {
+              await EvaluationFormResult.findByIdAndUpdate(
+                hasResult._id,
+                {
+                  sapras: answerValue / question,
+                },
+                { new: true }
+              );
+            }
+          } else if (f.name == "Instruktur") {
+            const answerCount = await EvaluationFormAnswer.find({
+              evaluationForm: f._id,
+              $and: [
+                {
+                  user,
+                },
+                {
+                  kelas,
+                },
+              ],
+            }).countDocuments();
+
+            const multi = answerCount / question;
+
+            if (!hasResult) {
+              await EvaluationFormResult.create({
+                kelas,
+                user,
+                instruktur: answerValue / (question * multi),
+              });
+            } else {
+              await EvaluationFormResult.findByIdAndUpdate(
+                hasResult._id,
+                {
+                  instruktur: answerValue / (question * multi),
+                },
+                { new: true }
+              );
+            }
+          } else if (f.name == "Materi") {
+            if (!hasResult) {
+              await EvaluationFormResult.create({
+                kelas,
+                user,
+                materi: answerValue / question,
+              });
+            } else {
+              await EvaluationFormResult.findByIdAndUpdate(
+                hasResult._id,
+                {
+                  materi: answerValue / question,
+                },
+                { new: true }
+              );
+            }
+          }
+        })
+      );
+
+      return response(200, {}, "Berhasil generate hasil form", res);
     } catch (error) {
       return response(500, error, "Server error", res);
     }
