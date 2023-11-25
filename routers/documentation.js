@@ -5,8 +5,8 @@ const Controller = require("../controllers/documentation");
 
 const formidable = require("express-formidable");
 
-router.get("/", auth.user, Controller.index);
-router.get("/:id", auth.user, Controller.show);
+router.get("/", Controller.index);
+router.get("/:id", Controller.show);
 router.post("/", auth.user, formidable(), Controller.store);
 router.put("/:id", auth.user, formidable(), Controller.update);
 router.delete("/:id", auth.user, Controller.destroy);
