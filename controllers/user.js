@@ -403,10 +403,42 @@ module.exports = {
 
   submitClassResolvementList: async (req, res) => {
     try {
-      const data = await ClassResolvementRequest.find()
+      const { user } = req.query;
+
+      let ids = [];
+      let len = 0;
+
+      if (user) {
+        const userData = await userModel.find();
+
+        if (user) {
+          len = user.length;
+
+          userData.map((u) => {
+            if (u.name.substring(0, len) == user) {
+              ids.push(u._id);
+            }
+
+            if (u.email.substring(0, len) == user) {
+              ids.push(u._id);
+            }
+          });
+        }
+      }
+
+      let data = await ClassResolvementRequest.find()
         .populate("user")
         .populate("kelas")
         .sort({ createdAt: -1 });
+
+      if (user) {
+        data = await ClassResolvementRequest.find({
+          user: { $in: ids },
+        })
+          .populate("user")
+          .populate("kelas")
+          .sort({ createdAt: -1 });
+      }
 
       return response(200, data, "List Permohonan", res);
     } catch (error) {
@@ -617,9 +649,36 @@ module.exports = {
 
   getStatusPendingUser: async (req, res) => {
     try {
-      const user = await userModel.find();
-      console.log(user);
-      const filtered = user.filter((val) => {
+      const { user } = req.query;
+
+      let ids = [];
+      let len = 0;
+
+      if (user) {
+        const userData = await userModel.find();
+
+        len = user.length;
+
+        userData.map((u) => {
+          if (u.name.substring(0, len) == user) {
+            ids.push(u._id);
+          }
+
+          if (u.email.substring(0, len) == user) {
+            ids.push(u._id);
+          }
+        });
+      }
+
+      let data = await userModel.find();
+
+      if (user) {
+        data = await userModel.find({
+          _id: { $in: ids },
+        });
+      }
+
+      const filtered = data.filter((val) => {
         return val.status === "pending";
       });
       response(200, filtered, "Berhasil get status pending user", res);
