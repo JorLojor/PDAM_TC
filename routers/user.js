@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const auth = require("../middleware/auth");
 const userController = require("../controllers/user");
+const formidable = require("express-formidable");
 
 const fs = require("fs");
 const path = require("path");
@@ -18,6 +19,15 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage });
+const storageCV = multer.diskStorage({
+  destination: path.join(__dirname, "..", "upload", "cv", today),
+  filename: (req, file, cb) => {
+    // const [name,type] = file.originalname.split('.')
+    cb(null, file.originalname);
+  },
+});
+
+const uploadCV = multer({ storage: storageCV });
 
 //router.get('/all' ,userController.getAllUser);// note
 router.get("/all", userController.getAllUser);
@@ -65,7 +75,9 @@ router.post("/login", userController.login);
 router.put(
   "/:id",
   auth.user,
-  upload.single("userImage"),
+  // upload.single("userImage"),
+  // uploadCV.single('cv'),
+  formidable(),
   userController.updateUser
 );
 router.put("/status/:id", auth.admin, userController.updateStatusUser);
@@ -77,5 +89,4 @@ router.put("/reset/:id/:code", userController.resetPassword);
 router.get("/instruktur/:id", auth.user, userController.getInstructor); // get instructor
 router.put("/instruktur/rating/:id", auth.user, userController.rate);
 router.put("/forced/:id", auth.server, userController.forcedUpdate);
-
 module.exports = router;

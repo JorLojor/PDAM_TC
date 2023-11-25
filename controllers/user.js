@@ -16,7 +16,9 @@ const {
   sendUserStatusMail,
   sendClassResolvementMail,
 } = require("../service/mail/config");
-
+const fs = require("fs");
+const moment = require("moment");
+const path = require("path");
 module.exports = {
   getbyEmail: async (req, res) => {
     try {
@@ -31,6 +33,18 @@ module.exports = {
       response(200, data, "get user by email", res);
     } catch (error) {
       response(500, error, error.message, res);
+    }
+  },
+  ubahStatus: async (req, res) => {
+    const { id } = req.params
+    const { status } = req.body
+    try {
+      const user = await userModel.findByIdAndUpdate(id, { status }, {
+        new: true,
+      });
+      response(200, user, "Berhasil update status user", res);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error, coba lagi" });
     }
   },
 
@@ -324,26 +338,57 @@ module.exports = {
   updateUser: async (req, res) => {
     const idUser = req.params.id;
     const updatedUser = req.body;
+    const picture = req.files['userImage']
+    const cvFile = req.files['cv']
 
-    console.log(req.file);
-    console.log(req.body);
+    console.log(picture, cvFile);
+    console.log(req.fields);
 
     let body;
 
     body = {
-      ...req.body,
+      ...req.fields,
     };
+    const today = new Date().toISOString().slice(0, 10);
 
+    const folderImage = path.join(__dirname, "..", "upload", "profile-image", today);
+    const folderCV = path.join(__dirname, "..", "upload", "cv", today);
+    await fs.promises.mkdir(folderImage, { recursive: true });
+    const format = "YYYYMMDDHHmmss";
+    const date = new Date();
+    const dateName = moment(date).format(format);
+    console.log(folderCV.type)
+
+    let ext;
+
+    if (picture.type == "image/png") {
+      ext = "png";
+    } else if (picture.type == "image/jpg") {
+      ext = "jpg";
+    } else if (picture.type == "image/jpeg") {
+      ext = "jpeg";
+    }
+
+    const newPicturePath = folderImage + `/profile-image${idUser}.${ext}`;
+
+    var oldPicturePath = picture.path;
+
+    fs.promises.copyFile(oldPicturePath, newPicturePath, 0, function (err) {
+      if (err) throw err;
+    });
+    const newCVPath = folderCV + `/cv${idUser}.pdf`;
+
+    var oldCVPath = cvFile.path;
+
+    fs.promises.copyFile(oldCVPath, newCVPath, 0, function (err) {
+      if (err) throw err;
+    });
+
+    body.userImage = `upload/profile-image/${today}/profile-image${idUser}.${ext}`;
+    body.link_cv = `upload/cv/${today}/cv${idUser}.pdf`;
     body.bidang = body.bidang ? JSON.parse(body.bidang) : [];
     body.pendidikan = body.pendidikan ? JSON.parse(body.pendidikan) : [];
     body.kompetensi = body.kompetensi ? JSON.parse(body.kompetensi) : [];
-    if (req.file) {
-      const imageProfile = req.file.path.split("/PDAM_TC/")[1];
-      body = {
-        ...req.body,
-        userImage: imageProfile,
-      };
-    }
 
     try {
       const user = await userModel.findByIdAndUpdate(idUser, body, {
@@ -693,14 +738,14 @@ module.exports = {
     const status = req.body.status; //status yang ingin dirubah
     try {
       const result = await userModel.findOneAndUpdate(
-        { _id: id },
+        { _id: id, role: 3 },
         { status: status },
         { new: true }
       );
 
       await sendUserStatusMail(result.email, status, result.username);
 
-      response(200, result, "Berhasil get status pending user", res);
+      response(200, result, "Berhasil ubah status user", res);
     } catch (error) {
       console.log(error.message);
       res.status(500).json({ error: "Internal server error, coba lagi" });
@@ -755,9 +800,8 @@ module.exports = {
       let user = data.map((val, idx) => {
         return {
           value: val._id,
-          label: `${val.name} (${val.username}) - ${
-            val.userType === 1 ? "Internal" : "Eksternal"
-          }`,
+          label: `${val.name} (${val.username}) - ${val.userType === 1 ? "Internal" : "Eksternal"
+            }`,
         };
       });
 

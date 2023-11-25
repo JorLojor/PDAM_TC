@@ -40,12 +40,16 @@ async function sendUserStatusMail(toEmail, status, username) {
         pass: process.env.SMTP_PASSWORD,
       },
     });
+    let msg = `<h1 style="font-weight:600;margin-bottom:'2rem';">Halo ${username},</h1><br/><p>Selamat pendaftaran anda sudah disetujui oleh admin. Anda bisa masuk ke Platform TKR Training Center Menggunakan Link Berikut : <a href="https://tkr2.nusantara-1.com/elearning/login">https://tkr2.nusantara-1.com/elearning/login</a></p>`
+    if(status == 'block'){
+      msg = 'Maaf akun anda sudah dinonaktifkan oleh admin'
+    }
 
     await transporter.sendMail({
       from: process.env.SMTP_EMAIL,
       to: toEmail,
       subject: "Status anda berhasil diubah",
-      html: `<h1 style="font-weight:600;margin-bottom:'2rem';">Halo ${username},</h1><br/><p>Selamat pendaftaran anda sudah disetujui oleh admin. Anda bisa masuk ke Platform TKR Training Center Menggunakan Link Berikut : <a href="https://tkr2.nusantara-1.com/elearning/login">https://tkr2.nusantara-1.com/elearning/login</a></p>`,
+      html: msg,
     });
 
     console.log(`Email berhasil dikirim ke ${toEmail}`);
