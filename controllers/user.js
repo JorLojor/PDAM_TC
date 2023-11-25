@@ -395,7 +395,7 @@ module.exports = {
 
   submitClassResolvementList: async (req, res) => {
     try {
-      const { user } = req.query;
+      const { user, kelas } = req.query;
 
       let ids = [];
       let len = 0;
@@ -423,9 +423,28 @@ module.exports = {
         .populate("kelas")
         .sort({ createdAt: -1 });
 
-      if (user) {
+      if (user && kelas) {
         data = await ClassResolvementRequest.find({
           user: { $in: ids },
+          $and: [
+            {
+              kelas,
+            },
+          ],
+        })
+          .populate("user")
+          .populate("kelas")
+          .sort({ createdAt: -1 });
+      } else if (user) {
+        data = await ClassResolvementRequest.find({
+          user: { $in: ids },
+        })
+          .populate("user")
+          .populate("kelas")
+          .sort({ createdAt: -1 });
+      } else if (kelas) {
+        data = await ClassResolvementRequest.find({
+          kelas,
         })
           .populate("user")
           .populate("kelas")
