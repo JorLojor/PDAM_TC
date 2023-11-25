@@ -395,7 +395,8 @@ module.exports = {
 
   submitClassResolvementList: async (req, res) => {
     try {
-      const { user, kelas } = req.query;
+      const user = req.query.user;
+      const kelas = req.query.kelas;
 
       let ids = [];
       let len = 0;
@@ -452,6 +453,30 @@ module.exports = {
       }
 
       return response(200, data, "List Permohonan", res);
+    } catch (error) {
+      console.log(error.message);
+
+      return res
+        .status(500)
+        .json({ error: "Internal server error, coba lagi" });
+    }
+  },
+
+  classResolvemntClassList: async (req, res) => {
+    try {
+      const request = await ClassResolvementRequest.find();
+
+      let ids = [];
+
+      request.map((r) => {
+        ids.push(r.kelas);
+      });
+
+      const data = await Kelas.find({
+        _id: { $in: ids },
+      }).select("nama");
+
+      return response(200, data, "List Kelas", res);
     } catch (error) {
       console.log(error.message);
 

@@ -24,6 +24,11 @@ router.get("/all", userController.getAllUser);
 router.get("/certificate", auth.student, userController.getCertificate);
 router.post("/my", userController.getSingleUser);
 router.get(
+  "/class-resolvement-class",
+  auth.admin,
+  userController.classResolvemntClassList
+);
+router.get(
   "/class-resolvement",
   auth.admin,
   userController.submitClassResolvementList
