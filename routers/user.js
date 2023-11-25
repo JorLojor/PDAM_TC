@@ -34,6 +34,11 @@ router.get("/all", userController.getAllUser);
 router.get("/certificate", auth.student, userController.getCertificate);
 router.post("/my", userController.getSingleUser);
 router.get(
+  "/class-resolvement-class",
+  auth.admin,
+  userController.classResolvemntClassList
+);
+router.get(
   "/class-resolvement",
   auth.admin,
   userController.submitClassResolvementList
@@ -72,6 +77,8 @@ router.post(
 );
 router.post("/register", userController.register);
 router.post("/login", userController.login);
+router.put("/status", auth.admin, userController.updateStatusUser);
+router.put("/password/:id", auth.user, userController.updatePassword);
 router.put(
   "/:id",
   auth.user,
@@ -80,8 +87,6 @@ router.put(
   formidable(),
   userController.updateUser
 );
-router.put("/status/:id", auth.admin, userController.updateStatusUser);
-router.put("/password/:id", auth.user, userController.updatePassword);
 router.delete("/:id", auth.admin, userController.deleteUser);
 router.put("/forgot/pass", userController.forgotPassword);
 router.get("/reset-password/:code", userController.checkUserResetPassword);
