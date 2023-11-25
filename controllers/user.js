@@ -535,65 +535,125 @@ module.exports = {
 
   approveSubmitClassResolvement: async (req, res) => {
     try {
-      const { id } = req.body;
+      let { id } = req.body;
 
       if (!id) {
         return response(400, {}, "Mohon isi id", res);
       }
 
-      const valid = await ClassResolvementRequest.findById(id);
+      if (id.length == 1) {
+        id = id[0];
 
-      if (!valid) {
-        return response(404, {}, "Permohonan tidak ditemukan", res);
-      }
+        const valid = await ClassResolvementRequest.findById(id);
 
-      const kelasId = valid.kelas;
+        if (!valid) {
+          return response(404, {}, "Permohonan tidak ditemukan", res);
+        }
 
-      const user = await userModel.findById(valid.user);
+        const kelasId = valid.kelas;
 
-      let kelas = [];
+        const user = await userModel.findById(valid.user);
 
-      let chosenClass = await Kelas.findById(kelasId);
+        let kelas = [];
 
-      user.kelas.map((m) => {
-        if (m.kelas.toHexString() == kelasId.toHexString()) {
-          kelas.push({
-            kelas: m.kelas,
-            status: m.status,
-            isDone: true,
-            _id: m._id,
-            createdAt: m.createdAt,
-            updatedAt: m.updatedAt,
+        let chosenClass = await Kelas.findById(kelasId);
+
+        user.kelas.map((m) => {
+          if (m.kelas.toHexString() == kelasId.toHexString()) {
+            kelas.push({
+              kelas: m.kelas,
+              status: m.status,
+              isDone: true,
+              _id: m._id,
+              createdAt: m.createdAt,
+              updatedAt: m.updatedAt,
+            });
+          } else {
+            kelas.push(m);
+          }
+        });
+
+        const data = await userModel.findByIdAndUpdate(
+          valid.user,
+          {
+            kelas,
+          },
+          {
+            new: true,
+          }
+        );
+
+        await ClassResolvementRequest.findByIdAndDelete(id);
+
+        await sendClassResolvementMail(
+          user.email,
+          chosenClass.nama,
+          user.username
+        );
+
+        return response(
+          200,
+          data,
+          "Permohonan penyelesaian kelas berhasil disetujui",
+          res
+        );
+      } else {
+        id.map(async (i) => {
+          const valid = await ClassResolvementRequest.findById(i);
+
+          if (!valid) {
+            return response(404, {}, "Permohonan tidak ditemukan", res);
+          }
+
+          const kelasId = valid.kelas;
+
+          const user = await userModel.findById(valid.user);
+
+          let kelas = [];
+
+          let chosenClass = await Kelas.findById(kelasId);
+
+          user.kelas.map((m) => {
+            if (m.kelas.toHexString() == kelasId.toHexString()) {
+              kelas.push({
+                kelas: m.kelas,
+                status: m.status,
+                isDone: true,
+                _id: m._id,
+                createdAt: m.createdAt,
+                updatedAt: m.updatedAt,
+              });
+            } else {
+              kelas.push(m);
+            }
           });
-        } else {
-          kelas.push(m);
-        }
-      });
 
-      const data = await userModel.findByIdAndUpdate(
-        valid.user,
-        {
-          kelas,
-        },
-        {
-          new: true,
-        }
-      );
+          await userModel.findByIdAndUpdate(
+            valid.user,
+            {
+              kelas,
+            },
+            {
+              new: true,
+            }
+          );
 
-      await ClassResolvementRequest.findByIdAndDelete(id);
+          await ClassResolvementRequest.findByIdAndDelete(i);
 
-      await sendClassResolvementMail(
-        user.email,
-        chosenClass.nama,
-        user.username
-      );
+          await sendClassResolvementMail(
+            user.email,
+            chosenClass.nama,
+            user.username
+          );
+        });
 
-      return response(
-        200,
-        data,
-        "Permohonan penyelesaian kelas berhasil disetujui",
-        res
-      );
+        return response(
+          200,
+          {},
+          "Permohonan penyelesaian kelas berhasil disetujui",
+          res
+        );
+      }
     } catch (error) {
       console.log(error.message);
 
@@ -605,19 +665,33 @@ module.exports = {
 
   denySubmitClassResolvement: async (req, res) => {
     try {
-      const { id } = req.body;
+      let { id } = req.body;
 
       if (!id) {
         return response(400, {}, "Mohon isi id", res);
       }
 
-      const valid = await ClassResolvementRequest.findById(id);
+      if (id.length == 1) {
+        id = id[0];
 
-      if (!valid) {
-        return response(404, {}, "Permohonan tidak ditemukan", res);
+        const valid = await ClassResolvementRequest.findById(id);
+
+        if (!valid) {
+          return response(404, {}, "Permohonan tidak ditemukan", res);
+        }
+
+        await ClassResolvementRequest.findByIdAndDelete(id);
+      } else {
+        id.map(async (i) => {
+          const valid = await ClassResolvementRequest.findById(i);
+
+          if (!valid) {
+            return response(404, {}, "Permohonan tidak ditemukan", res);
+          }
+
+          await ClassResolvementRequest.findByIdAndDelete(i);
+        });
       }
-
-      await ClassResolvementRequest.findByIdAndDelete(id);
 
       return response(
         200,
@@ -699,10 +773,12 @@ module.exports = {
   },
 
   updateStatusUser: async (req, res) => {
-    const { id, status } = req.body; //status yang ingin dirubah
+    let { id, status } = req.body; //status yang ingin dirubah
 
     try {
       if (id.length == 1) {
+        id = id[0];
+
         const result = await userModel.findOneAndUpdate(
           { _id: id },
           { status: status },
