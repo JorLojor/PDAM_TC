@@ -20,13 +20,102 @@ module.exports = {
     try {
       const halaman = parseInt(req.query.halaman) || 1;
       const batas = parseInt(req.query.batas) || 5;
-      const totalData = await KelasModel.countDocuments();
 
-      const data = await KelasModel.find()
+      const { userType } = req.query;
+
+      const fromDate = req.query.fromDate
+        ? req.query.fromDate + "T00:00:00.000Z"
+        : null;
+
+      const fromDate2 = fromDate
+        ? moment(req.query.fromDate).format("ddd MMM DD YYYY") +
+          "07:00:00 GMT+0700 (Western Indonesia Time)"
+        : null;
+
+      const toDate = req.query.toDate
+        ? req.query.toDate + "T00:00:00.000Z" + "T00:00:00.000Z"
+        : null;
+
+      const toDate2 = toDate
+        ? moment(req.query.toDate).format("ddd MMM DD YYYY") +
+          "07:00:00 GMT+0700 (Western Indonesia Time)"
+        : null;
+
+      let totalData = await KelasModel.countDocuments();
+
+      let data = await KelasModel.find()
         .skip((halaman - 1) * batas)
         .sort({ createdAt: -1 })
         .limit(batas)
         .populate("materi kategori trainingMethod");
+
+      if (userType || fromDate || toDate) {
+        let ids = [];
+
+        const kelas = await KelasModel.find();
+
+        if (userType) {
+          await Promise.all(
+            kelas.map(async (k) => {
+              for (var i = 0; i < k.peserta.length; i++) {
+                const user = await UserModel.findById(k.peserta[i].user);
+
+                if (user && user.userType == userType) {
+                  ids.push(k._id);
+
+                  break;
+                }
+              }
+            })
+          );
+        }
+
+        if (fromDate) {
+          await Promise.all(
+            kelas.map(async (k) => {
+              for (var i = 0; i < k.jadwal.length; i++) {
+                if (k.jadwal[i].tanggal >= fromDate) {
+                  ids.push(k._id);
+
+                  break;
+                } else if (k.jadwal[i].tanggal >= fromDate2) {
+                  ids.push(k._id);
+
+                  break;
+                }
+              }
+            })
+          );
+        }
+
+        if (toDate) {
+          await Promise.all(
+            kelas.map(async (k) => {
+              for (var i = 0; i < k.jadwal.length; i++) {
+                if (k.jadwal[i].tanggal <= toDate) {
+                  ids.push(k._id);
+
+                  break;
+                } else if (k.jadwal[i].tanggal <= toDate2) {
+                  ids.push(k._id);
+
+                  break;
+                }
+              }
+            })
+          );
+        }
+
+        data = await KelasModel.find({
+          _id: { $in: ids },
+        })
+          .skip((halaman - 1) * batas)
+          .sort({ createdAt: -1 })
+          .limit(batas)
+          .populate("materi kategori trainingMethod");
+
+        totalData = data.length;
+      }
 
       for (const kelas of data) {
         for (let i = 0; i < kelas.peserta.length; i++) {
