@@ -699,19 +699,30 @@ module.exports = {
   },
 
   updateStatusUser: async (req, res) => {
-    //admin dapat setuju atau menolak registrasi user
-    const id = req.params.id; //idUser yang ingin dirubah
-    const status = req.body.status; //status yang ingin dirubah
+    const { id, status } = req.body; //status yang ingin dirubah
+
     try {
-      const result = await userModel.findOneAndUpdate(
-        { _id: id },
-        { status: status },
-        { new: true }
-      );
+      if (id.length == 1) {
+        const result = await userModel.findOneAndUpdate(
+          { _id: id },
+          { status: status },
+          { new: true }
+        );
 
-      await sendUserStatusMail(result.email, status, result.username);
+        await sendUserStatusMail(result.email, status, result.username);
+      } else {
+        id.map(async (i) => {
+          const result = await userModel.findOneAndUpdate(
+            { _id: i },
+            { status: status },
+            { new: true }
+          );
 
-      response(200, result, "Berhasil get status pending user", res);
+          await sendUserStatusMail(result.email, status, result.username);
+        });
+      }
+
+      response(200, result, "Berhasil ubah status user", res);
     } catch (error) {
       console.log(error.message);
       res.status(500).json({ error: "Internal server error, coba lagi" });

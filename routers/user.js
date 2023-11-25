@@ -62,14 +62,14 @@ router.post(
 );
 router.post("/register", userController.register);
 router.post("/login", userController.login);
+router.put("/status", auth.admin, userController.updateStatusUser);
+router.put("/password/:id", auth.user, userController.updatePassword);
 router.put(
   "/:id",
   auth.user,
   upload.single("userImage"),
   userController.updateUser
 );
-router.put("/status/:id", auth.admin, userController.updateStatusUser);
-router.put("/password/:id", auth.user, userController.updatePassword);
 router.delete("/:id", auth.admin, userController.deleteUser);
 router.put("/forgot/pass", userController.forgotPassword);
 router.get("/reset-password/:code", userController.checkUserResetPassword);
