@@ -67,6 +67,7 @@ router.get(
   userController.getByRoleReactSelect
 ); // get status pending userå
 router.post("/filtered", auth.admin, userController.getWithFilter); // get with filter
+router.post("/admin", auth.superAdmin, userController.adminList); // get with filter
 router.get("/classes/:id", auth.student, userController.getUserClass); // get only user's class
 
 router.post("/create", auth.admin, userController.createUser);

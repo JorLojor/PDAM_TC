@@ -1025,6 +1025,78 @@ module.exports = {
     }
   },
 
+  adminList: async (req, res) => {
+    try {
+      const isPaginate = parseInt(req.query.paginate);
+      if (
+        req.body.name != undefined &&
+        req.body.name != null &&
+        req.body.name.trim() != ""
+      ) {
+        req.body.name = { $regex: "^" + req.body.name, $options: "i" };
+      }
+      let totalData = await userModel
+        .find({
+          ...req.body,
+          $and: [
+            {
+              role: 1,
+            },
+          ],
+        })
+        .countDocuments();
+
+      if (isPaginate === 0) {
+        const data = await userModel
+          .find({
+            ...req.body,
+            $and: [
+              {
+                role: 1,
+              },
+            ],
+          })
+          .select("-password");
+
+        result = {
+          data: data,
+          "total data": totalData,
+        };
+        response(200, result, "get user", res);
+        return;
+      }
+
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      const data = await userModel
+        .find({
+          ...req.body,
+          $and: [
+            {
+              role: 1,
+            },
+          ],
+        })
+        .sort({ name: 1 })
+        .select("-password")
+        .skip((page - 1) * limit)
+        .limit(limit);
+      // .populate("kelas")
+
+      result = {
+        data: data,
+        "total data": totalData,
+      };
+
+      response(200, result, "Berhasil get admin user", res);
+    } catch (error) {
+      console.log(error);
+
+      response(500, error, error.message, res);
+    }
+  },
+
   getUserClass: async (req, res) => {
     const { id } = req.params;
 
