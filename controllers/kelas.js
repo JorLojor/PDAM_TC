@@ -1395,7 +1395,29 @@ module.exports = {
           );
         }
 
-        if (fromDate) {
+        if (fromDate && toDate) {
+          await Promise.all(
+            kelas.map(async (k) => {
+              for (var i = 0; i < k.jadwal.length; i++) {
+                if (
+                  k.jadwal[i].tanggal >= fromDate &&
+                  k.jadwal[i].tanggal <= toDate
+                ) {
+                  ids.push(k._id);
+
+                  break;
+                } else if (
+                  k.jadwal[i].tanggal >= fromDate2 &&
+                  k.jadwal[i].tanggal <= toDate2
+                ) {
+                  ids.push(k._id);
+
+                  break;
+                }
+              }
+            })
+          );
+        } else if (fromDate) {
           await Promise.all(
             kelas.map(async (k) => {
               for (var i = 0; i < k.jadwal.length; i++) {
@@ -1411,9 +1433,7 @@ module.exports = {
               }
             })
           );
-        }
-
-        if (toDate) {
+        } else if (toDate) {
           await Promise.all(
             kelas.map(async (k) => {
               for (var i = 0; i < k.jadwal.length; i++) {
