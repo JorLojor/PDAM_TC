@@ -9,6 +9,7 @@ const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
 const moment = require("moment");
+const TestAnswer = require("../models/testAnswer");
 
 function makeid(length) {
   let result = "";
@@ -385,6 +386,139 @@ module.exports = {
     }
   },
 
+  getTestByClass: async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const result = await testAnswer
+        .find({
+          class: id,
+        })
+        .populate("test");
+
+      let data = [];
+      let postTest = [];
+      let preTest = [];
+      let quiz = [];
+      let postTestId = null;
+      let preTestId = null;
+      let quizIds = [];
+
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].test.type == "pre") {
+          preTestId = result[i].test._id;
+
+          break;
+        }
+      }
+
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].test.type == "post") {
+          postTestId = result[i].test._id;
+
+          break;
+        }
+      }
+
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].test.type == "quiz") {
+          quizIds.push(result[i].test._id);
+        }
+      }
+
+      if (preTestId) {
+        const preTestScore = await testAnswer
+          .find({
+            test: preTestId,
+            $and: [
+              {
+                class: id,
+              },
+            ],
+          })
+          .populate("user", "name");
+
+        preTestScore.map((p) => {
+          preTest.push({
+            name: p.user.name,
+            nilai: p.nilai,
+          });
+        });
+      }
+
+      if (postTestId) {
+        const postTestScore = await testAnswer
+          .find({
+            test: postTestId,
+            $and: [
+              {
+                class: id,
+              },
+            ],
+          })
+          .populate("user", "name");
+
+        postTestScore.map((p) => {
+          postTest.push({
+            name: p.user.name,
+            nilai: p.nilai,
+          });
+        });
+      }
+
+      if (quizIds.length > 0) {
+        const quizLength = quizIds.length;
+
+        const kelas = await Kelas.findById(id);
+
+        Promise.all(
+          kelas.map(async (k) => {
+            for (var i = 0; i < k.peserta.length; i++) {
+              let score = 0;
+
+              const user = await User.findById(k.peserta[i].user);
+
+              quizIds.map(async (q) => {
+                const quizTest = await TestAnswer.findOne({
+                  test: q,
+                  $and: [
+                    {
+                      class: id,
+                    },
+                    {
+                      user: k.peserta[i].user,
+                    },
+                  ],
+                });
+
+                if (quizTest) {
+                  score = score + quizTest.nilai;
+                }
+              });
+
+              const finalScore = score / quizLength;
+
+              quiz.push({
+                name: user.name,
+                nilai: finalScore,
+              });
+            }
+          })
+        );
+      }
+
+      data.push({
+        preTest,
+        quiz,
+        postTest,
+      });
+
+      return response(200, data, "Nilai Test di dapat", res);
+    } catch (error) {
+      return response(500, error, error.message, res);
+    }
+  },
+
   getTestAnswer: async (req, res) => {
     try {
       let user = req.query.user ?? null;
@@ -525,6 +659,7 @@ module.exports = {
 
   getTestAnswerFiltered: async (req, res) => {
     const { type, page, perPage } = req.body;
+
     try {
       const data = await testAnswer
         .find()
