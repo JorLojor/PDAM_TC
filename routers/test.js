@@ -6,6 +6,7 @@ const Controller = require("../controllers/test");
 
 const path = require("path");
 const multer = require("multer");
+const formidable = require("express-formidable");
 
 const today = new Date().toISOString().slice(0, 10);
 
@@ -46,6 +47,13 @@ testRouter.patch(
   auth.instruktur,
   upload.array("images"),
   Controller.updateTest
+);
+testRouter.put(
+  "/update/answer/:id/",
+  auth.user,
+  auth.instruktur,
+  formidable(),
+  Controller.updateTestAnswer
 );
 testRouter.delete(
   "/delete/:id/:slug/:title",
