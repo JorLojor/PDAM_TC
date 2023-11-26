@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const ClassResolvementRequest = require("../models/classResolvementRequest");
 const Materi = require("../models/materi");
 const userModel = require("../models/user");
+const TestAnswer = require("../models/testAnswer");
 const Sertifikat = require("../models/sertifikat");
 const Kelas = require("../models/kelas");
 const Kategori = require("../models/kategori");
@@ -35,6 +36,52 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
+  dashboardCard: async (req, res) => {
+    try {
+      const user = await userModel.findById(req.user.id);
+
+      let onGoingClass = 0;
+      let finishedClass = 0;
+
+      user.kelas.map((k) => {
+        if (k.isDone == true) {
+          finishedClass = finishedClass + 1;
+        } else {
+          onGoingClass = onGoingClass + 1;
+        }
+      });
+
+      const answerCount = await TestAnswer.find({
+        user: req.user.id,
+      }).countDocuments();
+
+      const answers = await TestAnswer.find({
+        user: req.user.id,
+      });
+
+      let score = 0;
+
+      if (answerCount > 0) {
+        answers.map((a) => {
+          score = score + a.nilai;
+        });
+
+        score = score / answerCount;
+      }
+
+      const data = {
+        finishedClass,
+        onGoingClass,
+        score,
+      };
+
+      response(200, data, "get user dashboard card", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
+
   ubahStatus: async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;

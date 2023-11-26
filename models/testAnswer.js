@@ -28,8 +28,8 @@ const answerSchema = new Schema(
       },
     ],
     nilai: { type: Number, default: 0 },
-    startAt: { type: String, required: true },
-    finishAt: { type: String, required: true },
+    startAt: { type: Number, required: true },
+    finishAt: { type: Number, required: true },
   },
   { timestamps: true }
 );
