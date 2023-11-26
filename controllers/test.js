@@ -741,8 +741,9 @@ module.exports = {
               ext = "jpeg";
             }
 
-            const newPath =
-              folder + `/answer${dateName}${index}${answerIndex}.${ext}`;
+            const filename = `/answer${dateName}${index}${answerIndex}.${ext}`;
+
+            const newPath = folder + filename;
 
             var oldPath = img.path;
 
@@ -750,7 +751,7 @@ module.exports = {
               if (err) throw err;
             });
 
-            const filePath = `/upload/test-answer-image/${today}/${index}/${answerIndex}/answer${dateName}${index}${answerIndex}.${ext}`;
+            const filePath = `/upload/test-answer-image/${today}/${index}/${answerIndex}${filename}`;
 
             newAnswer.push({
               value,
@@ -781,6 +782,107 @@ module.exports = {
             type: targetQuestion.type,
             answer: newAnswer,
           });
+        } else {
+          newQuestion.push(oldData.question[i]);
+        }
+      }
+
+      const result = await Test.findByIdAndUpdate(id, {
+        question: newQuestion,
+      });
+
+      return response(200, result, "Quiz Berhasil di perbaharui", res);
+    } catch (error) {
+      console.log(error);
+      response(500, error, error.message, res);
+      await session.abortTransaction();
+    } finally {
+      session.endSession();
+    }
+  },
+
+  updateTestQuestion: async (req, res) => {
+    const session = await mongoose.startSession();
+
+    try {
+      const { id } = req.params;
+
+      const { kode, index, value, type } = req.fields;
+
+      const img = req.files["img"];
+
+      const oldData = await Test.findById(id);
+
+      if (!oldData) {
+        return response(400, {}, "Data tidak ditemukan", res);
+      }
+
+      const targetQuestion = oldData.question[index];
+      const currentQuestionCount = oldData.question.length;
+
+      session.startTransaction();
+
+      let newQuestion = [];
+
+      for (let i = 0; i < currentQuestionCount; i++) {
+        if (i == index) {
+          if (img !== null) {
+            const today = new Date().toISOString().slice(0, 10);
+
+            const folder = path.join(
+              __dirname,
+              "..",
+              "upload",
+              "test-question-image",
+              today,
+              index
+            );
+
+            await fs.promises.mkdir(folder, { recursive: true });
+
+            const format = "YYYYMMDDHHmmss";
+
+            const date = new Date();
+
+            const dateName = moment(date).format(format);
+
+            let ext;
+
+            if (img.type == "image/png") {
+              ext = "png";
+            } else if (img.type == "image/jpg") {
+              ext = "jpg";
+            } else if (img.type == "image/jpeg") {
+              ext = "jpeg";
+            }
+            const filename = `/question${dateName}${index}.${ext}`;
+
+            const newPath = folder + filename;
+
+            var oldPath = img.path;
+
+            fs.promises.copyFile(oldPath, newPath, 0, function (err) {
+              if (err) throw err;
+            });
+
+            const filePath = `/upload/test-question-image/${today}/${index}${filename}`;
+
+            newQuestion.push({
+              kode,
+              value,
+              img: filePath,
+              type,
+              answer: targetQuestion.answer,
+            });
+          } else {
+            newQuestion.push({
+              kode,
+              value,
+              img: targetQuestion.img,
+              type,
+              answer: targetQuestion.answer,
+            });
+          }
         } else {
           newQuestion.push(oldData.question[i]);
         }

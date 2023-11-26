@@ -55,6 +55,13 @@ testRouter.put(
   formidable(),
   Controller.updateTestAnswer
 );
+testRouter.put(
+  "/update/question/:id/",
+  auth.user,
+  auth.instruktur,
+  formidable(),
+  Controller.updateTestQuestion
+);
 testRouter.delete(
   "/delete/:id/:slug/:title",
   auth.user,
