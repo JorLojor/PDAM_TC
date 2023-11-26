@@ -1341,23 +1341,9 @@ module.exports = {
 
       const { userType } = req.query;
 
-      const fromDate = req.query.fromDate
-        ? req.query.fromDate + "T00:00:00.000Z"
-        : null;
+      const fromDate = req.query.fromDate ? req.query.fromDate : null;
 
-      const fromDate2 = fromDate
-        ? moment(req.query.fromDate).format("ddd MMM DD YYYY") +
-          "07:00:00 GMT+0700 (Western Indonesia Time)"
-        : null;
-
-      const toDate = req.query.toDate
-        ? req.query.toDate + "T00:00:00.000Z" + "T00:00:00.000Z"
-        : null;
-
-      const toDate2 = toDate
-        ? moment(req.query.toDate).format("ddd MMM DD YYYY") +
-          "07:00:00 GMT+0700 (Western Indonesia Time)"
-        : null;
+      const toDate = req.query.toDate ? req.query.toDate : null;
 
       let data = await KelasModel.find({ ...req.body })
         .populate("materi")
@@ -1400,15 +1386,9 @@ module.exports = {
             kelas.map(async (k) => {
               for (var i = 0; i < k.jadwal.length; i++) {
                 if (
-                  k.jadwal[i].tanggal >= fromDate &&
-                  k.jadwal[i].tanggal <= toDate
-                ) {
-                  ids.push(k._id);
-
-                  break;
-                } else if (
-                  k.jadwal[i].tanggal >= fromDate2 &&
-                  k.jadwal[i].tanggal <= toDate2
+                  moment(k.jadwal[i].tanggal).format("YYYY-MM-DD") >=
+                    fromDate &&
+                  moment(k.jadwal[i].tanggal).format("YYYY-MM-DD") <= toDate
                 ) {
                   ids.push(k._id);
 
@@ -1421,11 +1401,9 @@ module.exports = {
           await Promise.all(
             kelas.map(async (k) => {
               for (var i = 0; i < k.jadwal.length; i++) {
-                if (k.jadwal[i].tanggal >= fromDate) {
-                  ids.push(k._id);
-
-                  break;
-                } else if (k.jadwal[i].tanggal >= fromDate2) {
+                if (
+                  moment(k.jadwal[i].tanggal).format("YYYY-MM-DD") >= fromDate
+                ) {
                   ids.push(k._id);
 
                   break;
@@ -1437,11 +1415,9 @@ module.exports = {
           await Promise.all(
             kelas.map(async (k) => {
               for (var i = 0; i < k.jadwal.length; i++) {
-                if (k.jadwal[i].tanggal <= toDate) {
-                  ids.push(k._id);
-
-                  break;
-                } else if (k.jadwal[i].tanggal <= toDate2) {
+                if (
+                  moment(k.jadwal[i].tanggal).format("YYYY-MM-DD") <= toDate
+                ) {
                   ids.push(k._id);
 
                   break;
