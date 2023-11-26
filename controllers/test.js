@@ -444,6 +444,12 @@ module.exports = {
             nilai: p.nilai,
           });
         });
+
+        preTest = Object.values(preTest)
+          .sort(function (a, b) {
+            return a.nilai > b.nilai ? 1 : -1;
+          })
+          .slice(0, 10);
       }
 
       if (postTestId) {
@@ -464,6 +470,12 @@ module.exports = {
             nilai: p.nilai,
           });
         });
+
+        postTestScore = Object.values(postTestScore)
+          .sort(function (a, b) {
+            return a.nilai > b.nilai ? 1 : -1;
+          })
+          .slice(0, 10);
       }
 
       if (quizIds.length > 0) {
@@ -505,6 +517,12 @@ module.exports = {
             }
           })
         );
+
+        quiz = Object.values(quiz)
+          .sort(function (a, b) {
+            return a.nilai > b.nilai ? 1 : -1;
+          })
+          .slice(0, 10);
       }
 
       data.push({
