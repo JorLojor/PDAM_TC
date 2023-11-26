@@ -1331,7 +1331,7 @@ module.exports = {
 
   getWithFilter: async (req, res) => {
     try {
-      const isPaginate = parseInt(req.query.paginate);
+      const isPaginate = req.query.paginate ? parseInt(req.query.paginate) : 0;
 
       let totalData;
 
@@ -1339,7 +1339,7 @@ module.exports = {
         req.body.isActive = true;
       }
 
-      const { userType } = req.body;
+      const { userType } = req.query;
 
       const fromDate = req.query.fromDate
         ? req.query.fromDate + "T00:00:00.000Z"
@@ -1374,9 +1374,9 @@ module.exports = {
           path: "trainingMethod",
         });
 
-      if (userType || fromDate || toDate) {
-        let ids = [];
+      let ids = [];
 
+      if (userType || fromDate || toDate) {
         const kelas = await KelasModel.find();
 
         if (userType) {
@@ -1431,7 +1431,9 @@ module.exports = {
           );
         }
 
-        await KelasModel.find({ _id: { $in: ids }, $and: [{ ...req.body }] })
+        data = await KelasModel.find({
+          _id: { $in: ids },
+        })
           .populate("materi")
           .populate("kategori")
           .populate({
@@ -1445,8 +1447,6 @@ module.exports = {
           .populate({
             path: "trainingMethod",
           });
-
-        totalData = data.length;
       }
 
       if (isPaginate === 0) {
@@ -1465,35 +1465,59 @@ module.exports = {
         }
 
         result = {
-          data: data,
+          data,
           "total data": totalData,
         };
+
         return response(200, result, "get kelas", res);
       } else {
         const page = parseInt(req.query.page) || 1;
         const limit = parseInt(req.query.limit) || 10;
-        const rawData = await KelasModel.find({ ...req.body });
+        let rawData = await KelasModel.find({ ...req.body });
 
-        const data = await KelasModel.find({ ...req.body })
-          .skip((page - 1) * limit)
-          .limit(limit)
-          .populate("materi")
-          .populate("kategori")
-          .populate({
-            path: "desainSertifikat.peserta",
-            model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
-          })
-          .populate({
-            path: "desainSertifikat.instruktur",
-            model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
-          })
-          .populate({
-            path: "trainingMethod",
+        if (ids.length > 0) {
+          rawData = await KelasModel.find({
+            _id: { $in: ids },
           });
 
-        if (data) {
-          totalData = rawData.length;
+          data = await KelasModel.find({
+            _id: { $in: ids },
+          })
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .populate("materi")
+            .populate("kategori")
+            .populate({
+              path: "desainSertifikat.peserta",
+              model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
+            })
+            .populate({
+              path: "desainSertifikat.instruktur",
+              model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+            })
+            .populate({
+              path: "trainingMethod",
+            });
+        } else {
+          data = await KelasModel.find({ ...req.body })
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .populate("materi")
+            .populate("kategori")
+            .populate({
+              path: "desainSertifikat.peserta",
+              model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
+            })
+            .populate({
+              path: "desainSertifikat.instruktur",
+              model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+            })
+            .populate({
+              path: "trainingMethod",
+            });
         }
+
+        totalData = rawData.length;
 
         result = {
           data: data,
