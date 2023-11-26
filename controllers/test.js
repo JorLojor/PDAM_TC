@@ -491,6 +491,8 @@ module.exports = {
         }
 
         data.push({
+          kelasId: id,
+          userId: user._id,
           name: user.name,
           nipp: user.nipp,
           type: user.userType == 1 ? "Internal" : "External",
