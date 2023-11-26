@@ -33,7 +33,7 @@ const uploadCV = multer({ storage: storageCV });
 router.get("/all", userController.getAllUser);
 router.get("/certificate", auth.student, userController.getCertificate);
 router.post("/my", userController.getSingleUser);
-router.get("/dashboard-card", auth.onlyStudent, userController.dashboardCard);
+router.get("/dashboard-card", auth.admin, userController.dashboardCard);
 router.get(
   "/class-resolvement-class",
   auth.admin,

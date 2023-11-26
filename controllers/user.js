@@ -39,26 +39,36 @@ module.exports = {
 
   dashboardCard: async (req, res) => {
     try {
-      const user = await userModel.findById(req.user.id);
+      const kelas = await Kelas.find();
+
+      let today = new Date();
+
+      today = moment(today).format("YYYY-MM-DD");
 
       let onGoingClass = 0;
       let finishedClass = 0;
 
-      user.kelas.map((k) => {
-        if (k.isDone == true) {
-          finishedClass = finishedClass + 1;
-        } else {
+      let ongoing = false;
+
+      kelas.map((k) => {
+        k.jadwal.map((j) => {
+          if (moment(j.tanggal).format("YYYY-MM-DD") < today) {
+            ongoing = true;
+          }
+        });
+
+        if (ongoing == true) {
           onGoingClass = onGoingClass + 1;
+        } else {
+          finishedClass = finishedClass + 1;
         }
+
+        ongoing = false;
       });
 
-      const answerCount = await TestAnswer.find({
-        user: req.user.id,
-      }).countDocuments();
+      const answerCount = await TestAnswer.find().countDocuments();
 
-      const answers = await TestAnswer.find({
-        user: req.user.id,
-      });
+      const answers = await TestAnswer.find();
 
       let score = 0;
 
