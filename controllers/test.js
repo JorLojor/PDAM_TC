@@ -443,7 +443,7 @@ module.exports = {
   },
 
   answerTest: async (req, res) => {
-    const { user, test, kelas, answers, duration } = req.body;
+    const { user, test, kelas, answers, startAt, finishAt } = req.body;
 
     try {
       const validUser = await User.findById(user);
@@ -498,7 +498,8 @@ module.exports = {
         class: validKelas._id,
         answers,
         nilai,
-        duration,
+        startAt,
+        finishAt,
       });
 
       const save = await answer.save();
