@@ -509,6 +509,89 @@ module.exports = {
     }
   },
 
+  getStudentDataQuiz: async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const result = await testAnswer
+        .find({
+          class: id,
+        })
+        .populate("test");
+
+      let data = [];
+      let quizIds = [];
+
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].test.type == "quiz") {
+          quizIds.push(result[i].test._id);
+        }
+      }
+
+      const kelas = await Kelas.findById(id);
+
+      let quizAverage = 0;
+
+      let quiz = [];
+
+      for (var i = 0; i < kelas.peserta.length; i++) {
+        const user = await User.findById(kelas.peserta[i].user);
+
+        if (quizIds.length > 0) {
+          let score = 0;
+
+          for (var i = 0; i < quizIds.length; i++) {
+            const quizTest = await TestAnswer.findOne({
+              test: quizIds[i],
+              $and: [
+                {
+                  class: id,
+                },
+                {
+                  user: user._id,
+                },
+              ],
+            });
+
+            if (quizTest) {
+              score = score + quizTest.nilai;
+              quiz.push({
+                nilai: quizTest.nilai,
+              });
+            }
+          }
+
+          quizAverage = score / quizLength;
+
+          data.push({
+            kelasId: id,
+            userId: user._id,
+            name: user.name,
+            nipp: user.nipp,
+            type: user.userType == 1 ? "Internal" : "External",
+            quizAverage,
+            length: quizIds.length,
+          });
+        } else {
+          data.push({
+            kelasId: id,
+            userId: user._id,
+            name: user.name,
+            nipp: user.nipp,
+            type: user.userType == 1 ? "Internal" : "External",
+            quizAverage: 0,
+            length: 0,
+          });
+        }
+      }
+
+      return response(200, data, "Data nilai quiz user didapatkan", res);
+    } catch (error) {
+      console.log(error);
+      return response(500, error, error.message, res);
+    }
+  },
+
   getTestByClass: async (req, res) => {
     try {
       const { id } = req.params;

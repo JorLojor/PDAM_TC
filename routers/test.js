@@ -23,6 +23,11 @@ const upload = multer({ storage });
 testRouter.get("/answered", auth.user, Controller.getTestAnswer);
 testRouter.get("/graphic", auth.user, Controller.getGraphic);
 testRouter.get("/student-data/:id", auth.user, Controller.getStudentData);
+testRouter.get(
+  "/student-data-quiz/:id",
+  auth.user,
+  Controller.getStudentDataQuiz
+);
 testRouter.get("/class/:id", auth.user, Controller.getTestByClass);
 testRouter.get("/quiz/:slug", auth.user, Controller.getQuiz);
 testRouter.get("/:id", auth.user, Controller.getTest);
