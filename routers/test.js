@@ -55,6 +55,7 @@ testRouter.patch(
   upload.array("images"),
   Controller.updateTest
 );
+testRouter.put("/update/:id/", auth.user, auth.instruktur, Controller.update);
 testRouter.put(
   "/update/answer/:id/",
   auth.user,

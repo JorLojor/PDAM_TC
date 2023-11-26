@@ -1042,6 +1042,34 @@ module.exports = {
     }
   },
 
+  update: async (req, res) => {
+    const session = await mongoose.startSession();
+
+    try {
+      const { id } = req.params;
+
+      const { title } = req.body;
+
+      const oldData = await Test.findById(id);
+
+      if (!oldData) {
+        return response(400, {}, "Data tidak ditemukan", res);
+      }
+
+      const result = await Test.findByIdAndUpdate(id, {
+        title,
+      });
+
+      return response(200, result, "Quiz Berhasil di perbaharui", res);
+    } catch (error) {
+      console.log(error);
+      response(500, error, error.message, res);
+      await session.abortTransaction();
+    } finally {
+      session.endSession();
+    }
+  },
+
   updateTestAnswer: async (req, res) => {
     const session = await mongoose.startSession();
 
