@@ -1076,7 +1076,7 @@ module.exports = {
     try {
       const { id } = req.params;
 
-      const { answerIndex, index, value, isTrue } = req.fields;
+      let { answerIndex, index, value } = req.fields;
 
       const img = req.files["img"];
 
@@ -1084,6 +1084,13 @@ module.exports = {
 
       if (!oldData) {
         return response(400, {}, "Data tidak ditemukan", res);
+      }
+
+      let isTrue = false;
+
+      if (value.substr(value.length - 6) == "{true}") {
+        isTrue = true;
+        value = value.substring(0, value.length - 6);
       }
 
       const targetQuestion = oldData.question[index];
@@ -1174,9 +1181,11 @@ module.exports = {
         }
       }
 
-      const result = await Test.findByIdAndUpdate(id, {
+      await Test.findByIdAndUpdate(id, {
         question: newQuestion,
       });
+
+      const result = await Test.findById(id);
 
       return response(200, result, "Quiz Berhasil di perbaharui", res);
     } catch (error) {
