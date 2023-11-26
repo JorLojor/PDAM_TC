@@ -418,49 +418,63 @@ module.exports = {
     body = {
       ...req.fields,
     };
+
     const today = new Date().toISOString().slice(0, 10);
 
-    const folderImage = path.join(
-      __dirname,
-      "..",
-      "upload",
-      "profile-image",
-      today
-    );
-    const folderCV = path.join(__dirname, "..", "upload", "cv", today);
-    await fs.promises.mkdir(folderImage, { recursive: true });
-    const format = "YYYYMMDDHHmmss";
-    const date = new Date();
-    const dateName = moment(date).format(format);
-    console.log(folderCV.type);
+    const oldData = await userModel.findById(idUser);
 
-    let ext;
+    if (picture) {
+      const folderImage = path.join(
+        __dirname,
+        "..",
+        "upload",
+        "profile-image",
+        today
+      );
 
-    if (picture.type == "image/png") {
-      ext = "png";
-    } else if (picture.type == "image/jpg") {
-      ext = "jpg";
-    } else if (picture.type == "image/jpeg") {
-      ext = "jpeg";
+      let ext;
+
+      if (picture.type == "image/png") {
+        ext = "png";
+      } else if (picture.type == "image/jpg") {
+        ext = "jpg";
+      } else if (picture.type == "image/jpeg") {
+        ext = "jpeg";
+      }
+
+      const newPicturePath = folderImage + `/profile-image${idUser}.${ext}`;
+
+      var oldPicturePath = picture.path;
+
+      fs.promises.copyFile(oldPicturePath, newPicturePath, 0, function (err) {
+        if (err) throw err;
+      });
+
+      body.userImage = `upload/profile-image/${today}/profile-image${idUser}.${ext}`;
+    } else {
+      body.userImage = oldData.userImage;
     }
 
-    const newPicturePath = folderImage + `/profile-image${idUser}.${ext}`;
+    if (cvFile) {
+      const folderCV = path.join(__dirname, "..", "upload", "cv", today);
 
-    var oldPicturePath = picture.path;
+      await fs.promises.mkdir(folderImage, { recursive: true });
 
-    fs.promises.copyFile(oldPicturePath, newPicturePath, 0, function (err) {
-      if (err) throw err;
-    });
-    const newCVPath = folderCV + `/cv${idUser}.pdf`;
+      console.log(folderCV.type);
 
-    var oldCVPath = cvFile.path;
+      const newCVPath = folderCV + `/cv${idUser}.pdf`;
 
-    fs.promises.copyFile(oldCVPath, newCVPath, 0, function (err) {
-      if (err) throw err;
-    });
+      var oldCVPath = cvFile.path;
 
-    body.userImage = `upload/profile-image/${today}/profile-image${idUser}.${ext}`;
-    body.link_cv = `upload/cv/${today}/cv${idUser}.pdf`;
+      fs.promises.copyFile(oldCVPath, newCVPath, 0, function (err) {
+        if (err) throw err;
+      });
+
+      body.link_cv = `upload/cv/${today}/cv${idUser}.pdf`;
+    } else {
+      body.link_cv = oldData.link_cv;
+    }
+
     body.bidang = body.bidang ? JSON.parse(body.bidang) : [];
     body.pendidikan = body.pendidikan ? JSON.parse(body.pendidikan) : [];
     body.kompetensi = body.kompetensi ? JSON.parse(body.kompetensi) : [];
