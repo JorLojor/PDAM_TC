@@ -142,13 +142,13 @@ module.exports = {
 
   getTodayClass: async (req, res) => {
     try {
-      var today =
-        moment().format("ddd MMM DD YYYY") +
-        "07:00:00 GMT+0700 (Western Indonesia Time)";
+      const { date } = req.query;
 
-      var today2 = new Date();
+      var today = moment().format("ddd MMM DD YYYY");
 
-      today2 = convertDate(today2) + "T00:00:00.000Z";
+      if (date) {
+        today = moment(date).format("ddd MMM DD YYYY");
+      }
 
       var ids = [];
 
@@ -156,7 +156,7 @@ module.exports = {
 
       kelas.map((k) => {
         for (var i = 0; i < k.jadwal.length; i++) {
-          if (k.jadwal[i].tanggal == today || k.jadwal[i].tanggal == today2) {
+          if (moment(k.jadwal[i].tanggal).format("ddd MMM DD YYYY") == today) {
             ids.push(k._id);
 
             break;
