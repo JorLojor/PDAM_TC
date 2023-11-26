@@ -386,6 +386,127 @@ module.exports = {
     }
   },
 
+  getStudentData: async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const result = await testAnswer
+        .find({
+          class: id,
+        })
+        .populate("test");
+
+      let data = [];
+      let postTestId = null;
+      let preTestId = null;
+      let quizIds = [];
+
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].test.type == "pre") {
+          preTestId = result[i].test._id;
+
+          break;
+        }
+      }
+
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].test.type == "post") {
+          postTestId = result[i].test._id;
+
+          break;
+        }
+      }
+
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].test.type == "quiz") {
+          quizIds.push(result[i].test._id);
+        }
+      }
+
+      const kelas = await Kelas.findById(id);
+
+      let postTest = 0;
+      let preTest = 0;
+      let quiz = 0;
+
+      for (var i = 0; i < kelas.peserta.length; i++) {
+        const user = await User.findById(kelas.peserta[i].user);
+
+        if (preTestId) {
+          const preTestScore = await testAnswer.findOne({
+            test: preTestId,
+            $and: [
+              {
+                class: id,
+              },
+              {
+                user: user._id,
+              },
+            ],
+          });
+
+          if (preTestScore) preTest = preTestScore.nilai;
+        }
+
+        if (postTestId) {
+          const postTestScore = await testAnswer
+            .findOne({
+              test: postTestId,
+              $and: [
+                {
+                  class: id,
+                },
+                {
+                  user: user._id,
+                },
+              ],
+            })
+            .populate("user", "name");
+
+          if (postTestScore) postTest = postTestScore.nilai;
+        }
+
+        if (quizIds.length > 0) {
+          let score = 0;
+
+          for (var i = 0; i < quizIds.length; i++) {
+            const quizTest = await TestAnswer.findOne({
+              test: quizIds[i],
+              $and: [
+                {
+                  class: id,
+                },
+                {
+                  user: user._id,
+                },
+              ],
+            });
+
+            if (quizTest) {
+              score = score + quizTest.nilai;
+            }
+          }
+
+          quiz = score / quizLength;
+        }
+
+        data.push({
+          name: user.name,
+          nipp: user.nipp,
+          type: user.userType == 1 ? "Internal" : "External",
+          preTest,
+          postTest,
+          quiz,
+        });
+      }
+
+      return response(200, data, "Data nilai user didapatkan", res);
+    } catch (error) {
+      console.log(error);
+      return response(500, error, error.message, res);
+    }
+  },
+
   getTestByClass: async (req, res) => {
     try {
       const { id } = req.params;
@@ -471,7 +592,7 @@ module.exports = {
           });
         });
 
-        postTestScore = Object.values(postTestScore)
+        postTest = Object.values(postTest)
           .sort(function (a, b) {
             return a.nilai > b.nilai ? 1 : -1;
           })

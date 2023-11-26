@@ -22,9 +22,10 @@ const upload = multer({ storage });
 //user
 testRouter.get("/answered", auth.user, Controller.getTestAnswer);
 testRouter.get("/graphic", auth.user, Controller.getGraphic);
-testRouter.get("/:id", auth.user, Controller.getTest);
+testRouter.get("/student-data/:id", auth.user, Controller.getStudentData);
 testRouter.get("/class/:id", auth.user, Controller.getTestByClass);
 testRouter.get("/quiz/:slug", auth.user, Controller.getQuiz);
+testRouter.get("/:id", auth.user, Controller.getTest);
 testRouter.post("/answered", auth.user, Controller.getTestAnswerFiltered);
 testRouter.post("/checkAnswer", auth.user, Controller.testCheck);
 testRouter.post("/nilai/:id", auth.user, Controller.nilai);
