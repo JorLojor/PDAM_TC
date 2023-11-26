@@ -166,7 +166,19 @@ module.exports = {
 
       const data = await KelasModel.find({
         _id: { $in: ids },
-      }).populate("materi kategori trainingMethod");
+      })
+        .populate("kategori trainingMethod")
+        .populate({
+          path: "materi",
+          populate: {
+            path: "instruktur",
+            model: "User",
+            populate: {
+              path: "rating",
+              model: "rating",
+            },
+          },
+        });
 
       const totalData = await KelasModel.find({
         _id: { $in: ids },
