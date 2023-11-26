@@ -80,10 +80,18 @@ module.exports = {
         score = score / answerCount;
       }
 
+      const user = await userModel
+        .find({
+          role: 3,
+        })
+        .countDocuments();
+
       const data = {
         finishedClass,
         onGoingClass,
         score,
+        classCount: kelas.length,
+        userCount: user,
       };
 
       response(200, data, "get user dashboard card", res);
