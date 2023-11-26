@@ -708,8 +708,8 @@ module.exports = {
               filtered[0].status === "pending"
                 ? "pending"
                 : filtered[0].status === "Approved"
-                  ? "draft"
-                  : "declined";
+                ? "draft"
+                : "declined";
           }
         }
       }
@@ -983,7 +983,7 @@ module.exports = {
         {
           $set: {
             status: "draft",
-            isActive: true
+            isActive: true,
           },
         },
         { new: true }
@@ -1332,13 +1332,106 @@ module.exports = {
   getWithFilter: async (req, res) => {
     try {
       const isPaginate = parseInt(req.query.paginate);
+
       let totalData;
+
       if (req.body.isActive == null || req.body.isActive == undefined) {
-        req.body.isActive = true
+        req.body.isActive = true;
       }
 
-      if (isPaginate === 0) {
-        let data = await KelasModel.find({ ...req.body })
+      const { userType } = req.body;
+
+      const fromDate = req.query.fromDate
+        ? req.query.fromDate + "T00:00:00.000Z"
+        : null;
+
+      const fromDate2 = fromDate
+        ? moment(req.query.fromDate).format("ddd MMM DD YYYY") +
+          "07:00:00 GMT+0700 (Western Indonesia Time)"
+        : null;
+
+      const toDate = req.query.toDate
+        ? req.query.toDate + "T00:00:00.000Z" + "T00:00:00.000Z"
+        : null;
+
+      const toDate2 = toDate
+        ? moment(req.query.toDate).format("ddd MMM DD YYYY") +
+          "07:00:00 GMT+0700 (Western Indonesia Time)"
+        : null;
+
+      let data = await KelasModel.find({ ...req.body })
+        .populate("materi")
+        .populate("kategori")
+        .populate({
+          path: "desainSertifikat.peserta",
+          model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
+        })
+        .populate({
+          path: "desainSertifikat.instruktur",
+          model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+        })
+        .populate({
+          path: "trainingMethod",
+        });
+
+      if (userType || fromDate || toDate) {
+        let ids = [];
+
+        const kelas = await KelasModel.find();
+
+        if (userType) {
+          await Promise.all(
+            kelas.map(async (k) => {
+              for (var i = 0; i < k.peserta.length; i++) {
+                const user = await UserModel.findById(k.peserta[i].user);
+
+                if (user && user.userType == userType) {
+                  ids.push(k._id);
+
+                  break;
+                }
+              }
+            })
+          );
+        }
+
+        if (fromDate) {
+          await Promise.all(
+            kelas.map(async (k) => {
+              for (var i = 0; i < k.jadwal.length; i++) {
+                if (k.jadwal[i].tanggal >= fromDate) {
+                  ids.push(k._id);
+
+                  break;
+                } else if (k.jadwal[i].tanggal >= fromDate2) {
+                  ids.push(k._id);
+
+                  break;
+                }
+              }
+            })
+          );
+        }
+
+        if (toDate) {
+          await Promise.all(
+            kelas.map(async (k) => {
+              for (var i = 0; i < k.jadwal.length; i++) {
+                if (k.jadwal[i].tanggal <= toDate) {
+                  ids.push(k._id);
+
+                  break;
+                } else if (k.jadwal[i].tanggal <= toDate2) {
+                  ids.push(k._id);
+
+                  break;
+                }
+              }
+            })
+          );
+        }
+
+        await KelasModel.find({ _id: { $in: ids }, $and: [{ ...req.body }] })
           .populate("materi")
           .populate("kategori")
           .populate({
@@ -1352,18 +1445,25 @@ module.exports = {
           .populate({
             path: "trainingMethod",
           });
+
+        totalData = data.length;
+      }
+
+      if (isPaginate === 0) {
         if (req.body.bulan != null) {
           data = data.filter((val, idx) => {
             const isoDate = new Date(val.jadwal[0].tanggal);
             const isoDateMonth = isoDate.getUTCMonth() + 1;
             const numericMonth = parseInt(req.body.bulan);
-  
-            return numericMonth === isoDateMonth
-          })
+
+            return numericMonth === isoDateMonth;
+          });
         }
+
         if (data) {
           totalData = data.length;
         }
+
         result = {
           data: data,
           "total data": totalData,
@@ -1460,7 +1560,7 @@ module.exports = {
             for (let j = 0; j < registered[i].kelas.length; j++) {
               if (
                 registered[i].kelas[j].kelas.toString() ==
-                getKelas._id.toString() &&
+                  getKelas._id.toString() &&
                 registered[i].kelas[j].status == status
               ) {
                 pesertaIds.push(registered[i]._id);
@@ -1518,7 +1618,7 @@ module.exports = {
           for (let j = 0; j < registered[i].kelas.length; j++) {
             if (
               registered[i].kelas[j].kelas.toString() ==
-              getKelas._id.toString() &&
+                getKelas._id.toString() &&
               registered[i].kelas[j].status == status
             ) {
               pesertaIds.push(registered[i]._id);
