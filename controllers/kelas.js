@@ -142,27 +142,41 @@ module.exports = {
 
   getTodayClass: async (req, res) => {
     try {
-      const { date } = req.query;
+      let { startDate, endDate } = req.query;
 
-      var today = moment().format("ddd MMM DD YYYY");
+      var today = moment().format("MMM DD YYYY");
 
-      if (date) {
-        today = moment(date).format("ddd MMM DD YYYY");
+      if (startDate && endDate) {
+        startDate = moment(startDate).format("MMM DD YYYY");
+        endDate = moment(endDate).format("MMM DD YYYY");
       }
 
       var ids = [];
 
       const kelas = await KelasModel.find();
 
-      kelas.map((k) => {
-        for (var i = 0; i < k.jadwal.length; i++) {
-          if (moment(k.jadwal[i].tanggal).format("ddd MMM DD YYYY") == today) {
+      if (startDate && endDate) {
+        kelas.map((k) => {
+          if (
+            moment(k.jadwal[0].tanggal).format("MMM DD YYYY") >= startDate &&
+            moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
+              "MMM DD YYYY"
+            ) <= endDate
+          ) {
             ids.push(k._id);
-
-            break;
           }
-        }
-      });
+        });
+      } else {
+        kelas.map((k) => {
+          for (var i = 0; i < k.jadwal.length; i++) {
+            if (moment(k.jadwal[i].tanggal).format("MMM DD YYYY") == today) {
+              ids.push(k._id);
+
+              break;
+            }
+          }
+        });
+      }
 
       const data = await KelasModel.find({
         _id: { $in: ids },
