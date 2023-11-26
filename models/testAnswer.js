@@ -28,6 +28,7 @@ const answerSchema = new Schema(
       },
     ],
     nilai: { type: Number, default: 0 },
+    duration: { type: Date, required: true },
   },
   { timestamps: true }
 );

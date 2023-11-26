@@ -8,7 +8,6 @@ const mongoose = require("mongoose");
 const fs = require("fs");
 const path = require("path");
 const moment = require("moment");
-const TestAnswer = require("../models/testAnswer");
 
 function makeid(length) {
   let result = "";
@@ -444,7 +443,7 @@ module.exports = {
   },
 
   answerTest: async (req, res) => {
-    const { user, test, kelas, answers } = req.body;
+    const { user, test, kelas, answers, duration } = req.body;
 
     try {
       const validUser = await User.findById(user);
@@ -499,6 +498,7 @@ module.exports = {
         class: validKelas._id,
         answers,
         nilai,
+        duration,
       });
 
       const save = await answer.save();
