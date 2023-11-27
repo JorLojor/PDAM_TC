@@ -86,7 +86,7 @@ module.exports = {
     try {
       const { kelas, user } = req.params;
 
-      const result = await EvaluationFormAnswer.findOne({
+      const result = await EvaluationFormAnswer.find({
         kelas,
         $and: [
           {
