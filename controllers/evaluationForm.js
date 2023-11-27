@@ -51,7 +51,7 @@ module.exports = {
         kelas,
       }).populate("user");
 
-      if (!result) result = {};
+      if (!result) result = [];
 
       return response(200, result, "Data hasil form", res);
     } catch (error) {
