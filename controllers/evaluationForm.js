@@ -47,7 +47,7 @@ module.exports = {
         return response(400, {}, "kelas tidak ditemukan", res);
       }
 
-      const result = await EvaluationFormResult.findOne({
+      let result = await EvaluationFormResult.findOne({
         kelas,
       }).populate("user");
 
@@ -55,6 +55,7 @@ module.exports = {
 
       return response(200, result, "Data hasil form", res);
     } catch (error) {
+      console.log(error);
       return response(500, error, "Server error", res);
     }
   },
