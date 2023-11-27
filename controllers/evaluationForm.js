@@ -47,11 +47,28 @@ module.exports = {
         return response(400, {}, "kelas tidak ditemukan", res);
       }
 
-      let result = await EvaluationFormResult.findOne({
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      let data = await EvaluationFormResult.findOne({
         kelas,
       }).populate("user");
 
-      if (!result) result = [];
+      if (page > 0) {
+        data = await EvaluationFormResult.findOne({
+          kelas,
+        })
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .populate("user");
+      }
+
+      if (!data) data = [];
+
+      let result = {
+        data,
+        "total data": data.length,
+      };
 
       return response(200, result, "Data hasil form", res);
     } catch (error) {
