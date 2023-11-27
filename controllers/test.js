@@ -10,6 +10,7 @@ const fs = require("fs");
 const path = require("path");
 const moment = require("moment");
 const TestAnswer = require("../models/testAnswer");
+const { paginateArray } = require("../service");
 
 function makeid(length) {
   let result = "";
@@ -390,6 +391,9 @@ module.exports = {
     try {
       const { id } = req.params;
 
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
       const result = await testAnswer
         .find({
           class: id,
@@ -502,7 +506,19 @@ module.exports = {
         });
       }
 
-      return response(200, data, "Data nilai user didapatkan", res);
+      const totalData = data.length;
+
+      data = paginateArray(data, limit, page);
+
+      const finalResult = {
+        data,
+        page,
+        limit,
+        totalData,
+        datalength: data.length,
+      };
+
+      return response(200, finalResult, "Data nilai user didapatkan", res);
     } catch (error) {
       console.log(error);
       return response(500, error, error.message, res);
@@ -512,6 +528,9 @@ module.exports = {
   getStudentDataQuiz: async (req, res) => {
     try {
       const { id } = req.params;
+
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
 
       const result = await testAnswer
         .find({
@@ -585,7 +604,19 @@ module.exports = {
         }
       }
 
-      return response(200, data, "Data nilai quiz user didapatkan", res);
+      const totalData = data.length;
+
+      data = paginateArray(data, limit, page);
+
+      const finalResult = {
+        data,
+        page,
+        limit,
+        totalData,
+        datalength: data.length,
+      };
+
+      return response(200, finalResult, "Data nilai quiz user didapatkan", res);
     } catch (error) {
       console.log(error);
       return response(500, error, error.message, res);

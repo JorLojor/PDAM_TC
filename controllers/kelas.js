@@ -221,6 +221,7 @@ module.exports = {
               idKelas: kelas,
               name: u.name,
               nipp: u.nipp,
+              userType: u.userType == 1 ? "Internal" : "External",
               kelas: targetClass.nama,
               absen: absenBox,
             });
