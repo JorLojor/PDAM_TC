@@ -13,34 +13,89 @@ const Test = require("../models/test");
 module.exports = {
   getAllMateri: async (req, res) => {
     try {
-      let { page, limits, isPaginate } = req.query;
-      const totalData = await MateriModel.countDocuments();
+      let { page, limits, section, instruktur } = req.query;
 
-      if (isPaginate === 0) {
-        const data = await MateriModel.find()
-          .populate("instruktur items.tugas items.quiz")
-          .sort({ createdAt: -1 });
+      let ids = [];
+      let len = 0;
 
-        result = {
-          data: data,
-          "total data": totalData,
-        };
+      const materi = await MateriModel.find();
 
-        response(200, results, "get materi");
-        return;
+      if (section) {
+        len = section.length;
+
+        materi.map((u) => {
+          if (u.section.substring(0, len) == section) {
+            ids.push(u._id);
+          }
+        });
       }
 
-      page = parseInt(page) || 1;
-      limits = parseInt(limits) || 6;
-      const data = await MateriModel.find()
+      let data = await MateriModel.find()
         .populate("instruktur items.tugas items.quiz")
-        .skip((page - 1) * limits)
-        .limit(limits)
         .sort({ createdAt: -1 });
+
+      if (ids.length > 0) {
+        data = await MateriModel.find({
+          _id: { $in: ids },
+        })
+          .populate("instruktur items.tugas items.quiz")
+          .sort({ createdAt: -1 });
+      }
+
+      if (page > 0) {
+        page = parseInt(page) || 1;
+        limits = parseInt(limits) || 6;
+
+        data = await MateriModel.find()
+          .populate("instruktur items.tugas items.quiz")
+          .skip((page - 1) * limits)
+          .limit(limits)
+          .sort({ createdAt: -1 });
+
+        if (ids.length > 0) {
+          data = await MateriModel.find({
+            _id: { $in: ids },
+          })
+            .populate("instruktur items.tugas items.quiz")
+            .skip((page - 1) * limits)
+            .limit(limits)
+            .sort({ createdAt: -1 });
+        }
+      }
+
+      if (instruktur) {
+        let ids = [];
+
+        data.map((u) => {
+          u.instruktur.map((i) => {
+            if (i._id == instruktur) {
+              ids.push(u._id);
+            }
+          });
+        });
+
+        if (ids.length > 0) {
+          if (page > 0) {
+            data = await MateriModel.find({
+              _id: { $in: ids },
+            })
+              .populate("instruktur items.tugas items.quiz")
+              .skip((page - 1) * limits)
+              .limit(limits)
+              .sort({ createdAt: -1 });
+          } else {
+            data = await MateriModel.find({
+              _id: { $in: ids },
+            })
+              .populate("instruktur items.tugas items.quiz")
+              .sort({ createdAt: -1 });
+          }
+        }
+      }
 
       result = {
         data: data,
-        "total data": totalData,
+        "total data": data.length,
       };
 
       response(200, result, "Get all materi", res);
