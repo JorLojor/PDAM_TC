@@ -50,12 +50,14 @@ module.exports = {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
 
-      let data = await EvaluationFormResult.findOne({
+      let data = await EvaluationFormResult.find({
         kelas,
       }).populate("user");
 
+      const totalData = data.length;
+
       if (page > 0) {
-        data = await EvaluationFormResult.findOne({
+        data = await EvaluationFormResult.find({
           kelas,
         })
           .skip((page - 1) * limit)
@@ -67,7 +69,10 @@ module.exports = {
 
       let result = {
         data,
-        "total data": data.length,
+        page,
+        limit,
+        totalData,
+        datalength: data.length,
       };
 
       return response(200, result, "Data hasil form", res);
