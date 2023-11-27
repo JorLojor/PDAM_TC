@@ -43,32 +43,98 @@ module.exports = {
 
       let today = new Date();
 
+      const startDate =
+        req.query.startDate != "" && req.query.startDate
+          ? moment(req.query.startDate).format("YYYY-MM-DD")
+          : null;
+
       today = moment(today).format("YYYY-MM-DD");
 
       let onGoingClass = 0;
       let finishedClass = 0;
+      let kelasIds = [];
+      let userIds = [];
 
-      let ongoing = false;
+      let classCount = kelas.length;
+
+      if (startDate) {
+        classCount = 0;
+      }
 
       kelas.map((k) => {
-        k.jadwal.map((j) => {
-          if (moment(j.tanggal).format("YYYY-MM-DD") < today) {
-            ongoing = true;
+        if (startDate) {
+          if (
+            moment(k.jadwal[0].tanggal).format("YYYY-MM-DD") >= startDate &&
+            moment(k.jadwal[k.jadwal.length - 1].tanggal).format("YYYY-MM-DD") <
+              today
+          ) {
+            onGoingClass = onGoingClass + 1;
+            classCount = classCount + 1;
+
+            kelasIds.push(k.ids);
+
+            k.peserta.map((p) => {
+              userIds.push(p.user);
+            });
           }
-        });
+          if (
+            moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
+              "YYYY-MM-DD"
+            ) >= today
+          ) {
+            finishedClass = finishedClass + 1;
+            classCount = classCount + 1;
+            kelasIds.push(k.ids);
 
-        if (ongoing == true) {
-          onGoingClass = onGoingClass + 1;
+            k.peserta.map((p) => {
+              userIds.push(p.user);
+            });
+          }
         } else {
-          finishedClass = finishedClass + 1;
-        }
+          if (
+            moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
+              "YYYY-MM-DD"
+            ) <= today
+          ) {
+            onGoingClass = onGoingClass + 1;
 
-        ongoing = false;
+            k.peserta.map((p) => {
+              userIds.push(p.user);
+            });
+          } else {
+            finishedClass = finishedClass + 1;
+
+            k.peserta.map((p) => {
+              userIds.push(p.user);
+            });
+          }
+        }
       });
 
-      const answerCount = await TestAnswer.find().countDocuments();
+      let answerCount = await TestAnswer.find().countDocuments();
 
-      const answers = await TestAnswer.find();
+      let answers = await TestAnswer.find();
+
+      const user = await userModel
+        .find({
+          role: 3,
+          $and: [
+            {
+              _id: { $in: userIds },
+            },
+          ],
+        })
+        .countDocuments();
+
+      if (startDate) {
+        answerCount = await TestAnswer.find({
+          kelas: { $in: kelasIds },
+        }).countDocuments();
+
+        answers = await TestAnswer.find({
+          kelas: { $in: kelasIds },
+        });
+      }
 
       let score = 0;
 
@@ -80,17 +146,11 @@ module.exports = {
         score = score / answerCount;
       }
 
-      const user = await userModel
-        .find({
-          role: 3,
-        })
-        .countDocuments();
-
       const data = {
         finishedClass,
         onGoingClass,
         score,
-        classCount: kelas.length,
+        classCount,
         userCount: user,
       };
 
