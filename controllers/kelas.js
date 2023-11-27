@@ -220,6 +220,7 @@ module.exports = {
               idUser: u._id,
               idKelas: kelas,
               name: u.name,
+              nipp: u.nipp,
               kelas: targetClass.nama,
               absen: absenBox,
             });
