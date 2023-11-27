@@ -12,6 +12,7 @@ const moment = require("moment");
 const _ = require("lodash");
 const { default: axios } = require("axios");
 const { sendClassEnrollmentMail } = require("../service/mail/config");
+const { paginateArray } = require("../service");
 
 module.exports = {
   getAllKelas: async (req, res) => {
@@ -142,6 +143,9 @@ module.exports = {
     try {
       const { kelas } = req.params;
 
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
       const targetClass = await KelasModel.findById(kelas);
 
       if (!targetClass) {
@@ -229,7 +233,19 @@ module.exports = {
         );
       }
 
-      return response(200, data, "get absensi", res);
+      const totalData = data.length;
+
+      data = paginateArray(data, limit, page);
+
+      const finalResult = {
+        data,
+        page,
+        limit,
+        totalData,
+        datalength: data.length,
+      };
+
+      return response(200, finalResult, "get absensi", res);
     } catch (error) {
       console.log(error);
       return response(500, error, error.message, res);
