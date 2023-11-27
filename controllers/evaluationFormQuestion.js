@@ -9,14 +9,31 @@ const response = require("../respons/response");
 module.exports = {
   index: async (req, res) => {
     try {
-      const data = await EvaluationFormQuestion.find().populate(
-        "evaluationForm"
-      );
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
 
-      const result = {
-        data,
-        "total data": data.length,
-      };
+      let result;
+
+      if (page == 0) {
+        const data = await EvaluationFormQuestion.find().populate(
+          "evaluationForm"
+        );
+
+        result = {
+          data,
+          "total data": data.length,
+        };
+      } else {
+        const data = await EvaluationFormQuestion.find()
+          .populate("evaluationForm")
+          .skip((page - 1) * limit)
+          .limit(limit);
+
+        result = {
+          data,
+          "total data": data.length,
+        };
+      }
 
       return response(200, result, "get pertanyaan form evaluasi", res);
     } catch (error) {

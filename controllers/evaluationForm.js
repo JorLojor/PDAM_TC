@@ -47,20 +47,35 @@ module.exports = {
         return response(400, {}, "kelas tidak ditemukan", res);
       }
 
-      const result = await EvaluationFormResult.findOne({
-        kelas,
-      }).populate("user");
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      let result;
+
+      if (page == 0) {
+        result = await EvaluationFormResult.find({
+          kelas,
+        }).populate("user");
+      } else {
+        result = await EvaluationFormResult.find({
+          kelas,
+        })
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .populate("user");
+      }
 
       return response(200, result, "Data hasil form", res);
     } catch (error) {
       return response(500, error, "Server error", res);
     }
   },
+
   getResultDetail: async (req, res) => {
     try {
       const { kelas, user } = req.params;
 
-      const result = await EvaluationFormAnswer.find({
+      const result = await EvaluationFormAnswer.findOne({
         kelas,
         $and: [
           {
