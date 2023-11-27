@@ -1518,20 +1518,16 @@ module.exports = {
             })
           );
         } else {
-          await Promise.all(
-            kelas.map(async (k) => {
-              for (var i = 0; i < k.peserta.length; i++) {
-                ids.push(k.peserta[i].user);
-              }
-            })
-          );
+          kelas.map((k) => {
+            ids.push(k._id);
+          });
         }
 
         if (methods) {
           kelas.map((k) => {
             if (methods == k.methods) {
               for (var i = 0; i < k.peserta.length; i++) {
-                ids.push(k.peserta[i].user);
+                ids.push(k._id);
               }
             }
           });
