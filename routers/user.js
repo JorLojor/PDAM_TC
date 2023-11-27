@@ -4,31 +4,6 @@ const auth = require("../middleware/auth");
 const userController = require("../controllers/user");
 const formidable = require("express-formidable");
 
-const fs = require("fs");
-const path = require("path");
-const multer = require("multer");
-
-const today = new Date().toISOString().slice(0, 10);
-
-const storage = multer.diskStorage({
-  destination: path.join(__dirname, "..", "upload", "profile-image", today),
-  filename: (req, file, cb) => {
-    // const [name,type] = file.originalname.split('.')
-    cb(null, file.originalname);
-  },
-});
-
-const upload = multer({ storage });
-const storageCV = multer.diskStorage({
-  destination: path.join(__dirname, "..", "upload", "cv", today),
-  filename: (req, file, cb) => {
-    // const [name,type] = file.originalname.split('.')
-    cb(null, file.originalname);
-  },
-});
-
-const uploadCV = multer({ storage: storageCV });
-
 //router.get('/all' ,userController.getAllUser);// note
 router.get("/all", userController.getAllUser);
 router.get("/certificate", auth.student, userController.getCertificate);

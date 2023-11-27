@@ -2,15 +2,13 @@ const mongoose = require("mongoose");
 const KelasModel = require("../models/kelas");
 const UserModel = require("../models/user");
 const MateriModel = require("../models/materi");
+const Absensi = require("../models/absensiPeserta");
 const Test = require("../models/test");
 const TestAnswer = require("../models/testAnswer");
 const calonPesertaSchema = require("../models/calonpeserta");
 const RecentClass = require("../models/recentClass");
 const response = require("../respons/response");
-const uploadImage = require("../middleware/imagepath");
-const multer = require("multer");
 const moment = require("moment");
-const convertDate = require("../service/index");
 const _ = require("lodash");
 const { default: axios } = require("axios");
 const { sendClassEnrollmentMail } = require("../service/mail/config");
@@ -137,6 +135,102 @@ module.exports = {
       response(200, result, "berhasil Get all kelas", res);
     } catch (error) {
       response(500, error, error.message, res);
+    }
+  },
+
+  getAbsensi: async (req, res) => {
+    try {
+      const { kelas } = req.params;
+
+      const targetClass = await KelasModel.findById(kelas);
+
+      if (!targetClass) {
+        return response(400, {}, "kelas tidak ditemukan", res);
+      }
+
+      let data = [];
+
+      let userIds = [];
+
+      targetClass.peserta.map((p) => {
+        userIds.push(p.user);
+      });
+
+      if (userIds.length > 0) {
+        data = [];
+
+        const user = await UserModel.find({
+          _id: { $in: userIds },
+        });
+
+        await Promise.all(
+          user.map(async (u) => {
+            let absenBox = [];
+
+            const absen = await Absensi.find({
+              user: u._id,
+              $and: [
+                {
+                  absenName: { $in: ["Absen Masuk", "ABSEN MULAI"] },
+                },
+              ],
+            });
+
+            if (absen.length > 0) {
+              for (let i = 0; i < targetClass.jadwal.length; i++) {
+                let masuk = false;
+
+                for (let j = 0; j < absen.length; j++) {
+                  if (
+                    moment(absen[j].date).format("YYYY-MM-DD") ==
+                    moment(targetClass.jadwal[i].tanggal).format("YYYY-MM-DD")
+                  ) {
+                    masuk = true;
+
+                    break;
+                  }
+                }
+
+                if (masuk) {
+                  absenBox.push({
+                    tanggal: moment(targetClass.jadwal[i].tanggal).format(
+                      "YYYY-MM-DD"
+                    ),
+                    status: "masuk",
+                  });
+                } else {
+                  absenBox.push({
+                    tanggal: moment(targetClass.jadwal[i].tanggal).format(
+                      "YYYY-MM-DD"
+                    ),
+                    status: "tidak masuk",
+                  });
+                }
+              }
+            } else {
+              targetClass.jadwal.map((j) => {
+                absenBox.push({
+                  tanggal: moment(j.tanggal).format("YYYY-MM-DD"),
+                  status: "tidak masuk",
+                });
+              });
+            }
+
+            data.push({
+              idUser: u._id,
+              idKelas: kelas,
+              name: u.name,
+              kelas: targetClass.nama,
+              absen: absenBox,
+            });
+          })
+        );
+      }
+
+      return response(200, data, "get absensi", res);
+    } catch (error) {
+      console.log(error);
+      return response(500, error, error.message, res);
     }
   },
 
