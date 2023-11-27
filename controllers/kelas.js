@@ -1477,7 +1477,7 @@ module.exports = {
         req.body.isActive = true;
       }
 
-      const { userType } = req.query;
+      const { userType, methods } = req.query;
 
       const fromDate = req.query.fromDate ? req.query.fromDate : null;
 
@@ -1500,10 +1500,10 @@ module.exports = {
 
       let ids = [];
 
-      if (userType || fromDate || toDate) {
+      if (userType || fromDate || toDate || methods) {
         const kelas = await KelasModel.find();
 
-        if (userType) {
+        if (userType < 2) {
           await Promise.all(
             kelas.map(async (k) => {
               for (var i = 0; i < k.peserta.length; i++) {
@@ -1517,6 +1517,24 @@ module.exports = {
               }
             })
           );
+        } else {
+          await Promise.all(
+            kelas.map(async (k) => {
+              for (var i = 0; i < k.peserta.length; i++) {
+                ids.push(k.peserta[i].user);
+              }
+            })
+          );
+        }
+
+        if (methods) {
+          kelas.map((k) => {
+            if (methods == k.methods) {
+              for (var i = 0; i < k.peserta.length; i++) {
+                ids.push(k.peserta[i].user);
+              }
+            }
+          });
         }
 
         if (fromDate && toDate) {
