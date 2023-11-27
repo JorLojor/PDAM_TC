@@ -1500,7 +1500,7 @@ module.exports = {
 
       let ids = [];
 
-      if (userType || fromDate || toDate || methods) {
+      if (userType || fromDate || toDate) {
         const kelas = await KelasModel.find();
 
         if (userType < 2) {
@@ -1520,16 +1520,6 @@ module.exports = {
         } else {
           kelas.map((k) => {
             ids.push(k._id);
-          });
-        }
-
-        if (methods) {
-          kelas.map((k) => {
-            if (methods == k.methods) {
-              for (var i = 0; i < k.peserta.length; i++) {
-                ids.push(k._id);
-              }
-            }
           });
         }
 
@@ -1608,6 +1598,33 @@ module.exports = {
           });
         }
 
+        if (methods) {
+          ids = [];
+
+          data.map((k) => {
+            if (methods == k.methods) {
+              ids.push(k._id);
+            }
+          });
+
+          data = await KelasModel.find({
+            _id: { $in: ids },
+          })
+            .populate("materi")
+            .populate("kategori")
+            .populate({
+              path: "desainSertifikat.peserta",
+              model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
+            })
+            .populate({
+              path: "desainSertifikat.instruktur",
+              model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+            })
+            .populate({
+              path: "trainingMethod",
+            });
+        }
+
         if (data) {
           totalData = data.length;
         }
@@ -1648,6 +1665,39 @@ module.exports = {
             });
         } else {
           data = await KelasModel.find({ ...req.body })
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .populate("materi")
+            .populate("kategori")
+            .populate({
+              path: "desainSertifikat.peserta",
+              model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
+            })
+            .populate({
+              path: "desainSertifikat.instruktur",
+              model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+            })
+            .populate({
+              path: "trainingMethod",
+            });
+        }
+
+        if (methods) {
+          ids = [];
+
+          data.map((k) => {
+            if (methods == k.methods) {
+              ids.push(k._id);
+            }
+          });
+
+          rawData = await KelasModel.find({
+            _id: { $in: ids },
+          });
+
+          data = await KelasModel.find({
+            _id: { $in: ids },
+          })
             .skip((page - 1) * limit)
             .limit(limit)
             .populate("materi")
