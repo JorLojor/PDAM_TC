@@ -1056,7 +1056,7 @@ module.exports = {
 
       for (let i = 0; i < currentAnswerCount; i++) {
         if (i == answerIndex) {
-          if (img !== null) {
+          if (img !== undefined) {
             const today = new Date().toISOString().slice(0, 10);
 
             const folder = path.join(
@@ -1174,7 +1174,7 @@ module.exports = {
 
       for (let i = 0; i < currentQuestionCount; i++) {
         if (i == index) {
-          if (img !== null) {
+          if (img !== undefined) {
             const today = new Date().toISOString().slice(0, 10);
 
             const folder = path.join(
