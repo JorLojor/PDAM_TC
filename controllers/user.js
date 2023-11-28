@@ -518,7 +518,7 @@ module.exports = {
     if (cvFile) {
       const folderCV = path.join(__dirname, "..", "upload", "cv", today);
 
-      await fs.promises.mkdir(folderImage, { recursive: true });
+      await fs.promises.mkdir(folderCV, { recursive: true });
 
       console.log(folderCV.type);
 
