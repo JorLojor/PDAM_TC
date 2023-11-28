@@ -4,35 +4,11 @@ const auth = require("../middleware/auth");
 const userController = require("../controllers/user");
 const formidable = require("express-formidable");
 
-const fs = require("fs");
-const path = require("path");
-const multer = require("multer");
-
-const today = new Date().toISOString().slice(0, 10);
-
-const storage = multer.diskStorage({
-  destination: path.join(__dirname, "..", "upload", "profile-image", today),
-  filename: (req, file, cb) => {
-    // const [name,type] = file.originalname.split('.')
-    cb(null, file.originalname);
-  },
-});
-
-const upload = multer({ storage });
-const storageCV = multer.diskStorage({
-  destination: path.join(__dirname, "..", "upload", "cv", today),
-  filename: (req, file, cb) => {
-    // const [name,type] = file.originalname.split('.')
-    cb(null, file.originalname);
-  },
-});
-
-const uploadCV = multer({ storage: storageCV });
-
 //router.get('/all' ,userController.getAllUser);// note
 router.get("/all", userController.getAllUser);
 router.get("/certificate", auth.student, userController.getCertificate);
 router.post("/my", userController.getSingleUser);
+router.get("/dashboard-card", auth.admin, userController.dashboardCard);
 router.get(
   "/class-resolvement-class",
   auth.admin,
@@ -67,6 +43,7 @@ router.get(
   userController.getByRoleReactSelect
 ); // get status pending userå
 router.post("/filtered", auth.admin, userController.getWithFilter); // get with filter
+router.post("/admin", auth.superAdmin, userController.adminList); // get with filter
 router.get("/classes/:id", auth.student, userController.getUserClass); // get only user's class
 
 router.post("/create", auth.admin, userController.createUser);

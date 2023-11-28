@@ -10,5 +10,6 @@ router.get("/notification/read/:id", auth.user, Controller.readNotification);
 router.get("/read/:id", auth.user, Controller.read);
 router.get("/:id", auth.user, Controller.index);
 router.post("/:id", auth.user, Controller.store);
+router.delete("/:id", auth.user, Controller.destroy);
 
 module.exports = router;

@@ -43,7 +43,7 @@ module.exports = {
           data: data,
           "total data": totalData,
         };
-        response(200, result, "get kategori berhasil", res);
+        response(200, result, "get chat berhasil", res);
         return;
       }
 
@@ -70,6 +70,20 @@ module.exports = {
       console.log(error);
 
       response(500, error, "Server error", res);
+    }
+  },
+
+  destroy: async (req, res) => {
+    try {
+      const id = req.params.id;
+
+      const result = await Chat.findByIdAndRemove(id);
+
+      return response(200, result, "Berhasil menghapus chat", res);
+    } catch (error) {
+      console.log(error);
+
+      return response(500, error, "Server error", res);
     }
   },
 
@@ -374,8 +388,6 @@ module.exports = {
           to = r._id;
         }
       });
-
-
 
       const theChat = await Chat.findOne({
         sender,

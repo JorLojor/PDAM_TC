@@ -15,7 +15,7 @@ const userSchema = new Schema(
     bidang: [{ type: String, required: false, default: [] }],
     nipp: { type: String, required: false },
     userImage: { type: String, required: false },
-    role: { type: Number, required: true, default: 3 }, // penentuan user 1 = admin, 2 = instruktur, 3 = student
+    role: { type: Number, required: true, default: 3 }, // penentuan user 1 = admin, 2 = instruktur, 3 = student, 0 = super admin
     userType: { type: Number, required: true, default: 0 }, // 1 = internal pdam dan 0 = eksternal pdam atau All
     kelas: [{ type: kelasInUserSchema, required: false }],
     phone: { type: String, required: false },

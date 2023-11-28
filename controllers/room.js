@@ -1,6 +1,5 @@
 const response = require("../respons/response");
 
-const Chat = require("../models/chat");
 const Room = require("../models/room");
 const User = require("../models/user");
 
@@ -8,18 +7,47 @@ module.exports = {
   index: async (req, res) => {
     try {
       const isPaginate = parseInt(req.query.paginate);
+      const user = req.query.user;
 
-      if (isNaN(isPaginate)) {
-        const totalData = await Room.find({
-          users: { $in: req.user.id },
+      let ids = [req.user.id];
+
+      let totalData = await Room.find({
+        users: { $in: ids },
+      }).countDocuments();
+
+      let data = await Room.find({
+        users: { $in: ids },
+      })
+        .populate("users", "name")
+        .populate("lastChat");
+
+      if (user) {
+        const userData = await User.find();
+
+        const len = user.length;
+
+        userData.map((u) => {
+          if (u.name.substring(0, len) == user) {
+            ids.push(u._id);
+          }
+
+          if (u.email.substring(0, len) == user) {
+            ids.push(u._id);
+          }
+        });
+
+        totalData = await Room.find({
+          users: { $in: ids },
         }).countDocuments();
 
-        const data = await Room.find({
-          users: { $in: req.user.id },
+        data = await Room.find({
+          users: { $in: ids },
         })
           .populate("users", "name")
           .populate("lastChat");
+      }
 
+      if (isNaN(isPaginate)) {
         result = {
           data: data,
           "total data": totalData,
@@ -30,11 +58,8 @@ module.exports = {
 
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
-      const totalData = await Room.find({
-        users: { $in: req.user.id },
-      }).countDocuments();
 
-      const data = await Room.find({
+      data = await Room.find({
         users: { $in: req.user.id },
       })
         .skip((page - 1) * limit)

@@ -2,6 +2,7 @@ const mongoose = require("mongoose");
 const ClassResolvementRequest = require("../models/classResolvementRequest");
 const Materi = require("../models/materi");
 const userModel = require("../models/user");
+const TestAnswer = require("../models/testAnswer");
 const Sertifikat = require("../models/sertifikat");
 const Kelas = require("../models/kelas");
 const Kategori = require("../models/kategori");
@@ -35,13 +36,141 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
-  ubahStatus: async (req, res) => {
-    const { id } = req.params
-    const { status } = req.body
+
+  dashboardCard: async (req, res) => {
     try {
-      const user = await userModel.findByIdAndUpdate(id, { status }, {
-        new: true,
+      const kelas = await Kelas.find();
+
+      let today = new Date();
+
+      const startDate =
+        req.query.startDate != "" && req.query.startDate
+          ? moment(req.query.startDate).format("YYYY-MM-DD")
+          : null;
+
+      today = moment(today).format("YYYY-MM-DD");
+
+      let onGoingClass = 0;
+      let finishedClass = 0;
+      let kelasIds = [];
+      let userIds = [];
+
+      let classCount = kelas.length;
+
+      if (startDate) {
+        classCount = 0;
+      }
+
+      kelas.map((k) => {
+        if (startDate) {
+          if (
+            moment(k.jadwal[0].tanggal).format("YYYY-MM-DD") >= startDate &&
+            moment(k.jadwal[k.jadwal.length - 1].tanggal).format("YYYY-MM-DD") <
+              today
+          ) {
+            onGoingClass = onGoingClass + 1;
+            classCount = classCount + 1;
+
+            kelasIds.push(k.ids);
+
+            k.peserta.map((p) => {
+              userIds.push(p.user);
+            });
+          }
+          if (
+            moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
+              "YYYY-MM-DD"
+            ) >= today
+          ) {
+            finishedClass = finishedClass + 1;
+            classCount = classCount + 1;
+            kelasIds.push(k.ids);
+
+            k.peserta.map((p) => {
+              userIds.push(p.user);
+            });
+          }
+        } else {
+          if (
+            moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
+              "YYYY-MM-DD"
+            ) <= today
+          ) {
+            onGoingClass = onGoingClass + 1;
+
+            k.peserta.map((p) => {
+              userIds.push(p.user);
+            });
+          } else {
+            finishedClass = finishedClass + 1;
+
+            k.peserta.map((p) => {
+              userIds.push(p.user);
+            });
+          }
+        }
       });
+
+      let answerCount = await TestAnswer.find().countDocuments();
+
+      let answers = await TestAnswer.find();
+
+      const user = await userModel
+        .find({
+          role: 3,
+          $and: [
+            {
+              _id: { $in: userIds },
+            },
+          ],
+        })
+        .countDocuments();
+
+      if (startDate) {
+        answerCount = await TestAnswer.find({
+          kelas: { $in: kelasIds },
+        }).countDocuments();
+
+        answers = await TestAnswer.find({
+          kelas: { $in: kelasIds },
+        });
+      }
+
+      let score = 0;
+
+      if (answerCount > 0) {
+        answers.map((a) => {
+          score = score + a.nilai;
+        });
+
+        score = score / answerCount;
+      }
+
+      const data = {
+        finishedClass,
+        onGoingClass,
+        score,
+        classCount,
+        userCount: user,
+      };
+
+      response(200, data, "get user dashboard card", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
+
+  ubahStatus: async (req, res) => {
+    const { id } = req.params;
+    const { status } = req.body;
+    try {
+      const user = await userModel.findByIdAndUpdate(
+        id,
+        { status },
+        {
+          new: true,
+        }
+      );
       response(200, user, "Berhasil update status user", res);
     } catch (error) {
       res.status(500).json({ error: "Internal server error, coba lagi" });
@@ -338,8 +467,8 @@ module.exports = {
   updateUser: async (req, res) => {
     const idUser = req.params.id;
     const updatedUser = req.body;
-    const picture = req.files['userImage']
-    const cvFile = req.files['cv']
+    const picture = req.files["userImage"];
+    const cvFile = req.files["cv"];
 
     console.log(picture, cvFile);
     console.log(req.fields);
@@ -349,43 +478,63 @@ module.exports = {
     body = {
       ...req.fields,
     };
+
     const today = new Date().toISOString().slice(0, 10);
 
-    const folderImage = path.join(__dirname, "..", "upload", "profile-image", today);
-    const folderCV = path.join(__dirname, "..", "upload", "cv", today);
-    await fs.promises.mkdir(folderImage, { recursive: true });
-    const format = "YYYYMMDDHHmmss";
-    const date = new Date();
-    const dateName = moment(date).format(format);
-    console.log(folderCV.type)
+    const oldData = await userModel.findById(idUser);
 
-    let ext;
+    if (picture) {
+      const folderImage = path.join(
+        __dirname,
+        "..",
+        "upload",
+        "profile-image",
+        today
+      );
 
-    if (picture.type == "image/png") {
-      ext = "png";
-    } else if (picture.type == "image/jpg") {
-      ext = "jpg";
-    } else if (picture.type == "image/jpeg") {
-      ext = "jpeg";
+      let ext;
+
+      if (picture.type == "image/png") {
+        ext = "png";
+      } else if (picture.type == "image/jpg") {
+        ext = "jpg";
+      } else if (picture.type == "image/jpeg") {
+        ext = "jpeg";
+      }
+
+      const newPicturePath = folderImage + `/profile-image${idUser}.${ext}`;
+
+      var oldPicturePath = picture.path;
+
+      fs.promises.copyFile(oldPicturePath, newPicturePath, 0, function (err) {
+        if (err) throw err;
+      });
+
+      body.userImage = `upload/profile-image/${today}/profile-image${idUser}.${ext}`;
+    } else {
+      body.userImage = oldData.userImage;
     }
 
-    const newPicturePath = folderImage + `/profile-image${idUser}.${ext}`;
+    if (cvFile) {
+      const folderCV = path.join(__dirname, "..", "upload", "cv", today);
 
-    var oldPicturePath = picture.path;
+      await fs.promises.mkdir(folderImage, { recursive: true });
 
-    fs.promises.copyFile(oldPicturePath, newPicturePath, 0, function (err) {
-      if (err) throw err;
-    });
-    const newCVPath = folderCV + `/cv${idUser}.pdf`;
+      console.log(folderCV.type);
 
-    var oldCVPath = cvFile.path;
+      const newCVPath = folderCV + `/cv${idUser}.pdf`;
 
-    fs.promises.copyFile(oldCVPath, newCVPath, 0, function (err) {
-      if (err) throw err;
-    });
+      var oldCVPath = cvFile.path;
 
-    body.userImage = `upload/profile-image/${today}/profile-image${idUser}.${ext}`;
-    body.link_cv = `upload/cv/${today}/cv${idUser}.pdf`;
+      fs.promises.copyFile(oldCVPath, newCVPath, 0, function (err) {
+        if (err) throw err;
+      });
+
+      body.link_cv = `upload/cv/${today}/cv${idUser}.pdf`;
+    } else {
+      body.link_cv = oldData.link_cv;
+    }
+
     body.bidang = body.bidang ? JSON.parse(body.bidang) : [];
     body.pendidikan = body.pendidikan ? JSON.parse(body.pendidikan) : [];
     body.kompetensi = body.kompetensi ? JSON.parse(body.kompetensi) : [];
@@ -929,8 +1078,9 @@ module.exports = {
       let user = data.map((val, idx) => {
         return {
           value: val._id,
-          label: `${val.name} (${val.username}) - ${val.userType === 1 ? "Internal" : "Eksternal"
-            }`,
+          label: `${val.name} (${val.username}) - ${
+            val.userType === 1 ? "Internal" : "Eksternal"
+          }`,
         };
       });
 
@@ -1007,6 +1157,78 @@ module.exports = {
       };
 
       response(200, result, "Berhasil get filtered user", res);
+    } catch (error) {
+      console.log(error);
+
+      response(500, error, error.message, res);
+    }
+  },
+
+  adminList: async (req, res) => {
+    try {
+      const isPaginate = parseInt(req.query.paginate);
+      if (
+        req.body.name != undefined &&
+        req.body.name != null &&
+        req.body.name.trim() != ""
+      ) {
+        req.body.name = { $regex: "^" + req.body.name, $options: "i" };
+      }
+      let totalData = await userModel
+        .find({
+          ...req.body,
+          $and: [
+            {
+              role: 1,
+            },
+          ],
+        })
+        .countDocuments();
+
+      if (isPaginate === 0) {
+        const data = await userModel
+          .find({
+            ...req.body,
+            $and: [
+              {
+                role: 1,
+              },
+            ],
+          })
+          .select("-password");
+
+        result = {
+          data: data,
+          "total data": totalData,
+        };
+        response(200, result, "get user", res);
+        return;
+      }
+
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      const data = await userModel
+        .find({
+          ...req.body,
+          $and: [
+            {
+              role: 1,
+            },
+          ],
+        })
+        .sort({ name: 1 })
+        .select("-password")
+        .skip((page - 1) * limit)
+        .limit(limit);
+      // .populate("kelas")
+
+      result = {
+        data: data,
+        "total data": totalData,
+      };
+
+      response(200, result, "Berhasil get admin user", res);
     } catch (error) {
       console.log(error);
 

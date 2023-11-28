@@ -69,7 +69,13 @@ router.post(
   formidable({ multiples: true }),
   Controller.updateTestimony
 );
-router.post("/youtube", auth.user, auth.admin, uploadVd.single('video_trailer'), Controller.updateYoutubeLink);
+router.post(
+  "/youtube",
+  auth.user,
+  auth.admin,
+  uploadVd.single("video_trailer"),
+  Controller.updateYoutubeLink
+);
 router.post(
   "/instructors",
   auth.user,
