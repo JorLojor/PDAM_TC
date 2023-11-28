@@ -1587,7 +1587,7 @@ module.exports = {
           });
       }
 
-      if (isPaginate === 0) {
+      if (!req.query.page || req.query.page === 0) {
         if (req.body.bulan != null) {
           data = data.filter((val, idx) => {
             const isoDate = new Date(val.jadwal[0].tanggal);
@@ -1683,6 +1683,40 @@ module.exports = {
         }
 
         if (methods) {
+          if (ids.length > 0) {
+            data = await KelasModel.find({
+              _id: { $in: ids },
+            })
+              .populate("materi")
+              .populate("kategori")
+              .populate({
+                path: "desainSertifikat.peserta",
+                model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
+              })
+              .populate({
+                path: "desainSertifikat.instruktur",
+                model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+              })
+              .populate({
+                path: "trainingMethod",
+              });
+          } else {
+            data = await KelasModel.find()
+              .populate("materi")
+              .populate("kategori")
+              .populate({
+                path: "desainSertifikat.peserta",
+                model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
+              })
+              .populate({
+                path: "desainSertifikat.instruktur",
+                model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+              })
+              .populate({
+                path: "trainingMethod",
+              });
+          }
+
           ids = [];
 
           data.map((k) => {
@@ -1696,43 +1730,24 @@ module.exports = {
               _id: { $in: ids },
             });
 
-            if (page > 0) {
-              data = await KelasModel.find({
-                _id: { $in: ids },
+            data = await KelasModel.find({
+              _id: { $in: ids },
+            })
+              .skip((page - 1) * limit)
+              .limit(limit)
+              .populate("materi")
+              .populate("kategori")
+              .populate({
+                path: "desainSertifikat.peserta",
+                model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
               })
-                .skip((page - 1) * limit)
-                .limit(limit)
-                .populate("materi")
-                .populate("kategori")
-                .populate({
-                  path: "desainSertifikat.peserta",
-                  model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
-                })
-                .populate({
-                  path: "desainSertifikat.instruktur",
-                  model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
-                })
-                .populate({
-                  path: "trainingMethod",
-                });
-            } else {
-              data = await KelasModel.find({
-                _id: { $in: ids },
+              .populate({
+                path: "desainSertifikat.instruktur",
+                model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
               })
-                .populate("materi")
-                .populate("kategori")
-                .populate({
-                  path: "desainSertifikat.peserta",
-                  model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
-                })
-                .populate({
-                  path: "desainSertifikat.instruktur",
-                  model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
-                })
-                .populate({
-                  path: "trainingMethod",
-                });
-            }
+              .populate({
+                path: "trainingMethod",
+              });
           }
         }
 
