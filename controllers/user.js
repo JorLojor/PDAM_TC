@@ -863,7 +863,18 @@ module.exports = {
           { new: true }
         );
 
-      response(200, result, "Berhasil ubah status user", res);
+        response(200, result, "Berhasil ubah status user", res);
+      } else {
+        id.map(async (i) => {
+          await userModel.findOneAndUpdate(
+            { _id: i, role: 3 },
+            { status: status },
+            { new: true }
+          );
+        });
+
+        response(200, "Berhasil ubah status user", res);
+      }
     } catch (error) {
       console.log(error.message);
       res.status(500).json({ error: "Internal server error, coba lagi" });
