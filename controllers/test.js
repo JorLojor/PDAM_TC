@@ -1149,7 +1149,7 @@ module.exports = {
     }
   },
 
-  updateTestAnswer: async (req, res) => {
+  deleteTestAnswer: async (req, res) => {
     const session = await mongoose.startSession();
 
     try {
