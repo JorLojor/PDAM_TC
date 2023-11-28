@@ -1315,9 +1315,11 @@ module.exports = {
         }
       }
 
-      const result = await Test.findByIdAndUpdate(id, {
+      await Test.findByIdAndUpdate(id, {
         question: newQuestion,
       });
+
+      const result = await Test.findById(id);
 
       return response(200, result, "Quiz Berhasil di perbaharui", res);
     } catch (error) {
