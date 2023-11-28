@@ -10,7 +10,7 @@ const fs = require("fs");
 const path = require("path");
 const moment = require("moment");
 const TestAnswer = require("../models/testAnswer");
-const { paginateArray } = require("../service");
+const { paginateArray, countRanking } = require("../service");
 
 function makeid(length) {
   let result = "";
@@ -664,102 +664,21 @@ module.exports = {
       }
 
       if (preTestId) {
-        const preTestScore = await testAnswer
-          .find({
-            test: preTestId,
-            $and: [
-              {
-                class: id,
-              },
-            ],
-          })
-          .populate("user", "name");
-
-        preTestScore.map((p) => {
-          preTest.push({
-            name: p.user.name,
-            nilai: p.nilai,
-          });
-        });
-
-        preTest = Object.values(preTest)
-          .sort(function (a, b) {
-            return a.nilai > b.nilai ? 1 : -1;
-          })
-          .slice(0, 10);
+        preTest = await Test.findById(preTestId).populate("pembuat");
       }
 
       if (postTestId) {
-        const postTestScore = await testAnswer
-          .find({
-            test: postTestId,
-            $and: [
-              {
-                class: id,
-              },
-            ],
-          })
-          .populate("user", "name");
-
-        postTestScore.map((p) => {
-          postTest.push({
-            name: p.user.name,
-            nilai: p.nilai,
-          });
-        });
-
-        postTest = Object.values(postTest)
-          .sort(function (a, b) {
-            return a.nilai > b.nilai ? 1 : -1;
-          })
-          .slice(0, 10);
+        postTest = await Test.findById(postTest).populate("pembuat");
       }
 
       if (quizIds.length > 0) {
-        const quizLength = quizIds.length;
-
-        const kelas = await Kelas.findById(id);
-
         Promise.all(
-          kelas.map(async (k) => {
-            for (var i = 0; i < k.peserta.length; i++) {
-              let score = 0;
+          quizIds.map(async (q) => {
+            const quizTest = await Test.findById(1).populate("pembuat");
 
-              const user = await User.findById(k.peserta[i].user);
-
-              quizIds.map(async (q) => {
-                const quizTest = await TestAnswer.findOne({
-                  test: q,
-                  $and: [
-                    {
-                      class: id,
-                    },
-                    {
-                      user: k.peserta[i].user,
-                    },
-                  ],
-                });
-
-                if (quizTest) {
-                  score = score + quizTest.nilai;
-                }
-              });
-
-              const finalScore = score / quizLength;
-
-              quiz.push({
-                name: user.name,
-                nilai: finalScore,
-              });
-            }
+            quiz.push(quizTest);
           })
         );
-
-        quiz = Object.values(quiz)
-          .sort(function (a, b) {
-            return a.nilai > b.nilai ? 1 : -1;
-          })
-          .slice(0, 10);
       }
 
       data.push({
@@ -904,6 +823,8 @@ module.exports = {
       });
 
       const save = await answer.save();
+
+      await countRanking(validKelas._id);
 
       return response(200, save, "Answers have been saved!", res);
     } catch (error) {
@@ -1135,7 +1056,7 @@ module.exports = {
 
       for (let i = 0; i < currentAnswerCount; i++) {
         if (i == answerIndex) {
-          if (req.files.length > 0 && img !== null) {
+          if (img !== null) {
             const today = new Date().toISOString().slice(0, 10);
 
             const folder = path.join(
@@ -1253,7 +1174,7 @@ module.exports = {
 
       for (let i = 0; i < currentQuestionCount; i++) {
         if (i == index) {
-          if (req.files.length > 0 && img !== null) {
+          if (img !== null) {
             const today = new Date().toISOString().slice(0, 10);
 
             const folder = path.join(
