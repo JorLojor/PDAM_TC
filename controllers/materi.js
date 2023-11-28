@@ -17,36 +17,42 @@ module.exports = {
 
       let ids = [];
       let len = 0;
+      let where = {}
 
       const materi = await MateriModel.find();
 
       if (section) {
-        len = section.length;
+        // len = section.length;
 
-        materi.map((u) => {
-          if (u.section.substring(0, len) == section) {
-            ids.push(u._id);
-          }
-        });
+        // materi.map((u) => {
+        //   if (u.section.substring(0, len) == section) {
+        //     ids.push(u._id);
+        //   }
+        // });
+        where.section = { $regex: `^${section}`, $options: 'i' }
       }
 
       let data = await MateriModel.find()
         .populate("instruktur items.tugas items.quiz")
         .sort({ createdAt: -1 });
 
-      if (ids.length > 0) {
-        data = await MateriModel.find({
-          _id: { $in: ids },
-        })
-          .populate("instruktur items.tugas items.quiz")
-          .sort({ createdAt: -1 });
+      if (instruktur) {
+        where.instruktur = { $in: instruktur }
       }
+
+      // if (ids.length > 0) {
+      //   data = await MateriModel.find({
+      //     _id: { $in: ids },
+      //   })
+      //     .populate("instruktur items.tugas items.quiz")
+      //     .sort({ createdAt: -1 });
+      // }
 
       if (page > 0) {
         page = parseInt(page) || 1;
         limits = parseInt(limits) || 6;
 
-        data = await MateriModel.find()
+        data = await MateriModel.find(where)
           .populate("instruktur items.tugas items.quiz")
           .skip((page - 1) * limits)
           .limit(limits)
@@ -63,39 +69,39 @@ module.exports = {
         }
       }
 
-      if (instruktur) {
-        let ids = [];
+      // if (instruktur) {
+      //   let ids = [];
 
-        data.map((u) => {
-          u.instruktur.map((i) => {
-            if (i._id == instruktur) {
-              ids.push(u._id);
-            }
-          });
-        });
+      //   data.map((u) => {
+      //     u.instruktur.map((i) => {
+      //       if (i._id == instruktur) {
+      //         ids.push(u._id);
+      //       }
+      //     });
+      //   });
 
-        if (ids.length > 0) {
-          if (page > 0) {
-            data = await MateriModel.find({
-              _id: { $in: ids },
-            })
-              .populate("instruktur items.tugas items.quiz")
-              .skip((page - 1) * limits)
-              .limit(limits)
-              .sort({ createdAt: -1 });
-          } else {
-            data = await MateriModel.find({
-              _id: { $in: ids },
-            })
-              .populate("instruktur items.tugas items.quiz")
-              .sort({ createdAt: -1 });
-          }
-        }
-      }
+      //   if (ids.length > 0) {
+      //     if (page > 0) {
+      //       data = await MateriModel.find({
+      //         _id: { $in: ids },
+      //       })
+      //         .populate("instruktur items.tugas items.quiz")
+      //         .skip((page - 1) * limits)
+      //         .limit(limits)
+      //         .sort({ createdAt: -1 });
+      //     } else {
+      //       data = await MateriModel.find({
+      //         _id: { $in: ids },
+      //       })
+      //         .populate("instruktur items.tugas items.quiz")
+      //         .sort({ createdAt: -1 });
+      //     }
+      //   }
+      // }
 
       result = {
         data: data,
-        "total data": data.length,
+        "total data": (section != undefined && section != '' && section != null) || (instruktur != undefined && instruktur != '' && instruktur != null) ? data.length : materi.length,
       };
 
       response(200, result, "Get all materi", res);
@@ -596,4 +602,32 @@ module.exports = {
       response(500, error, error.message, res);
     }
   },
+
+  getInstrukturThatHaveMateri: async (req, res) => {
+    try {
+      const materiList = await MateriModel.find({}).select('instruktur').populate('instruktur', ['_id', 'name'])
+      const listIntruktur = []
+
+      if (!materiList) {
+        response(404, null, "Instruktur tidak di temukan", res);
+      }
+
+      for (let i = 0; i < materiList.length; i++) {
+        listIntruktur.push({ _id: materiList[i].instruktur[0]._id, name: materiList[i].instruktur[0].name })
+      }
+      const filteredIns = listIntruktur.filter(
+        (item, index, self) => index === self.findIndex((t) => t._id === item._id)
+      );
+      const mapped = filteredIns.map((v, i) => {
+        return {
+          value: v._id,
+          label: `${v.name}`,
+        };
+      });
+
+      response(200, mapped, "Instruktur di dapat", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  }
 };
