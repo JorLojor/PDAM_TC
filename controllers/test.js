@@ -767,6 +767,7 @@ module.exports = {
 
     try {
       const validUser = await User.findById(user);
+
       if (!validUser) {
         return response(400, null, "User not found", res);
       }
@@ -777,9 +778,14 @@ module.exports = {
       }
 
       const validKelas = await Kelas.findOne({ slug: kelas });
+
       if (!validKelas) {
         return response(400, null, "Kelas not found", res);
       }
+
+      // await countRanking(validKelas._id, res);
+
+      // return res.json({ ok: "ok" });
 
       const questions = validTest.question;
 
@@ -798,7 +804,6 @@ module.exports = {
       await Promise.all(
         answers.map(async (row, index) => {
           const question = questions[index].answer;
-          console.log(`User's answer: ${row.answer}`);
 
           const checkAnswer = question.find((o) => o.value === row.answer);
 
@@ -1022,6 +1027,187 @@ module.exports = {
     }
   },
 
+  addTestAnswer: async (req, res) => {
+    const session = await mongoose.startSession();
+
+    try {
+      const { id } = req.params;
+
+      let { index, value } = req.fields;
+
+      const img = req.files["img"];
+
+      const oldData = await Test.findById(id);
+
+      if (!oldData) {
+        return response(400, {}, "Data tidak ditemukan", res);
+      }
+
+      let isTrue = false;
+
+      if (value.substr(value.length - 6) == "{true}") {
+        isTrue = true;
+        value = value.substring(0, value.length - 6);
+      }
+
+      const targetQuestion = oldData.question[index];
+      const currentQuestionCount = oldData.question.length;
+      const currentAnswerCount = targetQuestion.answer.length;
+
+      session.startTransaction();
+
+      let newAnswer = [];
+      let newQuestion = [];
+
+      for (let i = 0; i < currentAnswerCount; i++) {
+        newAnswer.push(targetQuestion.answer[i]);
+      }
+
+      if (img !== undefined) {
+        const today = new Date().toISOString().slice(0, 10);
+
+        const folder = path.join(
+          __dirname,
+          "..",
+          "upload",
+          "test-answer-image",
+          today,
+          index,
+          answerIndex
+        );
+
+        await fs.promises.mkdir(folder, { recursive: true });
+
+        const format = "YYYYMMDDHHmmss";
+
+        const date = new Date();
+
+        const dateName = moment(date).format(format);
+
+        let ext;
+
+        if (img.type == "image/png") {
+          ext = "png";
+        } else if (img.type == "image/jpg") {
+          ext = "jpg";
+        } else if (img.type == "image/jpeg") {
+          ext = "jpeg";
+        }
+
+        const filename = `/answer${dateName}${index}${answerIndex}.${ext}`;
+
+        const newPath = folder + filename;
+
+        var oldPath = img.path;
+
+        fs.promises.copyFile(oldPath, newPath, 0, function (err) {
+          if (err) throw err;
+        });
+
+        const filePath = `/upload/test-answer-image/${today}/${index}/${answerIndex}${filename}`;
+
+        newAnswer.push({
+          value,
+          img: filePath,
+          isTrue,
+        });
+      } else {
+        newAnswer.push({
+          value,
+          img: targetQuestion.answer[i].img,
+          isTrue,
+        });
+      }
+
+      for (let i = 0; i < currentQuestionCount; i++) {
+        if (index == i) {
+          newQuestion.push({
+            kode: targetQuestion.kode,
+            value: targetQuestion.value,
+            img: targetQuestion.img,
+            type: targetQuestion.type,
+            answer: newAnswer,
+          });
+        } else {
+          newQuestion.push(oldData.question[i]);
+        }
+      }
+
+      await Test.findByIdAndUpdate(id, {
+        question: newQuestion,
+      });
+
+      const result = await Test.findById(id);
+
+      return response(200, result, "Quiz Berhasil di perbaharui", res);
+    } catch (error) {
+      console.log(error);
+      response(500, error, error.message, res);
+      await session.abortTransaction();
+    } finally {
+      session.endSession();
+    }
+  },
+
+  updateTestAnswer: async (req, res) => {
+    const session = await mongoose.startSession();
+
+    try {
+      const { id } = req.params;
+
+      let { index, answerIndex } = req.body;
+
+      const oldData = await Test.findById(id);
+
+      if (!oldData) {
+        return response(400, {}, "Data tidak ditemukan", res);
+      }
+
+      const targetQuestion = oldData.question[index];
+      const currentQuestionCount = oldData.question.length;
+      const currentAnswerCount = targetQuestion.answer.length;
+
+      session.startTransaction();
+
+      let newAnswer = [];
+      let newQuestion = [];
+
+      for (let i = 0; i < currentAnswerCount; i++) {
+        if (i !== answerIndex) {
+          newAnswer.push(targetQuestion.answer[i]);
+        }
+      }
+
+      for (let i = 0; i < currentQuestionCount; i++) {
+        if (index == i) {
+          newQuestion.push({
+            kode: targetQuestion.kode,
+            value: targetQuestion.value,
+            img: targetQuestion.img,
+            type: targetQuestion.type,
+            answer: newAnswer,
+          });
+        } else {
+          newQuestion.push(oldData.question[i]);
+        }
+      }
+
+      await Test.findByIdAndUpdate(id, {
+        question: newQuestion,
+      });
+
+      const result = await Test.findById(id);
+
+      return response(200, result, "Quiz Berhasil di perbaharui", res);
+    } catch (error) {
+      console.log(error);
+      response(500, error, error.message, res);
+      await session.abortTransaction();
+    } finally {
+      session.endSession();
+    }
+  },
+
   updateTestAnswer: async (req, res) => {
     const session = await mongoose.startSession();
 
@@ -1103,7 +1289,6 @@ module.exports = {
               value,
               img: filePath,
               isTrue,
-              _id: targetQuestion.answer[i]._id,
             });
             console.log(filePath, newAnswer);
           } else {
@@ -1111,7 +1296,6 @@ module.exports = {
               value,
               img: targetQuestion.answer[i].img,
               isTrue,
-              _id: targetQuestion.answer[i]._id,
             });
           }
         } else {
@@ -1129,6 +1313,148 @@ module.exports = {
             answer: newAnswer,
           });
         } else {
+          newQuestion.push(oldData.question[i]);
+        }
+      }
+
+      await Test.findByIdAndUpdate(id, {
+        question: newQuestion,
+      });
+
+      const result = await Test.findById(id);
+
+      return response(200, result, "Quiz Berhasil di perbaharui", res);
+    } catch (error) {
+      console.log(error);
+      response(500, error, error.message, res);
+      await session.abortTransaction();
+    } finally {
+      session.endSession();
+    }
+  },
+
+  addTestQuestion: async (req, res) => {
+    const session = await mongoose.startSession();
+
+    try {
+      const { id } = req.params;
+
+      const { value, type } = req.fields;
+
+      const img = req.files["img"];
+
+      const oldData = await Test.findById(id);
+
+      if (!oldData) {
+        return response(400, {}, "Data tidak ditemukan", res);
+      }
+
+      const currentQuestionCount = oldData.question.length;
+
+      session.startTransaction();
+
+      let newQuestion = [];
+
+      for (let i = 0; i < currentQuestionCount; i++) {
+        newQuestion.push(oldData.question[i]);
+      }
+
+      if (img !== undefined) {
+        const today = new Date().toISOString().slice(0, 10);
+
+        const folder = path.join(
+          __dirname,
+          "..",
+          "upload",
+          "test-question-image",
+          today,
+          "new"
+        );
+
+        await fs.promises.mkdir(folder, { recursive: true });
+
+        const format = "YYYYMMDDHHmmss";
+
+        const date = new Date();
+
+        const dateName = moment(date).format(format);
+
+        let ext;
+
+        if (img.type == "image/png") {
+          ext = "png";
+        } else if (img.type == "image/jpg") {
+          ext = "jpg";
+        } else if (img.type == "image/jpeg") {
+          ext = "jpeg";
+        }
+        const filename = `/question${dateName}new.${ext}`;
+
+        const newPath = folder + filename;
+
+        var oldPath = img.path;
+
+        fs.promises.copyFile(oldPath, newPath, 0, function (err) {
+          if (err) throw err;
+        });
+
+        const filePath = `/upload/test-question-image/${today}/new${filename}`;
+
+        newQuestion.push({
+          kode: makeid(8),
+          value,
+          img: filePath,
+          type,
+          answer: [],
+        });
+      } else {
+        newQuestion.push({
+          kode: makeid(8),
+          value,
+          img: null,
+          type,
+          answer: [],
+        });
+      }
+
+      await Test.findByIdAndUpdate(id, {
+        question: newQuestion,
+      });
+
+      const result = await Test.findById(id);
+
+      return response(200, result, "Quiz Berhasil di perbaharui", res);
+    } catch (error) {
+      console.log(error);
+      response(500, error, error.message, res);
+      await session.abortTransaction();
+    } finally {
+      session.endSession();
+    }
+  },
+
+  deleteTestQuestion: async (req, res) => {
+    const session = await mongoose.startSession();
+
+    try {
+      const { id } = req.params;
+
+      const { index } = req.body;
+
+      const oldData = await Test.findById(id);
+
+      if (!oldData) {
+        return response(400, {}, "Data tidak ditemukan", res);
+      }
+
+      const currentQuestionCount = oldData.question.length;
+
+      session.startTransaction();
+
+      let newQuestion = [];
+
+      for (let i = 0; i < currentQuestionCount; i++) {
+        if (i !== index) {
           newQuestion.push(oldData.question[i]);
         }
       }

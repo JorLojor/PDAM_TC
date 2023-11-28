@@ -1,5 +1,6 @@
 const Kelas = require("../models/kelas");
 const Ranking = require("../models/ranking");
+const TestAnswer = require("../models/testAnswer");
 
 function convertDate(date) {
   var yyyy = date.getFullYear().toString();
@@ -18,17 +19,60 @@ function convertDate(date) {
   );
 }
 
-async function countRanking(kelas) {
-  await Ranking.find({
-    kelas,
-  }).deleteMany();
+async function countRanking(kelas, res) {
+  try {
+    await Ranking.find({
+      kelas,
+    }).deleteMany();
 
-  const targetClass = await Kelas.findById(kelas);
+    const targetClass = await Kelas.findById(kelas);
 
-  let userIds = [];
+    let userIds = [];
+    let userData = [];
 
-  for (var i = 0; i < targetClass.peserta.length; i++) {
-    userIds.push(targetClass.peserta[i].user);
+    for (var i = 0; i < targetClass.peserta.length; i++) {
+      userIds.push(targetClass.peserta[i].user);
+    }
+
+    if (userIds.length > 0) {
+      for (var i = 0; i < userIds.length; i++) {
+        let nilai = 0;
+        let startAt = 0;
+        let finishAt = 0;
+
+        const answers = await TestAnswer.find({
+          user: userIds[i],
+          $and: [
+            {
+              kelas,
+            },
+          ],
+        });
+
+        return res.json(answer);
+        if (answers.length > 0) {
+          for (var j = 0; j < answers.length; j++) {
+            nilai = nilai + answers[j].nilai;
+            startAt = startAt + answers[j].startAt;
+            finishAt = finishAt + answers[j].finishAt;
+          }
+
+          nilai = Math.floor(nilai / answers.length);
+          startAt = Math.floor(startAt / answers.length);
+          finishAt = Math.floor(finishAt / answers.length);
+
+          userData.push({
+            user: userIds[i],
+            nilai,
+            startAt,
+            finishAt,
+          });
+        }
+      }
+    }
+  } catch (error) {
+    console.error(error);
+    return res.json(error);
   }
 
   // let result = finishAt - startAt;

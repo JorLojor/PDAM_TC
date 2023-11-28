@@ -64,11 +64,37 @@ testRouter.put(
   Controller.updateTestAnswer
 );
 testRouter.put(
+  "/update/new-answer/:id/",
+  auth.user,
+  auth.instruktur,
+  formidable(),
+  Controller.addTestAnswer
+);
+testRouter.put(
+  "/update/delete-answer/:id/",
+  auth.user,
+  auth.instruktur,
+  Controller.deleteTestAnswer
+);
+testRouter.put(
   "/update/question/:id/",
   auth.user,
   auth.instruktur,
   formidable(),
   Controller.updateTestQuestion
+);
+testRouter.put(
+  "/update/new-question/:id/",
+  auth.user,
+  auth.instruktur,
+  formidable(),
+  Controller.addTestQuestion
+);
+testRouter.put(
+  "/update/delete-question/:id/",
+  auth.user,
+  auth.instruktur,
+  Controller.deleteTestQuestion
 );
 testRouter.delete(
   "/delete/:id/:slug/:title",
