@@ -28,6 +28,12 @@ testRouter.get(
   auth.user,
   Controller.getStudentDataQuiz
 );
+testRouter.get(
+  "/check/:id",
+  auth.user,
+  auth.onlyStudent,
+  Controller.checkifTestHasBeenAnswered
+);
 testRouter.get("/class/:id", auth.user, Controller.getTestByClass);
 testRouter.get("/quiz/:slug", auth.user, Controller.getQuiz);
 testRouter.get(

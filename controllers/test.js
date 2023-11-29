@@ -669,6 +669,27 @@ module.exports = {
     }
   },
 
+  checkifTestHasBeenAnswered: async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const hasBeenAnswered = await testAnswer.findOne({
+        test: id,
+        $and: [
+          {
+            user: req.user.id,
+          },
+        ],
+      });
+
+      return hasBeenAnswered
+        ? response(200, { status: false }, "Test sudah dijawab", res)
+        : response(200, { status: true }, "Test belum dijawab", res);
+    } catch (error) {
+      return response(500, error, error.message, res);
+    }
+  },
+
   getTestByClass: async (req, res) => {
     try {
       const { id } = req.params;
