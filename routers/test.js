@@ -35,6 +35,11 @@ testRouter.get(
   Controller.checkifTestHasBeenAnswered
 );
 testRouter.get("/class/:id", auth.user, Controller.getTestByClass);
+testRouter.get(
+  "/class-answered/:id",
+  auth.user,
+  Controller.getTestByClassAnswered
+);
 testRouter.get("/quiz/:slug", auth.user, Controller.getQuiz);
 testRouter.get(
   "/my-quiz-result",

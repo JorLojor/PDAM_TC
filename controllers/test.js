@@ -797,6 +797,63 @@ module.exports = {
     }
   },
 
+  getTestByClassAnswered: async (req, res) => {
+    try {
+      const { id } = req.params;
+      const result = await testAnswer
+        .find({
+          class: id,
+        })
+        .populate("test");
+      let data = [];
+      let postTest = [];
+      let preTest = [];
+      let quiz = [];
+      let postTestId = null;
+      let preTestId = null;
+      let quizIds = [];
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].test.type == "pre") {
+          preTestId = result[i].test._id;
+          break;
+        }
+      }
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].test.type == "post") {
+          postTestId = result[i].test._id;
+          break;
+        }
+      }
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].test.type == "quiz") {
+          quizIds.push(result[i].test._id);
+        }
+      }
+      if (preTestId) {
+        preTest = await Test.findById(preTestId).populate("pembuat");
+      }
+      if (postTestId) {
+        postTest = await Test.findById(postTest).populate("pembuat");
+      }
+      if (quizIds.length > 0) {
+        Promise.all(
+          quizIds.map(async (q) => {
+            const quizTest = await Test.findById(q).populate("pembuat");
+            quiz.push(quizTest);
+          })
+        );
+      }
+      data.push({
+        preTest,
+        quiz,
+        postTest,
+      });
+      return response(200, data, "Nilai Test di dapat", res);
+    } catch (error) {
+      return response(500, error, error.message, res);
+    }
+  },
+
   getTestAnswer: async (req, res) => {
     try {
       let user = req.query.user ?? null;
