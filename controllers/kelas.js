@@ -1861,30 +1861,28 @@ module.exports = {
             }
           });
 
-          if (ids.length > 0) {
-            rawData = await KelasModel.find({
-              _id: { $in: ids },
-            });
+          rawData = await KelasModel.find({
+            _id: { $in: ids },
+          });
 
-            data = await KelasModel.find({
-              _id: { $in: ids },
+          data = await KelasModel.find({
+            _id: { $in: ids },
+          })
+            .skip((page - 1) * limit)
+            .limit(limit)
+            .populate("materi")
+            .populate("kategori")
+            .populate({
+              path: "desainSertifikat.peserta",
+              model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
             })
-              .skip((page - 1) * limit)
-              .limit(limit)
-              .populate("materi")
-              .populate("kategori")
-              .populate({
-                path: "desainSertifikat.peserta",
-                model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
-              })
-              .populate({
-                path: "desainSertifikat.instruktur",
-                model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
-              })
-              .populate({
-                path: "trainingMethod",
-              });
-          }
+            .populate({
+              path: "desainSertifikat.instruktur",
+              model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+            })
+            .populate({
+              path: "trainingMethod",
+            });
         }
 
         totalData = rawData.length;
