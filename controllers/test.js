@@ -1115,7 +1115,7 @@ module.exports = {
       }
 
       const result = await Test.findByIdAndUpdate(id, {
-        title,
+        judul: title,
       });
 
       return response(200, result, "Quiz Berhasil di perbaharui", res);

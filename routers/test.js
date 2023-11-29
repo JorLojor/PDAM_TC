@@ -67,7 +67,6 @@ testRouter.patch(
   upload.array("images"),
   Controller.updateTest
 );
-testRouter.put("/update/:id/", auth.user, auth.instruktur, Controller.update);
 testRouter.put(
   "/update/answer/:id/",
   auth.user,
@@ -108,6 +107,7 @@ testRouter.put(
   auth.instruktur,
   Controller.deleteTestQuestion
 );
+testRouter.put("/update/:id/", auth.user, auth.instruktur, Controller.update);
 testRouter.delete(
   "/delete/:id/:slug/:title",
   auth.user,

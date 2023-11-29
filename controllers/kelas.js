@@ -1613,7 +1613,7 @@ module.exports = {
         req.body.isActive = true;
       }
 
-      const { userType, methods } = req.query;
+      const { nama, userType, methods } = req.query;
 
       const fromDate = req.query.fromDate ? req.query.fromDate : null;
 
@@ -1636,8 +1636,21 @@ module.exports = {
 
       let ids = [];
 
-      if (userType || fromDate || toDate) {
+      if (nama || userType || fromDate || toDate) {
         const kelas = await KelasModel.find();
+
+        let len = 0;
+
+        if (nama) {
+          len = nama.length;
+          kelas.map(async (k) => {
+            if (k.nama.substring(0, len).toLowerCase() == nama.toLowerCase()) {
+              ids.push(k._id);
+            }
+          });
+        }
+
+        console.log(ids);
 
         if (userType < 2) {
           await Promise.all(
@@ -1653,7 +1666,7 @@ module.exports = {
               }
             })
           );
-        } else {
+        } else if (userType > 1) {
           kelas.map((k) => {
             ids.push(k._id);
           });
@@ -1776,7 +1789,7 @@ module.exports = {
         const limit = parseInt(req.query.limit) || 10;
         let rawData = await KelasModel.find({ ...req.body });
 
-        if (ids.length > 0) {
+        if (nama || userType || fromDate || toDate) {
           rawData = await KelasModel.find({
             _id: { $in: ids },
           });
@@ -1819,7 +1832,7 @@ module.exports = {
         }
 
         if (methods) {
-          if (ids.length > 0) {
+          if (nama || userType || fromDate || toDate) {
             data = await KelasModel.find({
               _id: { $in: ids },
             })
