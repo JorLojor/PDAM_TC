@@ -1073,7 +1073,7 @@ module.exports = {
           "test-answer-image",
           today,
           index,
-          answerIndex
+          "new"
         );
 
         await fs.promises.mkdir(folder, { recursive: true });
@@ -1094,7 +1094,7 @@ module.exports = {
           ext = "jpeg";
         }
 
-        const filename = `/answer${dateName}${index}${answerIndex}.${ext}`;
+        const filename = `/answer${dateName}${index}new.${ext}`;
 
         const newPath = folder + filename;
 
@@ -1104,7 +1104,7 @@ module.exports = {
           if (err) throw err;
         });
 
-        const filePath = `/upload/test-answer-image/${today}/${index}/${answerIndex}${filename}`;
+        const filePath = `/upload/test-answer-image/${today}/${index}/new${filename}`;
 
         newAnswer.push({
           value,
@@ -1114,7 +1114,7 @@ module.exports = {
       } else {
         newAnswer.push({
           value,
-          img: targetQuestion.answer[i].img,
+          img: "",
           isTrue,
         });
       }
