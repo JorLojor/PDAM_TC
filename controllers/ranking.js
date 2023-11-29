@@ -13,9 +13,11 @@ module.exports = {
       let data;
       let totalData = 0;
 
-      totalData = await Ranking.countDocuments();
-
       const kelas = await Kelas.findById(id);
+
+      totalData = await Ranking.countDocuments({
+        kelas,
+      });
 
       if (!kelas) {
         response(400, {}, "Kelas tidak ditemukan", res);
