@@ -39,7 +39,7 @@ module.exports = {
 
   dashboardCard: async (req, res) => {
     try {
-      const kelas = await Kelas.find();
+      let kelas = await Kelas.find();
 
       let today = new Date();
 
@@ -61,100 +61,229 @@ module.exports = {
         classCount = 0;
       }
 
-      kelas.map((k) => {
-        if (startDate) {
-          if (
-            moment(k.jadwal[0].tanggal).format("YYYY-MM-DD") >= startDate &&
-            moment(k.jadwal[k.jadwal.length - 1].tanggal).format("YYYY-MM-DD") <
-              today
-          ) {
-            onGoingClass = onGoingClass + 1;
-            classCount = classCount + 1;
+      if (req.user.role == 3) {
+        const me = await userModel.findById(req.user.id);
 
-            kelasIds.push(k.ids);
-
-            k.peserta.map((p) => {
-              userIds.push(p.user);
-            });
-          }
-          if (
-            moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
-              "YYYY-MM-DD"
-            ) >= today
-          ) {
-            finishedClass = finishedClass + 1;
-            classCount = classCount + 1;
-            kelasIds.push(k.ids);
-
-            k.peserta.map((p) => {
-              userIds.push(p.user);
-            });
-          }
-        } else {
-          if (
-            moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
-              "YYYY-MM-DD"
-            ) <= today
-          ) {
-            onGoingClass = onGoingClass + 1;
-
-            k.peserta.map((p) => {
-              userIds.push(p.user);
-            });
-          } else {
-            finishedClass = finishedClass + 1;
-
-            k.peserta.map((p) => {
-              userIds.push(p.user);
-            });
-          }
+        for (let i = 0; i < me.kelas.length; i++) {
+          kelasIds.push(me.kelas[i].kelas);
         }
-      });
 
-      let answerCount = await TestAnswer.find().countDocuments();
+        kelas = await Kelas.find({
+          _id: { $in: kelasIds },
+        });
 
-      let answers = await TestAnswer.find();
+        classCount = kelas.length;
 
-      const user = await userModel
-        .find({
-          role: 3,
-          $and: [
-            {
-              _id: { $in: userIds },
-            },
-          ],
-        })
-        .countDocuments();
+        if (startDate) {
+          classCount = 0;
+        }
 
-      if (startDate) {
-        answerCount = await TestAnswer.find({
-          kelas: { $in: kelasIds },
+        kelasIds = [];
+
+        kelas.map((k) => {
+          if (startDate) {
+            if (
+              moment(k.jadwal[0].tanggal).format("YYYY-MM-DD") >= startDate &&
+              moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
+                "YYYY-MM-DD"
+              ) < today
+            ) {
+              onGoingClass = onGoingClass + 1;
+              classCount = classCount + 1;
+
+              kelasIds.push(k.ids);
+
+              k.peserta.map((p) => {
+                userIds.push(p.user);
+              });
+            }
+            if (
+              moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
+                "YYYY-MM-DD"
+              ) >= today
+            ) {
+              finishedClass = finishedClass + 1;
+              classCount = classCount + 1;
+              kelasIds.push(k.ids);
+
+              k.peserta.map((p) => {
+                userIds.push(p.user);
+              });
+            }
+          } else {
+            if (
+              moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
+                "YYYY-MM-DD"
+              ) <= today
+            ) {
+              onGoingClass = onGoingClass + 1;
+
+              k.peserta.map((p) => {
+                userIds.push(p.user);
+              });
+            } else {
+              finishedClass = finishedClass + 1;
+
+              k.peserta.map((p) => {
+                userIds.push(p.user);
+              });
+            }
+          }
+        });
+
+        let answerCount = await TestAnswer.find({
+          user: req.user._id,
         }).countDocuments();
 
-        answers = await TestAnswer.find({
-          kelas: { $in: kelasIds },
+        let answers = await TestAnswer.find({ user: req.user._id });
+
+        const user = await userModel
+          .find({
+            role: 3,
+            $and: [
+              {
+                _id: { $in: userIds },
+              },
+            ],
+          })
+          .countDocuments();
+
+        if (startDate) {
+          answerCount = await TestAnswer.find({
+            kelas: { $in: kelasIds },
+            $and: [
+              {
+                user: req.user._id,
+              },
+            ],
+          }).countDocuments();
+
+          answers = await TestAnswer.find({
+            kelas: { $in: kelasIds },
+            $and: [
+              {
+                user: req.user._id,
+              },
+            ],
+          });
+        }
+
+        let score = 0;
+
+        if (answerCount > 0) {
+          answers.map((a) => {
+            score = score + a.nilai;
+          });
+
+          score = score / answerCount;
+        }
+
+        const data = {
+          finishedClass,
+          onGoingClass,
+          score,
+          classCount,
+          userCount: user,
+        };
+
+        response(200, data, "get user dashboard card", res);
+      } else {
+        kelas.map((k) => {
+          if (startDate) {
+            if (
+              moment(k.jadwal[0].tanggal).format("YYYY-MM-DD") >= startDate &&
+              moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
+                "YYYY-MM-DD"
+              ) < today
+            ) {
+              onGoingClass = onGoingClass + 1;
+              classCount = classCount + 1;
+
+              kelasIds.push(k.ids);
+
+              k.peserta.map((p) => {
+                userIds.push(p.user);
+              });
+            }
+            if (
+              moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
+                "YYYY-MM-DD"
+              ) >= today
+            ) {
+              finishedClass = finishedClass + 1;
+              classCount = classCount + 1;
+              kelasIds.push(k.ids);
+
+              k.peserta.map((p) => {
+                userIds.push(p.user);
+              });
+            }
+          } else {
+            if (
+              moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
+                "YYYY-MM-DD"
+              ) <= today
+            ) {
+              onGoingClass = onGoingClass + 1;
+
+              k.peserta.map((p) => {
+                userIds.push(p.user);
+              });
+            } else {
+              finishedClass = finishedClass + 1;
+
+              k.peserta.map((p) => {
+                userIds.push(p.user);
+              });
+            }
+          }
         });
+
+        let answerCount = await TestAnswer.find().countDocuments();
+
+        let answers = await TestAnswer.find();
+
+        const user = await userModel
+          .find({
+            role: 3,
+            $and: [
+              {
+                _id: { $in: userIds },
+              },
+            ],
+          })
+          .countDocuments();
+
+        if (startDate) {
+          answerCount = await TestAnswer.find({
+            kelas: { $in: kelasIds },
+          }).countDocuments();
+
+          answers = await TestAnswer.find({
+            kelas: { $in: kelasIds },
+          });
+        }
+
+        let score = 0;
+
+        if (answerCount > 0) {
+          answers.map((a) => {
+            score = score + a.nilai;
+          });
+
+          score = score / answerCount;
+        }
+
+        const data = {
+          finishedClass,
+          onGoingClass,
+          score,
+          classCount,
+          userCount: user,
+        };
+
+        response(200, data, "get user dashboard card", res);
       }
-
-      let score = 0;
-
-      if (answerCount > 0) {
-        answers.map((a) => {
-          score = score + a.nilai;
-        });
-
-        score = score / answerCount;
-      }
-
-      const data = {
-        finishedClass,
-        onGoingClass,
-        score,
-        classCount,
-        userCount: user,
-      };
-
-      response(200, data, "get user dashboard card", res);
     } catch (error) {
       response(500, error, error.message, res);
     }

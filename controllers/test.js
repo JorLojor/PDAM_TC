@@ -387,6 +387,52 @@ module.exports = {
     }
   },
 
+  getStudentClass: async (req, res) => {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      const result = await testAnswer
+        .find({
+          user: req.user.id,
+        })
+        .populate("test");
+
+      let data = [];
+
+      if (result.length > 0) {
+        for (let i = 0; i < result.length; i++) {
+          const kelas = await Kelas.findById(result[i].kelas);
+
+          const test = await Test.findById(result[i].test);
+
+          data.push({
+            test: test.judul,
+            kelas: kelas.nama,
+            waktu: moment(result[i].createdAt).format("DD-MM-YYYY HH:mm:ss"),
+          });
+        }
+      }
+
+      const totalData = data.length;
+
+      data = paginateArray(data, limit, page);
+
+      const finalResult = {
+        data,
+        page,
+        limit,
+        totalData,
+        datalength: data.length,
+      };
+
+      return response(200, finalResult, "Data nilai user didapatkan", res);
+    } catch (error) {
+      console.log(error);
+      return response(500, error, error.message, res);
+    }
+  },
+
   getStudentData: async (req, res) => {
     try {
       const { id } = req.params;

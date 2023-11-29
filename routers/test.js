@@ -30,6 +30,12 @@ testRouter.get(
 );
 testRouter.get("/class/:id", auth.user, Controller.getTestByClass);
 testRouter.get("/quiz/:slug", auth.user, Controller.getQuiz);
+testRouter.get(
+  "/my-quiz-result",
+  auth.user,
+  auth.onlyStudent,
+  Controller.getStudentClass
+);
 testRouter.get("/:id", auth.user, Controller.getTest);
 testRouter.post("/answered", auth.user, Controller.getTestAnswerFiltered);
 testRouter.post("/checkAnswer", auth.user, Controller.testCheck);

@@ -25,8 +25,20 @@ const upload = multer({ storage });
 
 // router.get("/", auth.user, Controller.getAllKelas);
 router.get("/", Controller.getAllKelas); //testing
-router.get("/absensi/:kelas", Controller.getAbsensi);
-router.get("/today", Controller.getTodayClass); //testing
+router.get("/absensi/:kelas", auth.user, Controller.getAbsensi);
+router.get("/today", auth.user, Controller.getTodayClass); //testing
+router.get(
+  "/my-pending-class",
+  auth.user,
+  auth.onlyStudent,
+  Controller.getStudentPendingClass
+);
+router.get(
+  "/my-class",
+  auth.user,
+  auth.onlyStudent,
+  Controller.getStudentClass
+);
 router.get("/latest", auth.user, auth.onlyStudent, Controller.getRecentClass);
 router.get(
   "/peserta-by-instruktur/:instruktur",

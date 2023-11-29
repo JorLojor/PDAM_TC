@@ -333,6 +333,144 @@ module.exports = {
     }
   },
 
+  getStudentClass: async (req, res) => {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      var ids = [];
+
+      const user = await UserModel.findById(req.user.id);
+
+      user.kelas.map((k) => {
+        if (k.status == "approved" && k.isDone == false) {
+          ids.push(k.kelas);
+        }
+      });
+
+      let data = [];
+
+      if (ids.length > 0) {
+        kelas = await KelasModel.find({
+          _id: { $in: ids },
+        }).populate("materi peserta kategori trainingMethod");
+
+        if (kelas.length > 0) {
+          for (let i = 0; i < kelas.length; i++) {
+            let instruktur = null;
+
+            for (let j = 0; j < kelas[i].materi.length; j++) {
+              for (let k = 0; k < kelas[i].materi[j].instruktur.length; k++) {
+                instruktur = await UserModel.findById(
+                  kelas[i].materi[j].instruktur[k]
+                );
+
+                if (instruktur) {
+                  break;
+                }
+              }
+              if (instruktur) {
+                break;
+              }
+            }
+
+            data.push({
+              id: kelas[i]._id,
+              nama: kelas[i].nama,
+              methods: kelas[i].methods,
+              instruktur: instruktur ? instruktur.name : "",
+            });
+          }
+        }
+      }
+
+      const totalData = data.length;
+
+      data = paginateArray(data, limit, page);
+
+      const finalResult = {
+        data,
+        page,
+        limit,
+        totalData,
+        datalength: data.length,
+      };
+
+      response(200, finalResult, "berhasil Get kelas pending", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
+
+  getStudentPendingClass: async (req, res) => {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      var ids = [];
+
+      const user = await UserModel.findById(req.user.id);
+
+      user.kelas.map((k) => {
+        if (k.status == "pending") {
+          ids.push(k.kelas);
+        }
+      });
+
+      let data = [];
+
+      if (ids.length > 0) {
+        kelas = await KelasModel.find({
+          _id: { $in: ids },
+        }).populate("materi peserta kategori trainingMethod");
+
+        if (kelas.length > 0) {
+          for (let i = 0; i < kelas.length; i++) {
+            let instruktur = null;
+
+            for (let j = 0; j < kelas[i].materi.length; j++) {
+              for (let k = 0; k < kelas[i].materi[j].instruktur.length; k++) {
+                instruktur = await UserModel.findById(
+                  kelas[i].materi[j].instruktur[k]
+                );
+
+                if (instruktur) {
+                  break;
+                }
+              }
+              if (instruktur) {
+                break;
+              }
+            }
+
+            data.push({
+              id: kelas[i]._id,
+              nama: kelas[i].nama,
+              start: moment(kelas[i].jadwal[0].tanggal).format("DD-MM-YYYY"),
+              instruktur: instruktur ? instruktur.name : "",
+            });
+          }
+        }
+      }
+
+      const totalData = data.length;
+
+      data = paginateArray(data, limit, page);
+
+      const finalResult = {
+        data,
+        page,
+        limit,
+        totalData,
+        datalength: data.length,
+      };
+
+      response(200, finalResult, "berhasil Get kelas pending", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
+
   nilaiPerKelas: async (req, res) => {
     const kelasId = req.params.id;
     try {
@@ -1469,8 +1607,6 @@ module.exports = {
 
   getWithFilter: async (req, res) => {
     try {
-      const isPaginate = req.query.paginate ? parseInt(req.query.paginate) : 0;
-
       let totalData;
 
       if (req.body.isActive == null || req.body.isActive == undefined) {
