@@ -800,11 +800,13 @@ module.exports = {
   getTestByClassAnswered: async (req, res) => {
     try {
       const { id } = req.params;
+
       const result = await testAnswer
         .find({
           class: id,
         })
         .populate("test");
+
       let data = [];
       let postTest = [];
       let preTest = [];
@@ -812,42 +814,135 @@ module.exports = {
       let postTestId = null;
       let preTestId = null;
       let quizIds = [];
+
       for (let i = 0; i < result.length; i++) {
         if (result[i].test.type == "pre") {
           preTestId = result[i].test._id;
           break;
         }
       }
+
       for (let i = 0; i < result.length; i++) {
         if (result[i].test.type == "post") {
           postTestId = result[i].test._id;
           break;
         }
       }
+
       for (let i = 0; i < result.length; i++) {
         if (result[i].test.type == "quiz") {
           quizIds.push(result[i].test._id);
         }
       }
+
       if (preTestId) {
-        preTest = await Test.findById(preTestId).populate("pembuat");
+        const test = await testAnswer
+          .find({
+            class: id,
+            $and: [
+              {
+                test: preTestId,
+              },
+            ],
+          })
+          .populate("test");
+
+        if (test.length > 0) {
+          await Promise.all(
+            test.map(async (t) => {
+              const user = await User.findById(t.user);
+
+              preTest.push({
+                user: user.name,
+                userType: user.userType == 1 ? "Internal" : "External",
+                nipp: user.nipp,
+                nilai: t.nilai,
+                durasi: converttoMinute(converttoSecond(t.finishAt, t.startAt)),
+              });
+            })
+          );
+        }
       }
+
       if (postTestId) {
-        postTest = await Test.findById(postTest).populate("pembuat");
+        const test = await testAnswer
+          .find({
+            class: id,
+            $and: [
+              {
+                test: postTestId,
+              },
+            ],
+          })
+          .populate("test");
+
+        if (test.length > 0) {
+          await Promise.all(
+            test.map(async (t) => {
+              const user = await User.findById(t.user);
+
+              postTest.push({
+                user: user.name,
+                userType: user.userType == 1 ? "Internal" : "External",
+                nipp: user.nipp,
+                nilai: t.nilai,
+                durasi: converttoMinute(converttoSecond(t.finishAt, t.startAt)),
+              });
+            })
+          );
+        }
       }
+
       if (quizIds.length > 0) {
-        Promise.all(
-          quizIds.map(async (q) => {
-            const quizTest = await Test.findById(q).populate("pembuat");
-            quiz.push(quizTest);
+        let nilai = 0;
+        let duration = 0;
+
+        const kelas = Kelas.findById(id);
+
+        await Promise.all(
+          kelas.map(async (k) => {
+            k.peserta.map(async (p) => {
+              const user = await User.findById(p.user);
+
+              quizIds.map(async (q) => {
+                const quizTest = await testAnswer
+                  .find({
+                    class: id,
+                    $and: [
+                      {
+                        test: q,
+                      },
+                    ],
+                  })
+                  .populate("test");
+
+                nilai = nilai + quizTest.nilai;
+                duration =
+                  duration +
+                  converttoSecond(quizTest.finishAt, quizTest.startAt);
+              });
+
+              nilai = Math.floor(nilai / quizIds.length);
+              duration = Math.floor(duration / quizIds.length);
+
+              quiz.push({
+                user: user.name,
+                userType: user.userType == 1 ? "Internal" : "External",
+                nipp: user.nipp,
+                nilai,
+                durasi: duration,
+              });
+            });
           })
         );
       }
+
       data.push({
         preTest,
         quiz,
         postTest,
       });
+
       return response(200, data, "Nilai Test di dapat", res);
     } catch (error) {
       return response(500, error, error.message, res);
