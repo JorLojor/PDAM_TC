@@ -10,7 +10,12 @@ const fs = require("fs");
 const path = require("path");
 const moment = require("moment");
 const TestAnswer = require("../models/testAnswer");
-const { paginateArray, countRanking } = require("../service");
+const {
+  paginateArray,
+  countRanking,
+  converttoSecond,
+  converttoMinute,
+} = require("../service");
 
 function makeid(length) {
   let result = "";
@@ -476,8 +481,11 @@ module.exports = {
       const kelas = await Kelas.findById(id);
 
       let postTest = 0;
+      let postTestDuration = "";
       let preTest = 0;
+      let preTestDuration = "";
       let quiz = 0;
+      let quizDuration = "";
 
       for (var i = 0; i < kelas.peserta.length; i++) {
         const user = await User.findById(kelas.peserta[i].user);
@@ -495,7 +503,12 @@ module.exports = {
             ],
           });
 
-          if (preTestScore) preTest = preTestScore.nilai;
+          if (preTestScore) {
+            preTest = preTestScore.nilai;
+            preTestDuration = converttoMinute(
+              converttoSecond(preTestScore.finishAt, preTestScore.startAt)
+            );
+          }
         }
 
         if (postTestId) {
@@ -513,11 +526,17 @@ module.exports = {
             })
             .populate("user", "name");
 
-          if (postTestScore) postTest = postTestScore.nilai;
+          if (postTestScore) {
+            postTest = postTestScore.nilai;
+            postTestDuration = converttoMinute(
+              converttoSecond(postTest.finishAt, postTest.startAt)
+            );
+          }
         }
 
         if (quizIds.length > 0) {
           let score = 0;
+          let duration = 0;
 
           for (var i = 0; i < quizIds.length; i++) {
             const quizTest = await TestAnswer.findOne({
@@ -534,10 +553,13 @@ module.exports = {
 
             if (quizTest) {
               score = score + quizTest.nilai;
+              duration =
+                duration + converttoSecond(quizTest.finishAt, quizTest.startAt);
             }
           }
 
           quiz = score / quizLength;
+          quizDuration = converttoMinute(Math.floor(duration / answers.length));
         }
 
         data.push({
@@ -547,8 +569,11 @@ module.exports = {
           nipp: user.nipp,
           type: user.userType == 1 ? "Internal" : "External",
           preTest,
+          preTestDuration,
           postTest,
+          postTestDuration,
           quiz,
+          quizDuration,
         });
       }
 
@@ -596,6 +621,7 @@ module.exports = {
       const kelas = await Kelas.findById(id);
 
       let quizAverage = 0;
+      let quizDurationAverage = "";
 
       let quiz = [];
 
@@ -603,6 +629,7 @@ module.exports = {
         const user = await User.findById(kelas.peserta[i].user);
 
         if (quizIds.length > 0) {
+          let duration = 0;
           let score = 0;
 
           for (var i = 0; i < quizIds.length; i++) {
@@ -620,13 +647,22 @@ module.exports = {
 
             if (quizTest) {
               score = score + quizTest.nilai;
+              duration =
+                duration + converttoSecond(quizTest.finishAt, quizTest.startAt);
+
               quiz.push({
                 nilai: quizTest.nilai,
+                durasi: converttoMinute(
+                  converttoSecond(quizTest.finishAt, quizTest.startAt)
+                ),
               });
             }
           }
 
           quizAverage = score / quizLength;
+          quizDurationAverage = converttoMinute(
+            Math.floor(duration / quizLength)
+          );
 
           data.push({
             kelasId: id,
@@ -635,6 +671,7 @@ module.exports = {
             nipp: user.nipp,
             type: user.userType == 1 ? "Internal" : "External",
             quizAverage,
+            quizDurationAverage,
             length: quizIds.length,
           });
         } else {
@@ -645,6 +682,7 @@ module.exports = {
             nipp: user.nipp,
             type: user.userType == 1 ? "Internal" : "External",
             quizAverage: 0,
+            quizDurationAverage: "",
             length: 0,
           });
         }
@@ -694,54 +732,53 @@ module.exports = {
     try {
       const { id } = req.params;
 
-      const result = await testAnswer
-        .find({
-          class: id,
-        })
-        .populate("test");
+      const result = await Kelas.findById(id).populate("materi");
 
       let data = [];
       let postTest = [];
       let preTest = [];
       let quiz = [];
-      let postTestId = null;
-      let preTestId = null;
+      let postTestIds = [];
+      let preTestIds = [];
       let quizIds = [];
 
-      for (let i = 0; i < result.length; i++) {
-        if (result[i].test.type == "pre") {
-          preTestId = result[i].test._id;
+      for (let i = 0; i < result.materi.length; i++) {
+        preTestIds.push(result.materi[i].test.pre);
+      }
 
-          break;
+      for (let i = 0; i < result.materi.length; i++) {
+        postTestIds.push(result.materi[i].test.post);
+      }
+
+      for (let i = 0; i < result.materi.length; i++) {
+        for (let j = 0; j < result.materi[i].items.length; j++) {
+          quizIds.push(result.materi[i].items[j].quiz);
+        }
+      }
+      if (preTestIds) {
+        for (let i = 0; i < preTestIds.length; i++) {
+          const preTestData = await Test.findById(preTestIds[i]).populate(
+            "pembuat"
+          );
+
+          preTest.push(preTestData);
         }
       }
 
-      for (let i = 0; i < result.length; i++) {
-        if (result[i].test.type == "post") {
-          postTestId = result[i].test._id;
+      if (postTestIds) {
+        for (let i = 0; i < postTestIds.length; i++) {
+          const postTestData = await Test.findById(postTestIds[i]).populate(
+            "pembuat"
+          );
 
-          break;
+          postTest.push(postTestData);
         }
-      }
-
-      for (let i = 0; i < result.length; i++) {
-        if (result[i].test.type == "quiz") {
-          quizIds.push(result[i].test._id);
-        }
-      }
-
-      if (preTestId) {
-        preTest = await Test.findById(preTestId).populate("pembuat");
-      }
-
-      if (postTestId) {
-        postTest = await Test.findById(postTest).populate("pembuat");
       }
 
       if (quizIds.length > 0) {
         Promise.all(
           quizIds.map(async (q) => {
-            const quizTest = await Test.findById(1).populate("pembuat");
+            const quizTest = await Test.findById(q).populate("pembuat");
 
             quiz.push(quizTest);
           })
@@ -850,10 +887,6 @@ module.exports = {
         return response(400, null, "Kelas not found", res);
       }
 
-      // await countRanking(validKelas._id, res);
-
-      // return res.json({ ok: "ok" });
-
       const questions = validTest.question;
 
       let correct = 0;
@@ -901,6 +934,7 @@ module.exports = {
       return response(200, save, "Answers have been saved!", res);
     } catch (error) {
       console.error(error);
+
       return response(500, null, error.message, res);
     }
   },

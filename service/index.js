@@ -19,7 +19,20 @@ function convertDate(date) {
   );
 }
 
-async function countRanking(kelas, res) {
+function converttoMinute(duration) {
+  return Math.floor(duration / 60) + ":" + Math.floor(duration % 60);
+}
+
+function converttoSecond(finish, start) {
+  var dateFinish = new Date(finish);
+  var dateStart = new Date(start);
+
+  const diffTime = Math.abs(dateFinish - dateStart);
+
+  return diffTime;
+}
+
+async function countRanking(kelas) {
   try {
     await Ranking.find({
       kelas,
@@ -27,71 +40,103 @@ async function countRanking(kelas, res) {
 
     const targetClass = await Kelas.findById(kelas);
 
+    let rankingBox = [];
     let userIds = [];
     let userData = [];
+
+    let len = 1;
 
     for (var i = 0; i < targetClass.peserta.length; i++) {
       userIds.push(targetClass.peserta[i].user);
     }
 
+    let finishedTestCount = await TestAnswer.find({
+      class: kelas,
+    }).countDocuments();
+
     if (userIds.length > 0) {
+      finishedTestCount = Math.floor(finishedTestCount / userIds.length);
+
       for (var i = 0; i < userIds.length; i++) {
         let nilai = 0;
-        let startAt = 0;
-        let finishAt = 0;
+        let duration = 0;
 
         const answers = await TestAnswer.find({
           user: userIds[i],
           $and: [
             {
-              kelas,
+              class: kelas,
             },
           ],
         });
 
-        return res.json(answer);
-        if (answers.length > 0) {
+        if (answers.length > 0 && finishedTestCount == answers.length) {
+          len = answers.length;
+
           for (var j = 0; j < answers.length; j++) {
             nilai = nilai + answers[j].nilai;
-            startAt = startAt + answers[j].startAt;
-            finishAt = finishAt + answers[j].finishAt;
+            duration =
+              duration +
+              converttoSecond(answers[j].finishAt, answers[j].startAt);
           }
 
           nilai = Math.floor(nilai / answers.length);
-          startAt = Math.floor(startAt / answers.length);
-          finishAt = Math.floor(finishAt / answers.length);
+          duration = Math.floor(duration / answers.length);
 
           userData.push({
             user: userIds[i],
             nilai,
-            startAt,
-            finishAt,
+            duration,
           });
         }
       }
     }
+
+    if (userData.length > 0) {
+      for (var i = 0; i < userData.length; i++) {
+        const durasi = converttoMinute(userData[i].duration);
+
+        rankingBox.push({
+          user: userData[i].user,
+          nilai: userData[i].nilai,
+          durasi,
+          duration: userData[i].duration,
+        });
+      }
+    }
+
+    rankingBox.sort((a, b) => {
+      if (a.nilai !== b.nilai) {
+        return b.nilai - a.nilai;
+      } else {
+        return a.duration - b.duration;
+      }
+    });
+
+    for (var i = 0; i < rankingBox.length; i++) {
+      await Ranking.create({
+        user: rankingBox[i].user,
+        kelas,
+        ranking: i + 1,
+        value: rankingBox[i].nilai,
+        duration: rankingBox[i].durasi,
+      });
+    }
+
+    return true;
   } catch (error) {
     console.error(error);
-    return res.json(error);
   }
-
-  // let result = finishAt - startAt;
-
-  // const hours = Math.floor(result / 3600);
-
-  // const minutes = Math.floor(hours * 60);
-  // const seconds = minutes % 60;
-
-  // return res.json({
-  //   unix1,
-  //   unix2,
-  //   result,
-  //   duration: `${minutes}:${seconds}`,
-  // });
 }
 
 function paginateArray(array, page_size, page_number) {
   return array.slice((page_number - 1) * page_size, page_number * page_size);
 }
 
-module.exports = { convertDate, countRanking, paginateArray };
+module.exports = {
+  convertDate,
+  converttoMinute,
+  converttoSecond,
+  countRanking,
+  paginateArray,
+};

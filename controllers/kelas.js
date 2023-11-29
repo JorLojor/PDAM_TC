@@ -396,7 +396,7 @@ module.exports = {
         datalength: data.length,
       };
 
-      response(200, finalResult, "berhasil Get kelas pending", res);
+      response(200, finalResult, "berhasil Get kelas", res);
     } catch (error) {
       response(500, error, error.message, res);
     }

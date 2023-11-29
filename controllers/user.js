@@ -20,6 +20,7 @@ const {
 const fs = require("fs");
 const moment = require("moment");
 const path = require("path");
+const Ranking = require("../models/ranking");
 module.exports = {
   getbyEmail: async (req, res) => {
     try {
@@ -52,6 +53,7 @@ module.exports = {
 
       let onGoingClass = 0;
       let finishedClass = 0;
+      let ranking = "";
       let kelasIds = [];
       let userIds = [];
 
@@ -178,12 +180,25 @@ module.exports = {
           score = score / answerCount;
         }
 
+        personalRanking = await Ranking.find({ user: req.user_id });
+
+        if (personalRanking.length > 0) {
+          let accumulation = 0;
+
+          personalRanking.map((p) => {
+            accumulation = accumulation + p.ranking;
+          });
+
+          ranking = Math.floor(accumulation / personalRanking.length);
+        }
+
         const data = {
           finishedClass,
           onGoingClass,
           score,
           classCount,
           userCount: user,
+          ranking,
         };
 
         response(200, data, "get user dashboard card", res);
@@ -280,6 +295,7 @@ module.exports = {
           score,
           classCount,
           userCount: user,
+          ranking: "",
         };
 
         response(200, data, "get user dashboard card", res);

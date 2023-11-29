@@ -27,6 +27,6 @@ const rankingSchema = new Schema(
   { timestamps: true }
 );
 
-const Ranking = mongoose.model("Rangking", rankingSchema);
+const Ranking = mongoose.model("Ranking", rankingSchema);
 
 module.exports = Ranking;
