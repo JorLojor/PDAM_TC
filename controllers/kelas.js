@@ -14,6 +14,7 @@ const { default: axios } = require("axios");
 const { sendClassEnrollmentMail } = require("../service/mail/config");
 const { paginateArray } = require("../service");
 const Ranking = require("../models/ranking");
+const classEnrollmentLog = require("../models/classEnrollmentLog");
 
 module.exports = {
   getAllKelas: async (req, res) => {
@@ -1559,6 +1560,11 @@ module.exports = {
         { new: true, session }
       );
 
+      await classEnrollmentLog.create({
+        user: iduser,
+        kelas: kelas._id,
+      });
+
       const user = await UserModel.findOne({
         _id: iduser,
       });
@@ -1668,7 +1674,7 @@ module.exports = {
           });
         }
 
-        if (ids.len > 0) {
+        if (ids.length > 0) {
           kelas = await KelasModel.find({
             _id: { $in: ids },
           });
@@ -1694,7 +1700,7 @@ module.exports = {
           });
         }
 
-        if (ids.len > 0) {
+        if (ids.length > 0) {
           kelas = await KelasModel.find({
             _id: { $in: ids },
           });
