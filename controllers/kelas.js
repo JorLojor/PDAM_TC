@@ -12,7 +12,7 @@ const moment = require("moment");
 const _ = require("lodash");
 const { default: axios } = require("axios");
 const { sendClassEnrollmentMail } = require("../service/mail/config");
-const { paginateArray } = require("../service");
+const { paginateArray, getInstructorClass } = require("../service");
 const Ranking = require("../models/ranking");
 const classEnrollmentLog = require("../models/classEnrollmentLog");
 
@@ -335,85 +335,122 @@ module.exports = {
     }
   },
 
-  getStudentClass: async (req, res) => {
+  getPersonalClass: async (req, res) => {
     try {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
 
-      var ids = [];
-
-      const user = await UserModel.findById(req.user.id);
-
-      user.kelas.map((k) => {
-        if (k.status == "approved") {
-          ids.push(k.kelas);
-        }
-      });
-
       let data = [];
+      let ids = [];
+      let finalResult;
 
-      if (ids.length > 0) {
-        kelas = await KelasModel.find({
-          _id: { $in: ids },
-        }).populate("materi peserta kategori trainingMethod");
+      let totalData = 0;
 
-        if (kelas.length > 0) {
-          for (let i = 0; i < kelas.length; i++) {
-            let instruktur = null;
-            let nilai = 0;
+      if (req.user.role == 3) {
+        const user = await UserModel.findById(req.user.id);
 
-            for (let j = 0; j < kelas[i].materi.length; j++) {
-              for (let k = 0; k < kelas[i].materi[j].instruktur.length; k++) {
-                instruktur = await UserModel.findById(
-                  kelas[i].materi[j].instruktur[k]
-                );
+        user.kelas.map((k) => {
+          if (k.status == "approved") {
+            ids.push(k.kelas);
+          }
+        });
 
+        if (ids.length > 0) {
+          kelas = await KelasModel.find({
+            _id: { $in: ids },
+          }).populate("materi peserta kategori trainingMethod");
+
+          if (kelas.length > 0) {
+            for (let i = 0; i < kelas.length; i++) {
+              let instruktur = null;
+              let nilai = 0;
+
+              for (let j = 0; j < kelas[i].materi.length; j++) {
+                for (let k = 0; k < kelas[i].materi[j].instruktur.length; k++) {
+                  instruktur = await UserModel.findById(
+                    kelas[i].materi[j].instruktur[k]
+                  );
+
+                  if (instruktur) {
+                    break;
+                  }
+                }
                 if (instruktur) {
                   break;
                 }
               }
-              if (instruktur) {
-                break;
-              }
-            }
 
-            if (kelas[i].isDone == true) {
-              const ranking = await Ranking.findOne({
-                kelas: kelas[i],
-                $and: [
-                  {
-                    user: req.user._id,
-                  },
-                ],
+              if (kelas[i].isDone == true) {
+                const ranking = await Ranking.findOne({
+                  kelas: kelas[i],
+                  $and: [
+                    {
+                      user: req.user._id,
+                    },
+                  ],
+                });
+
+                if (ranking) {
+                  nilai = ranking.value;
+                }
+              }
+
+              data.push({
+                id: kelas[i]._id,
+                nama: kelas[i].nama,
+                methods: kelas[i].methods,
+                instruktur: instruktur ? instruktur.name : "",
+                nilai,
               });
-
-              if (ranking) {
-                nilai = ranking.value;
-              }
             }
-
-            data.push({
-              id: kelas[i]._id,
-              nama: kelas[i].nama,
-              methods: kelas[i].methods,
-              instruktur: instruktur ? instruktur.name : "",
-              nilai,
-            });
           }
         }
+
+        totalData = data.length;
+
+        data = paginateArray(data, limit, page);
+
+        finalResult = {
+          data,
+          page,
+          limit,
+          totalData,
+          datalength: data.length,
+        };
+      } else {
+        kelasIds = await getInstructorClass(req.user.id);
+
+        totalData = await KelasModel.find({
+          _id: { $in: kelasIds },
+        }).countDocuments();
+
+        data = await KelasModel.find({
+          _id: { $in: kelasIds },
+        })
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .populate("materi")
+          .populate("kategori")
+          .populate({
+            path: "desainSertifikat.peserta",
+            model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
+          })
+          .populate({
+            path: "desainSertifikat.instruktur",
+            model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+          })
+          .populate({
+            path: "trainingMethod",
+          });
+
+        finalResult = {
+          data,
+          page,
+          limit,
+          totalData,
+          datalength: data.length,
+        };
       }
-
-      const totalData = data.length;
-
-      data = paginateArray(data, limit, page);
-
-      const finalResult = {
-        data,
-        page,
-        limit,
-        totalData,
-        datalength: data.length,
-      };
 
       response(200, finalResult, "berhasil Get kelas", res);
     } catch (error) {
