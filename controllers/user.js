@@ -21,6 +21,8 @@ const fs = require("fs");
 const moment = require("moment");
 const path = require("path");
 const Ranking = require("../models/ranking");
+const { getInstructorClass } = require("../service");
+const classEnrollmentLog = require("../models/classEnrollmentLog");
 module.exports = {
   getbyEmail: async (req, res) => {
     try {
@@ -93,7 +95,7 @@ module.exports = {
               onGoingClass = onGoingClass + 1;
               classCount = classCount + 1;
 
-              kelasIds.push(k.ids);
+              kelasIds.push(k._id);
 
               k.peserta.map((p) => {
                 userIds.push(p.user);
@@ -106,7 +108,7 @@ module.exports = {
             ) {
               finishedClass = finishedClass + 1;
               classCount = classCount + 1;
-              kelasIds.push(k.ids);
+              kelasIds.push(k._id);
 
               k.peserta.map((p) => {
                 userIds.push(p.user);
@@ -202,7 +204,7 @@ module.exports = {
         };
 
         response(200, data, "get user dashboard card", res);
-      } else {
+      } else if (req.user.role < 2) {
         kelas.map((k) => {
           if (startDate) {
             if (
@@ -214,7 +216,7 @@ module.exports = {
               onGoingClass = onGoingClass + 1;
               classCount = classCount + 1;
 
-              kelasIds.push(k.ids);
+              kelasIds.push(k._id);
 
               k.peserta.map((p) => {
                 userIds.push(p.user);
@@ -227,7 +229,7 @@ module.exports = {
             ) {
               finishedClass = finishedClass + 1;
               classCount = classCount + 1;
-              kelasIds.push(k.ids);
+              kelasIds.push(k._id);
 
               k.peserta.map((p) => {
                 userIds.push(p.user);
@@ -296,6 +298,108 @@ module.exports = {
           classCount,
           userCount: user,
           ranking: "",
+        };
+
+        response(200, data, "get user dashboard card", res);
+      } else {
+        let newStudents = 0;
+        let studentTotal = 0;
+
+        kelasIds = await getInstructorClass(req.user.id);
+
+        kelas = await Kelas.find({
+          _id: { $in: kelasIds },
+        });
+
+        classCount = kelas.length;
+
+        if (startDate) {
+          classCount = 0;
+        }
+
+        kelas = await Kelas.find({ _id: { $in: kelasIds } });
+
+        kelasIds = [];
+
+        kelas.map((k) => {
+          if (startDate) {
+            if (
+              moment(k.jadwal[0].tanggal).format("YYYY-MM-DD") >= startDate &&
+              moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
+                "YYYY-MM-DD"
+              ) < today
+            ) {
+              kelasIds.push(k._id);
+            }
+            if (
+              moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
+                "YYYY-MM-DD"
+              ) >= today
+            ) {
+              finishedClass = finishedClass + 1;
+            }
+          } else {
+            if (
+              moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
+                "YYYY-MM-DD"
+              ) <= today
+            ) {
+              kelasIds.push(k._id);
+            } else {
+              finishedClass = finishedClass + 1;
+            }
+          }
+        });
+
+        kelas = await Kelas.find({ _id: { $in: kelasIds } });
+
+        await Promise.all(
+          kelas.map((k) => {
+            studentTotal = studentTotal + k.peserta.length;
+          })
+        );
+
+        let lastWeek;
+
+        if (startDate) {
+          today = startDate;
+
+          lastWeek = moment(req.query.startDate)
+            .subtract(7, "days")
+            .format("YYYY-MM-DD");
+        } else {
+          today = new Date();
+
+          lastWeek = new Date(
+            today.getFullYear(),
+            today.getMonth(),
+            today.getDate() - 7
+          );
+
+          today = moment(today).format("YYYY-MM-DD");
+          lastWeek = moment(lastWeek).format("YYYY-MM-DD");
+        }
+
+        const log = await classEnrollmentLog.find({
+          kelas: { $in: kelasIds },
+        });
+
+        if (log.length > 0) {
+          log.map((l) => {
+            if (
+              moment(l.createdAt).format("YYYY-MM-DD") >= lastWeek &&
+              moment(l.createdAt).format("YYYY-MM-DD") <= today
+            ) {
+              newStudents = newStudents + 1;
+            }
+          });
+        }
+
+        const data = {
+          studentTotal,
+          finishedClass,
+          classTotal: kelas.length,
+          newStudents,
         };
 
         response(200, data, "get user dashboard card", res);

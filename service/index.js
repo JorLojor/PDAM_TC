@@ -1,4 +1,5 @@
 const Kelas = require("../models/kelas");
+const materi = require("../models/materi");
 const Ranking = require("../models/ranking");
 const TestAnswer = require("../models/testAnswer");
 
@@ -129,6 +130,33 @@ async function countRanking(kelas) {
   }
 }
 
+async function getInstructorClass(user) {
+  let ids = [];
+  let materiIds = [];
+
+  const materiData = await materi.find();
+
+  for (let i = 0; i < materiData.length; i++) {
+    for (let j = 0; j < materiData[i].instruktur.length; j++) {
+      if (materiData[i].instruktur[j] == user) {
+        materiIds.push(materiData[i]._id);
+      }
+    }
+  }
+
+  const kelas = await Kelas.find({
+    materi: {
+      $in: materiIds,
+    },
+  });
+
+  for (let i = 0; i < kelas.length; i++) {
+    ids.push(kelas[i]._id);
+  }
+
+  return ids;
+}
+
 function paginateArray(array, page_size, page_number) {
   return array.slice((page_number - 1) * page_size, page_number * page_size);
 }
@@ -138,5 +166,6 @@ module.exports = {
   converttoMinute,
   converttoSecond,
   countRanking,
+  getInstructorClass,
   paginateArray,
 };
