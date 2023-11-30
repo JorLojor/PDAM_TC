@@ -104,8 +104,8 @@ module.exports = {
       response(400, null, "Gambar desain harus diupload!", res);
       return;
     }
-
-    let desain = "/upload/" + req.file.path.split("/upload/")[1];
+    let path = req.file.path.replaceAll('\\', '/')
+    let desain = "/upload/" + path.split("/upload/")[1];
 
     try {
       const sertifikat = new sertifikatModel({
