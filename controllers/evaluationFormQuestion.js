@@ -281,7 +281,7 @@ module.exports = {
         return response(400, {}, "form tidak ditemukan", res);
       }
 
-      const result = await EvaluationFormQuestion.findOne({
+      const result = await EvaluationFormQuestion.find({
         evaluationForm,
       }).populate("evaluationForm");
 
