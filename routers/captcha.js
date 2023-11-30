@@ -7,7 +7,7 @@ router.post('/verify', async (req, res) => {
     const { data } = await axios.post(
         `https://www.google.com/recaptcha/api/siteverify?secret=6LekAx8pAAAAAD56RNNRRGN7WMj_JMRBWqrD5Kgy&response=${captchaValue}`
     );
-    response.send(data);
+    res.send(data); 
 })
 
 module.exports = router;
