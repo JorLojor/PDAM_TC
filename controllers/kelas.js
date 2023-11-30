@@ -1672,11 +1672,11 @@ module.exports = {
               ids.push(k._id);
             }
           });
-        }
 
-        kelas = await KelasModel.find({
-          _id: { $in: ids },
-        });
+          kelas = await KelasModel.find({
+            _id: { $in: ids },
+          });
+        }
 
         if (userType < 2) {
           await Promise.all(
@@ -1698,9 +1698,11 @@ module.exports = {
           });
         }
 
-        kelas = await KelasModel.find({
-          _id: { $in: ids },
-        });
+        if (userType) {
+          kelas = await KelasModel.find({
+            _id: { $in: ids },
+          });
+        }
 
         if (fromDate && toDate) {
           await Promise.all(
