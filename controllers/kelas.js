@@ -335,6 +335,65 @@ module.exports = {
     }
   },
 
+  getIncomingSchedule: async (req, res) => {
+    try {
+      kelasIds = await getInstructorClass(req.user.id);
+
+      var today = moment().format("YYYY-MM-DD");
+
+      let data = [];
+
+      const kelas = await KelasModel.find({
+        _id: { $in: kelasIds },
+      });
+
+      if (kelas.length > 0) {
+        for (let g = 0; g < kelas.length; g++) {
+          for (let h = 0; h < kelas[g].jadwal.length; h++) {
+            if (
+              moment(kelas[g].jadwal[h].tanggal).format("YYYY-MM-DD") > today
+            ) {
+              const materiData = await MateriModel.find({
+                _id: kelas[g].materi,
+              });
+
+              for (let i = 0; i < materiData.length; i++) {
+                for (let j = 0; j < materiData[i].instruktur.length; j++) {
+                  if (materiData[i].instruktur[j] == req.user.id) {
+                    materi = materiData[i].section;
+
+                    break;
+                  }
+                }
+
+                if (materi.length > 0) {
+                  break;
+                }
+              }
+
+              data.push({
+                date: moment(kelas[g].jadwal[h].tanggal).format("YYYY-MM-DD"),
+                kelas: kelas[g].nama,
+                jamMulai: kelas[g].jadwal[h].jamMulai,
+                materi,
+              });
+            }
+          }
+        }
+
+        data.sort((a, b) => {
+          if (a.date !== b.date) {
+            return b.date - a.date;
+          }
+        });
+      }
+
+      response(200, data, "berhasil Get jadwal", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
+
   getPersonalClass: async (req, res) => {
     try {
       const page = parseInt(req.query.page) || 1;
