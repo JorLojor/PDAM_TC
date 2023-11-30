@@ -1637,7 +1637,7 @@ module.exports = {
       let ids = [];
 
       if (nama || userType || fromDate || toDate) {
-        const kelas = await KelasModel.find();
+        let kelas = await KelasModel.find();
 
         let len = 0;
 
@@ -1650,7 +1650,11 @@ module.exports = {
           });
         }
 
-        console.log(ids);
+        if (ids.len > 0) {
+          kelas = await KelasModel.find({
+            _id: { $in: ids },
+          });
+        }
 
         if (userType < 2) {
           await Promise.all(
@@ -1669,6 +1673,12 @@ module.exports = {
         } else if (userType > 1) {
           kelas.map((k) => {
             ids.push(k._id);
+          });
+        }
+
+        if (ids.len > 0) {
+          kelas = await KelasModel.find({
+            _id: { $in: ids },
           });
         }
 
