@@ -1679,15 +1679,19 @@ module.exports = {
         }
 
         if (userType < 2) {
+          let pesertaCount = 0;
+
           await Promise.all(
             kelas.map(async (k) => {
               for (var i = 0; i < k.peserta.length; i++) {
                 const user = await UserModel.findById(k.peserta[i].user);
 
                 if (user && user.userType == userType) {
-                  ids.push(k._id);
+                  pesertaCount = pesertaCount + 1;
+                }
 
-                  break;
+                if (pesertaCount == k.peserta.length) {
+                  ids.push(k._id);
                 }
               }
             })
