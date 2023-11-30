@@ -21,6 +21,7 @@ const upload = multer({ storage });
 
 router.get("/materi/:slug", auth.user, Controller.getTugas);
 router.get("/check/:id/:idTugas", auth.user, Controller.checkPesertaStatus);
+router.get("/mine", auth.user, Controller.getAllTugasInstrukturPersonal);
 router.get("/:id", auth.user, Controller.getOnetugas);
 router.get("/:id/tugas", Controller.getAllTugasInstruktur);
 
@@ -33,7 +34,11 @@ router.post(
 );
 
 router.post("/filtered", Controller.getTugasFiltered);
-router.get('/deadline/:kelas/:task/:id', auth.user, Controller.getTugasDeadline);
+router.get(
+  "/deadline/:kelas/:task/:id",
+  auth.user,
+  Controller.getTugasDeadline
+);
 router.post("/deadline", auth.user, Controller.setTugasDeadline);
 
 router.put(
