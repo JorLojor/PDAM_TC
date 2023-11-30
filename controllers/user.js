@@ -725,7 +725,7 @@ module.exports = {
           }
 
           const sertifikat = await Sertifikat.findById(
-            detailKelas.desainSertifikat.peserta
+            detailKelas.desainSertifikat?.peserta
           );
 
           data.push({ sertifikat, kelas: detailKelas.nama });

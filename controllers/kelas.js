@@ -13,6 +13,7 @@ const _ = require("lodash");
 const { default: axios } = require("axios");
 const { sendClassEnrollmentMail } = require("../service/mail/config");
 const { paginateArray } = require("../service");
+const Ranking = require("../models/ranking");
 
 module.exports = {
   getAllKelas: async (req, res) => {
@@ -343,7 +344,7 @@ module.exports = {
       const user = await UserModel.findById(req.user.id);
 
       user.kelas.map((k) => {
-        if (k.status == "approved" && k.isDone == false) {
+        if (k.status == "approved") {
           ids.push(k.kelas);
         }
       });
@@ -358,6 +359,7 @@ module.exports = {
         if (kelas.length > 0) {
           for (let i = 0; i < kelas.length; i++) {
             let instruktur = null;
+            let nilai = 0;
 
             for (let j = 0; j < kelas[i].materi.length; j++) {
               for (let k = 0; k < kelas[i].materi[j].instruktur.length; k++) {
@@ -374,11 +376,27 @@ module.exports = {
               }
             }
 
+            if (kelas[i].isDone == true) {
+              const ranking = await Ranking.findOne({
+                kelas: kelas[i],
+                $and: [
+                  {
+                    user: req.user._id,
+                  },
+                ],
+              });
+
+              if (ranking) {
+                nilai = ranking.value;
+              }
+            }
+
             data.push({
               id: kelas[i]._id,
               nama: kelas[i].nama,
               methods: kelas[i].methods,
               instruktur: instruktur ? instruktur.name : "",
+              nilai,
             });
           }
         }
@@ -1637,7 +1655,7 @@ module.exports = {
       let ids = [];
 
       if (nama || userType || fromDate || toDate) {
-        const kelas = await KelasModel.find();
+        let kelas = await KelasModel.find();
 
         let len = 0;
 
@@ -1650,7 +1668,11 @@ module.exports = {
           });
         }
 
-        console.log(ids);
+        if (ids.len > 0) {
+          kelas = await KelasModel.find({
+            _id: { $in: ids },
+          });
+        }
 
         if (userType < 2) {
           await Promise.all(
@@ -1669,6 +1691,12 @@ module.exports = {
         } else if (userType > 1) {
           kelas.map((k) => {
             ids.push(k._id);
+          });
+        }
+
+        if (ids.len > 0) {
+          kelas = await KelasModel.find({
+            _id: { $in: ids },
           });
         }
 
