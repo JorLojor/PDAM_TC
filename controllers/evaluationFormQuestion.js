@@ -1,5 +1,6 @@
 const EvaluationForm = require("../models/evaluationForm");
 const EvaluationFormAnswer = require("../models/evaluationFormAnswer");
+const evaluationFormMessage = require("../models/evaluationFormMessage");
 const EvaluationFormQuestion = require("../models/evaluationFormQuestion");
 const EvaluationFormResult = require("../models/evaluationFormResult");
 const Kelas = require("../models/kelas");
@@ -48,6 +49,7 @@ module.exports = {
         evaluationFormQuestion,
         instructor,
         value,
+        message,
       } = req.body;
 
       const user = req.user.id;
@@ -122,6 +124,14 @@ module.exports = {
           value: value[i],
         });
       }
+
+      await evaluationFormMessage.create({
+        kelas,
+        user,
+        evaluationForm,
+        message,
+        instructor,
+      });
 
       return response(200, {}, "Berhasil menjawab pertanyaan", res);
     } catch (error) {
