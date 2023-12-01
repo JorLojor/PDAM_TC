@@ -374,6 +374,7 @@ module.exports = {
               data.push({
                 date: moment(kelas[g].jadwal[h].tanggal).format("YYYY-MM-DD"),
                 kelas: kelas[g].nama,
+                image: kelas[g].image,
                 jamMulai: kelas[g].jadwal[h].jamMulai,
                 materi,
               });
