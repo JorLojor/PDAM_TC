@@ -2,6 +2,7 @@ const EvaluationForm = require("../models/evaluationForm");
 const EvaluationFormAnswer = require("../models/evaluationFormAnswer");
 const evaluationFormMessage = require("../models/evaluationFormMessage");
 const EvaluationFormResult = require("../models/evaluationFormResult");
+const EvaluationFormQuestion = require("../models/evaluationFormQuestion");
 const Kelas = require("../models/kelas");
 const User = require("../models/user");
 
@@ -61,6 +62,61 @@ module.exports = {
       if (page > 0) {
         data = await EvaluationFormResult.find({
           kelas,
+        })
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .populate("user");
+      }
+
+      if (!data) data = [];
+
+      let result = {
+        data,
+        page,
+        limit,
+        totalData,
+        datalength: data.length,
+      };
+
+      return response(200, result, "Data hasil form", res);
+    } catch (error) {
+      console.log(error);
+      return response(500, error, "Server error", res);
+    }
+  },
+
+  getResultByInstructor: async (req, res) => {
+    try {
+      const kelas = req.params.kelas;
+
+      const validClass = await Kelas.findById(kelas);
+
+      if (!validClass) {
+        return response(400, {}, "kelas tidak ditemukan", res);
+      }
+
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      let data = await EvaluationFormResult.find({
+        kelas,
+        $and: [
+          {
+            instruktur: req.user._id,
+          },
+        ],
+      }).populate("user");
+
+      const totalData = data.length;
+
+      if (page > 0) {
+        data = await EvaluationFormResult.find({
+          kelas,
+          $and: [
+            {
+              instruktur: req.user._id,
+            },
+          ],
         })
           .skip((page - 1) * limit)
           .limit(limit)
@@ -183,7 +239,100 @@ module.exports = {
         }
       }
 
-      return response(200, result, "Data detail hasil form", res);
+      const data = {
+        result,
+        message,
+      };
+
+      return response(200, data, "Data detail hasil form", res);
+    } catch (error) {
+      return response(500, error, "Server error", res);
+    }
+  },
+
+  getResultDetailByInstructor: async (req, res) => {
+    try {
+      const { kelas, user } = req.params;
+
+      let answers = [];
+      let message = [];
+
+      const result = await EvaluationFormAnswer.find({
+        kelas,
+        $and: [
+          {
+            user,
+          },
+        ],
+      })
+        .populate("user")
+        .populate("evaluationForm")
+        .populate("evaluationFormQuestion")
+        .populate("instructor")
+        .populate("kelas");
+
+      if (result.length > 0) {
+        const form = await EvaluationForm.find();
+
+        for (let i = 0; i < form.length; i++) {
+          if (form[i].name == "Instruktur") {
+            const messageData = await evaluationFormMessage.findOne({
+              kelas: result.kelas,
+              $and: [
+                {
+                  user: result.user,
+                },
+                {
+                  evaluationForm: form[i]._id,
+                },
+                {
+                  instructor: req.user.id,
+                },
+              ],
+            });
+
+            message.push({
+              form: form[i].name,
+              instructor: instructor[j].name,
+              message: messageData.message,
+            });
+
+            questions = await EvaluationFormQuestion.find({
+              evaluationForm: form[i]._id,
+            });
+
+            for (let j = 0; j < questions.length; j++) {
+              const answer = await EvaluationFormAnswer.findOne({
+                kelas,
+                $and: [
+                  {
+                    user,
+                  },
+                  {
+                    evaluationFormQuestion: questions[j],
+                  },
+                  {
+                    instructor: req.user.id,
+                  },
+                ],
+              });
+
+              answers.push({
+                question: questions[j].name,
+                answer: answer.value,
+              });
+            }
+          }
+        }
+      }
+
+      const data = {
+        result,
+        message,
+        answers,
+      };
+
+      return response(200, data, "Data detail hasil form", res);
     } catch (error) {
       return response(500, error, "Server error", res);
     }
