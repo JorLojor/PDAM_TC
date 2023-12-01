@@ -168,7 +168,14 @@ module.exports = {
           for (let i = 0; i < task.length; i++) {
             const deadline = await TaskDeadline.find({
               task: task[i],
-            }).populate("task");
+            }).populate({
+              path: 'task',
+              populate: {
+                path: 'materi',
+                model: 'Materi',
+                select: "section"
+              },
+            });
 
             if (deadline.length > 0) {
               data.push(deadline[deadline.length - 1]);
