@@ -12,8 +12,9 @@ const moment = require("moment");
 const _ = require("lodash");
 const { default: axios } = require("axios");
 const { sendClassEnrollmentMail } = require("../service/mail/config");
-const { paginateArray } = require("../service");
+const { paginateArray, getInstructorClass } = require("../service");
 const Ranking = require("../models/ranking");
+const classEnrollmentLog = require("../models/classEnrollmentLog");
 
 module.exports = {
   getAllKelas: async (req, res) => {
@@ -334,68 +335,129 @@ module.exports = {
     }
   },
 
-  getStudentClass: async (req, res) => {
+  getIncomingSchedule: async (req, res) => {
+    try {
+      kelasIds = await getInstructorClass(req.user.id);
+
+      var today = moment().format("YYYY-MM-DD");
+
+      let data = [];
+
+      const kelas = await KelasModel.find({
+        _id: { $in: kelasIds },
+      });
+
+      if (kelas.length > 0) {
+        for (let g = 0; g < kelas.length; g++) {
+          for (let h = 0; h < kelas[g].jadwal.length; h++) {
+            if (
+              moment(kelas[g].jadwal[h].tanggal).format("YYYY-MM-DD") > today
+            ) {
+              const materiData = await MateriModel.find({
+                _id: kelas[g].materi,
+              });
+
+              for (let i = 0; i < materiData.length; i++) {
+                for (let j = 0; j < materiData[i].instruktur.length; j++) {
+                  if (materiData[i].instruktur[j] == req.user.id) {
+                    materi = materiData[i].section;
+
+                    break;
+                  }
+                }
+
+                if (materi.length > 0) {
+                  break;
+                }
+              }
+
+              data.push({
+                date: moment(kelas[g].jadwal[h].tanggal).format("YYYY-MM-DD"),
+                kelas: kelas[g].nama,
+                jamMulai: kelas[g].jadwal[h].jamMulai,
+                materi,
+              });
+            }
+          }
+        }
+
+        data.sort((a, b) => {
+          if (a.date !== b.date) {
+            return b.date - a.date;
+          }
+        });
+      }
+
+      response(200, data, "berhasil Get jadwal", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
+
+  getPersonalClass: async (req, res) => {
     try {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
 
-      var ids = [];
-
-      const user = await UserModel.findById(req.user.id);
-
-      user.kelas.map((k) => {
-        if (k.status == "approved") {
-          ids.push(k.kelas);
-        }
-      });
-
       let data = [];
+      let ids = [];
+      let finalResult;
 
-      if (ids.length > 0) {
-        kelas = await KelasModel.find({
-          _id: { $in: ids },
-        }).populate("materi peserta kategori trainingMethod");
+      let totalData = 0;
+
+      if (req.user.role == 3) {
+        const user = await UserModel.findById(req.user.id);
+
+        user.kelas.map((k) => {
+          if (k.status == "approved") {
+            ids.push(k.kelas);
+          }
+        });
+
+        if (ids.length > 0) {
+          kelas = await KelasModel.find({
+            _id: { $in: ids },
+          }).populate("materi peserta kategori trainingMethod");
 
         if (kelas.length > 0) {
           for (let i = 0; i < kelas.length; i++) {
             let instruktur = null;
             let nilai = "-";
 
-            for (let j = 0; j < kelas[i].materi.length; j++) {
-              for (let k = 0; k < kelas[i].materi[j].instruktur.length; k++) {
-                instruktur = await UserModel.findById(
-                  kelas[i].materi[j].instruktur[k]
-                );
+              for (let j = 0; j < kelas[i].materi.length; j++) {
+                for (let k = 0; k < kelas[i].materi[j].instruktur.length; k++) {
+                  instruktur = await UserModel.findById(
+                    kelas[i].materi[j].instruktur[k]
+                  );
 
+                  if (instruktur) {
+                    break;
+                  }
+                }
                 if (instruktur) {
                   break;
                 }
               }
-              if (instruktur) {
-                break;
-              }
-            }
 
-            if (kelas[i].isDone == true) {
-              const ranking = await Ranking.findOne({
-                kelas: kelas[i],
-                $and: [
-                  {
-                    user: req.user._id,
-                  },
-                ],
-              });
+              if (kelas[i].isDone == true) {
+                const ranking = await Ranking.findOne({
+                  kelas: kelas[i],
+                  $and: [
+                    {
+                      user: req.user._id,
+                    },
+                  ],
+                });
 
-              if (ranking) {
-                nilai = ranking.value;
+                if (ranking) {
+                  nilai = ranking.value;
+                }
               }
-            }
 
             data.push({
               id: kelas[i]._id,
               nama: kelas[i].nama,
               methods: kelas[i].methods,
-              kategori: kelas[i].kategori.name,
               instruktur: instruktur ? instruktur.name : "",
               nilai,
             });
@@ -403,17 +465,51 @@ module.exports = {
         }
       }
 
-      const totalData = data.length;
+        totalData = data.length;
 
-      data = paginateArray(data, limit, page);
+        data = paginateArray(data, limit, page);
 
-      const finalResult = {
-        data,
-        page,
-        limit,
-        totalData,
-        datalength: data.length,
-      };
+        finalResult = {
+          data,
+          page,
+          limit,
+          totalData,
+          datalength: data.length,
+        };
+      } else {
+        kelasIds = await getInstructorClass(req.user.id);
+
+        totalData = await KelasModel.find({
+          _id: { $in: kelasIds },
+        }).countDocuments();
+
+        data = await KelasModel.find({
+          _id: { $in: kelasIds },
+        })
+          .skip((page - 1) * limit)
+          .limit(limit)
+          .populate("materi")
+          .populate("kategori")
+          .populate({
+            path: "desainSertifikat.peserta",
+            model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
+          })
+          .populate({
+            path: "desainSertifikat.instruktur",
+            model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+          })
+          .populate({
+            path: "trainingMethod",
+          });
+
+        finalResult = {
+          data,
+          page,
+          limit,
+          totalData,
+          datalength: data.length,
+        };
+      }
 
       response(200, finalResult, "berhasil Get kelas", res);
     } catch (error) {
@@ -1560,6 +1656,11 @@ module.exports = {
         { new: true, session }
       );
 
+      await classEnrollmentLog.create({
+        user: iduser,
+        kelas: kelas._id,
+      });
+
       const user = await UserModel.findOne({
         _id: iduser,
       });
@@ -1667,24 +1768,26 @@ module.exports = {
               ids.push(k._id);
             }
           });
-        }
 
-        if (ids.len > 0) {
           kelas = await KelasModel.find({
             _id: { $in: ids },
           });
         }
 
         if (userType < 2) {
+          let pesertaCount = 0;
+
           await Promise.all(
             kelas.map(async (k) => {
               for (var i = 0; i < k.peserta.length; i++) {
                 const user = await UserModel.findById(k.peserta[i].user);
 
                 if (user && user.userType == userType) {
-                  ids.push(k._id);
+                  pesertaCount = pesertaCount + 1;
+                }
 
-                  break;
+                if (pesertaCount == k.peserta.length) {
+                  ids.push(k._id);
                 }
               }
             })
@@ -1695,7 +1798,7 @@ module.exports = {
           });
         }
 
-        if (ids.len > 0) {
+        if (userType) {
           kelas = await KelasModel.find({
             _id: { $in: ids },
           });

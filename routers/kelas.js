@@ -33,12 +33,8 @@ router.get(
   auth.onlyStudent,
   Controller.getStudentPendingClass
 );
-router.get(
-  "/my-class",
-  auth.user,
-  auth.onlyStudent,
-  Controller.getStudentClass
-);
+router.get("/my-class", auth.user, Controller.getPersonalClass);
+router.get("/my-incoming-schedule", auth.user, Controller.getIncomingSchedule);
 router.get("/latest", auth.user, auth.onlyStudent, Controller.getRecentClass);
 router.get(
   "/peserta-by-instruktur/:instruktur",

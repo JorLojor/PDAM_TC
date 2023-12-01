@@ -61,15 +61,19 @@ module.exports = {
 
   getTugasDeadline: async (req, res) => {
     try {
-      const { id, task,kelas } = req.params;
+      const { id, task, kelas } = req.params;
 
-      const findKelas = await KelasModel.findOne({ slug:kelas });
+      const findKelas = await KelasModel.findOne({ slug: kelas });
 
       if (!findKelas) {
         return response(404, {}, "kelas tidak ditemukan", res);
       }
 
-      const get = await TaskDeadline.find({ user: id, task, class:findKelas._id }).populate("task");
+      const get = await TaskDeadline.find({
+        user: id,
+        task,
+        class: findKelas._id,
+      }).populate("task");
       console.log(get);
       response(200, get, "Tugas ditemukan", res);
     } catch (error) {
@@ -88,7 +92,7 @@ module.exports = {
         return response(404, {}, "tugas tidak ditemukan", res);
       }
 
-      const checkKelas = await KelasModel.findOne({ slug:kelas });
+      const checkKelas = await KelasModel.findOne({ slug: kelas });
 
       if (!checkKelas) {
         return response(404, {}, "kelas tidak ditemukan", res);
@@ -97,7 +101,7 @@ module.exports = {
       const data = await TaskDeadline.create({
         user: req.user.id,
         task,
-        class:checkKelas._id,
+        class: checkKelas._id,
         deadline: new Date(
           currentTime.getTime() + checkTugas.timeLimit * 24 * 60 * 60 * 1000
         ),
@@ -133,6 +137,38 @@ module.exports = {
     } catch (error) {
       res.json({ status: "Error!" });
       console.log(error.message);
+    }
+  },
+
+  getAllTugasInstrukturPersonal: async (req, res) => {
+    try {
+      let data = [];
+
+      const materis = await MateriModel.find({ instruktur: req.user.id });
+
+      if (materis.length > 0) {
+        await Promise.all(
+          materis.map(async (materi) => {
+            const tasks = await tugasSchema
+              .find({
+                materi: materi._id,
+              })
+              .populate("materi");
+
+            if (tasks.length > 0) {
+              tasks.map((task) => {
+                data.push({
+                  task,
+                });
+              });
+            }
+          })
+        );
+      }
+
+      return response(200, data, "Ditemukan", res);
+    } catch (error) {
+      return response(500, null, error.message, res);
     }
   },
 
@@ -237,7 +273,7 @@ module.exports = {
         response(400, user, "anda sudah mengumpulkan", res);
       }
 
-      const checkKelas = await KelasModel.findOne({ slug:kelas });
+      const checkKelas = await KelasModel.findOne({ slug: kelas });
 
       if (!checkKelas) {
         return response(404, {}, "kelas tidak ditemukan", res);
@@ -252,21 +288,19 @@ module.exports = {
 
       const pengumpulan = {
         user,
-        kelas:checkKelas.slug,
+        kelas: checkKelas.slug,
         answerFile,
         answer,
         status: status,
       };
 
-      console.log({pengumpulan});
+      console.log({ pengumpulan });
 
       let data = tugas.pengumpulanTugas;
 
       data.push(pengumpulan);
 
-      console.log({data});
-
-
+      console.log({ data });
 
       const result = await tugasSchema.findByIdAndUpdate(
         idTugas,
@@ -422,8 +456,8 @@ module.exports = {
       }
       const boxTugas = getTugas.pengumpulanTugas;
 
-      console.log({boxTugas});
-      console.log({idUser});
+      console.log({ boxTugas });
+      console.log({ idUser });
 
       const checkUserInsideBox = boxTugas.filter(
         (item) => item.user.toString() === idUser._id.toString()
@@ -441,7 +475,7 @@ module.exports = {
         return {
           ...v._doc,
           nilai: nilai,
-          status:'sudah dinilai'
+          status: "sudah dinilai",
         };
       });
 
