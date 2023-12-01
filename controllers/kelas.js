@@ -2266,7 +2266,7 @@ module.exports = {
       let status = false;
 
       user.kelas.map((m) => {
-        if (m.kelas.toHexString() == kelas) {
+        if (m.kelas.toHexString() == kelas.toHexString()) {
           status = true;
         }
       });
