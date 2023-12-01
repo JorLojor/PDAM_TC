@@ -4,6 +4,7 @@ const evaluationFormMessage = require("../models/evaluationFormMessage");
 const EvaluationFormQuestion = require("../models/evaluationFormQuestion");
 const EvaluationFormResult = require("../models/evaluationFormResult");
 const Kelas = require("../models/kelas");
+const User = require("../models/user");
 
 const response = require("../respons/response");
 
@@ -85,7 +86,9 @@ module.exports = {
 
       let isRegistered = false;
 
-      user.kelas.map((m) => {
+      const userData = await User.findById(user);
+
+      userData.kelas.map((m) => {
         if (m.kelas.toHexString() == validClass._id.toHexString()) {
           if (m.isDone == true) {
             isRegistered = true;
@@ -135,6 +138,7 @@ module.exports = {
 
       return response(200, {}, "Berhasil menjawab pertanyaan", res);
     } catch (error) {
+      console.log(error);
       return response(500, error, "Server error", res);
     }
   },

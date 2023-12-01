@@ -8,6 +8,7 @@ const upload = require("../middleware/filepath");
 const TaskDeadline = require("../models/tugasDeadline");
 const uploadFile = require("../middleware/filepath");
 const multer = require("multer");
+const moment = require("moment");
 require("dotenv").config();
 
 module.exports = {
@@ -143,6 +144,7 @@ module.exports = {
   getAllTugasInstrukturPersonal: async (req, res) => {
     try {
       let data = [];
+      let task = [];
 
       const materis = await MateriModel.find({ instruktur: req.user.id });
 
@@ -156,10 +158,24 @@ module.exports = {
               .populate("materi");
 
             if (tasks.length > 0) {
-              tasks.map((task) => {
-                data.push({
-                  task,
-                });
+              tasks.map((t) => {
+                task.push(t._id);
+              });
+            }
+
+            if (task.length > 0) {
+              task.map(async (t) => {
+                const deadline = await TaskDeadline.findOne({
+                  task: t,
+                }).populate("task");
+
+                if (
+                  deadline &&
+                  moment(deadline.deadline).format("YYY-MM-DD") >
+                    moment().format("YYY-MM-DD")
+                ) {
+                  data.push(deadline);
+                }
               });
             }
           })
