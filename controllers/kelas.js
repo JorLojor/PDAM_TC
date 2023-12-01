@@ -359,7 +359,7 @@ module.exports = {
         if (kelas.length > 0) {
           for (let i = 0; i < kelas.length; i++) {
             let instruktur = null;
-            let nilai = 0;
+            let nilai = "-";
 
             for (let j = 0; j < kelas[i].materi.length; j++) {
               for (let k = 0; k < kelas[i].materi[j].instruktur.length; k++) {
@@ -395,6 +395,7 @@ module.exports = {
               id: kelas[i]._id,
               nama: kelas[i].nama,
               methods: kelas[i].methods,
+              kategori: kelas[i].kategori.name,
               instruktur: instruktur ? instruktur.name : "",
               nilai,
             });
