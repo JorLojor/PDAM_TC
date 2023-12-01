@@ -40,6 +40,39 @@ module.exports = {
     }
   },
 
+  check: async (req, res) => {
+    try {
+      const { kelas } = req.params;
+
+      let data = await EvaluationFormResult.find({
+        kelas,
+        $and: [
+          {
+            user: req.user._id,
+          },
+        ],
+      });
+
+      if (data) {
+        return response(
+          200,
+          { status: true },
+          "sudah mengisi evaluasi ini",
+          res
+        );
+      } else {
+        return response(
+          200,
+          { status: false },
+          "belum mengisi evaluasi ini",
+          res
+        );
+      }
+    } catch (error) {
+      return response(500, error, "Server error", res);
+    }
+  },
+
   getResult: async (req, res) => {
     try {
       const kelas = req.params.kelas;

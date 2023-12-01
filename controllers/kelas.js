@@ -2258,6 +2258,30 @@ module.exports = {
     }
   },
 
+  checkClassResolvement: async (req, res) => {
+    try {
+      const { kelas } = req.params;
+
+      const user = await UserModel.findById(req.user.id);
+
+      let status = false;
+
+      user.kelas.map((m) => {
+        if (m.kelas.toHexString() == kelas.toHexString()) {
+          status = true;
+        }
+      });
+
+      if (status) {
+        return response(200, status, "Kelas sudah diselesaikan", res);
+      }
+
+      return response(200, status, "Kelas belum diselesaikan", res);
+    } catch (error) {
+      response(500, null, error.message, res);
+    }
+  },
+
   storeRecentClassIO: async ({ id, id_user }) => {
     try {
       const check = await RecentClass.findOne({

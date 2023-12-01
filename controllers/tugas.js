@@ -8,7 +8,6 @@ const upload = require("../middleware/filepath");
 const TaskDeadline = require("../models/tugasDeadline");
 const uploadFile = require("../middleware/filepath");
 const multer = require("multer");
-const moment = require("moment");
 require("dotenv").config();
 
 module.exports = {
@@ -162,24 +161,20 @@ module.exports = {
                 task.push(t._id);
               });
             }
-
-            if (task.length > 0) {
-              task.map(async (t) => {
-                const deadline = await TaskDeadline.findOne({
-                  task: t,
-                }).populate("task");
-
-                if (
-                  deadline &&
-                  moment(deadline.deadline).format("YYY-MM-DD") >
-                    moment().format("YYY-MM-DD")
-                ) {
-                  data.push(deadline);
-                }
-              });
-            }
           })
         );
+
+        if (task.length > 0) {
+          for (let i = 0; i < task.length; i++) {
+            const deadline = await TaskDeadline.find({
+              task: task[i],
+            }).populate("task");
+
+            if (deadline.length > 0) {
+              data.push(deadline[deadline.length - 1]);
+            }
+          }
+        }
       }
 
       return response(200, data, "Ditemukan", res);
