@@ -263,6 +263,9 @@ module.exports = {
           {
             user,
           },
+          {
+            instructor: req.user.id,
+          },
         ],
       })
         .populate("user")
