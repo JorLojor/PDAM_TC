@@ -8,7 +8,6 @@ const upload = require("../middleware/filepath");
 const TaskDeadline = require("../models/tugasDeadline");
 const uploadFile = require("../middleware/filepath");
 const multer = require("multer");
-const moment = require("moment");
 require("dotenv").config();
 
 module.exports = {
@@ -169,11 +168,7 @@ module.exports = {
                   task: t,
                 }).populate("task");
 
-                if (
-                  deadline &&
-                  moment(deadline.deadline).format("YYY-MM-DD") >
-                    moment().format("YYY-MM-DD")
-                ) {
+                if (deadline) {
                   data.push(deadline);
                 }
               });
