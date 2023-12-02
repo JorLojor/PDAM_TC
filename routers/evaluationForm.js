@@ -5,7 +5,11 @@ const Controller = require("../controllers/evaluationForm");
 
 router.get("/", auth.user, Controller.index);
 router.get("/check/:kelas", auth.user, Controller.check);
-router.get("/result/instructor", auth.user, Controller.getResultByInstructor);
+router.get(
+  "/result/instructor/:kelas",
+  auth.user,
+  Controller.getResultByInstructor
+);
 router.get(
   "/result/instructor/:kelas/:user",
   auth.user,
