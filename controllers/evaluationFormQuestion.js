@@ -42,6 +42,7 @@ module.exports = {
       return response(500, error, "Server error", res);
     }
   },
+
   answer: async (req, res) => {
     try {
       const {
@@ -142,6 +143,7 @@ module.exports = {
       return response(500, error, "Server error", res);
     }
   },
+
   destroy: async (req, res) => {
     try {
       const id = req.params.id;
@@ -153,6 +155,7 @@ module.exports = {
       return response(500, error, "Server error", res);
     }
   },
+
   generateResult: async (req, res) => {
     try {
       const { kelas } = req.body;
@@ -275,6 +278,7 @@ module.exports = {
       return response(500, error, "Server error", res);
     }
   },
+
   getbyForm: async (req, res) => {
     try {
       const evaluationForm = req.params.evaluationForm;
@@ -294,6 +298,7 @@ module.exports = {
       return response(500, error, "Server error", res);
     }
   },
+
   show: async (req, res) => {
     try {
       const id = req.params.id;
@@ -307,6 +312,7 @@ module.exports = {
       return response(500, error, "Server error", res);
     }
   },
+
   store: async (req, res) => {
     try {
       const { name, evaluationForm } = req.body;
@@ -333,6 +339,7 @@ module.exports = {
       return response(500, error, "Server error", res);
     }
   },
+
   update: async (req, res) => {
     try {
       const id = req.params.id;

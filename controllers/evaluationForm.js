@@ -133,11 +133,6 @@ module.exports = {
 
       let data = await EvaluationFormResult.find({
         kelas,
-        $and: [
-          {
-            instruktur: req.user._id,
-          },
-        ],
       }).populate("user");
 
       const totalData = data.length;
@@ -145,11 +140,6 @@ module.exports = {
       if (page > 0) {
         data = await EvaluationFormResult.find({
           kelas,
-          $and: [
-            {
-              instruktur: req.user._id,
-            },
-          ],
         })
           .skip((page - 1) * limit)
           .limit(limit)
