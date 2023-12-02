@@ -374,6 +374,7 @@ module.exports = {
               data.push({
                 date: moment(kelas[g].jadwal[h].tanggal).format("YYYY-MM-DD"),
                 kelas: kelas[g].nama,
+                image: kelas[g].image,
                 jamMulai: kelas[g].jadwal[h].jamMulai,
                 materi,
               });
@@ -419,10 +420,10 @@ module.exports = {
             _id: { $in: ids },
           }).populate("materi peserta kategori trainingMethod");
 
-          if (kelas.length > 0) {
-            for (let i = 0; i < kelas.length; i++) {
-              let instruktur = null;
-              let nilai = 0;
+        if (kelas.length > 0) {
+          for (let i = 0; i < kelas.length; i++) {
+            let instruktur = null;
+            let nilai = "-";
 
               for (let j = 0; j < kelas[i].materi.length; j++) {
                 for (let k = 0; k < kelas[i].materi[j].instruktur.length; k++) {
@@ -454,16 +455,16 @@ module.exports = {
                 }
               }
 
-              data.push({
-                id: kelas[i]._id,
-                nama: kelas[i].nama,
-                methods: kelas[i].methods,
-                instruktur: instruktur ? instruktur.name : "",
-                nilai,
-              });
-            }
+            data.push({
+              id: kelas[i]._id,
+              nama: kelas[i].nama,
+              methods: kelas[i].methods,
+              instruktur: instruktur ? instruktur.name : "",
+              nilai,
+            });
           }
         }
+      }
 
         totalData = data.length;
 
