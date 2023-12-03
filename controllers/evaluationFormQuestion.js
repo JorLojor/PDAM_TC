@@ -137,6 +137,109 @@ module.exports = {
         instructor,
       });
 
+      if (validForm.name == "Materi") {
+        const form = await EvaluationForm.find();
+
+        await Promise.all(
+          form.map(async (f) => {
+            const question = await EvaluationFormQuestion.find({
+              evaluationForm: f._id,
+            }).countDocuments();
+
+            const answer = await EvaluationFormAnswer.find({
+              evaluationForm: f._id,
+              $and: [
+                {
+                  user,
+                },
+                {
+                  kelas,
+                },
+              ],
+            });
+
+            let answerValue = 0;
+
+            answer.map((a) => {
+              answerValue = answerValue + a.value;
+            });
+
+            const hasResult = await EvaluationFormResult.findOne({
+              kelas,
+              $and: [
+                {
+                  user,
+                },
+              ],
+            });
+
+            if (f.name == "Sapras") {
+              if (!hasResult) {
+                await EvaluationFormResult.create({
+                  kelas,
+                  user,
+                  sapras: answerValue / question,
+                });
+              } else {
+                await EvaluationFormResult.findByIdAndUpdate(
+                  hasResult._id,
+                  {
+                    sapras: answerValue / question,
+                  },
+                  { new: true }
+                );
+              }
+            } else if (f.name == "Instruktur") {
+              const answerCount = await EvaluationFormAnswer.find({
+                evaluationForm: f._id,
+                $and: [
+                  {
+                    user,
+                  },
+                  {
+                    kelas,
+                  },
+                ],
+              }).countDocuments();
+
+              const multi = answerCount / question;
+
+              if (!hasResult) {
+                await EvaluationFormResult.create({
+                  kelas,
+                  user,
+                  instruktur: answerValue / (question * multi),
+                });
+              } else {
+                await EvaluationFormResult.findByIdAndUpdate(
+                  hasResult._id,
+                  {
+                    instruktur: answerValue / (question * multi),
+                  },
+                  { new: true }
+                );
+              }
+            } else if (f.name == "Materi") {
+              if (!hasResult) {
+                await EvaluationFormResult.create({
+                  kelas,
+                  user,
+                  materi: answerValue / question,
+                });
+              } else {
+                await EvaluationFormResult.findByIdAndUpdate(
+                  hasResult._id,
+                  {
+                    materi: answerValue / question,
+                  },
+                  { new: true }
+                );
+              }
+            }
+          })
+        );
+      }
+
       return response(200, {}, "Berhasil menjawab pertanyaan", res);
     } catch (error) {
       console.log(error);
