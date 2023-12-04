@@ -1599,8 +1599,8 @@ module.exports = {
   },
 
   approvePeserta: async (req, res) => {
-    const { slug, iduser } = req.params;
-    const { status } = req.body;
+    const { slug } = req.params;
+    const { status, iduser } = req.body;
 
     const session = await mongoose.startSession();
     session.startTransaction();
@@ -1614,64 +1614,66 @@ module.exports = {
 
       const extracted = [...get.peserta];
 
-      const selectPeserta = extracted.filter(
-        (v) => v.user.toString() === iduser
-      );
-      const withoutSelected = extracted.filter(
-        (v) => v.user.toString() !== iduser
-      );
+      for (let i = 0; i < iduser.length; i++) {
+        const selectPeserta = extracted.filter(
+          (v) => v.user.toString() === iduser[i]
+        );
+        const withoutSelected = extracted.filter(
+          (v) => v.user.toString() !== iduser[i]
+        );
 
-      if (selectPeserta.length > 0) {
-        selectPeserta[0].status = status;
+        if (selectPeserta.length > 0) {
+          selectPeserta[0].status = status;
+        }
+
+        const mergePesertaList = [...withoutSelected, ...selectPeserta];
+
+        await KelasModel.findOneAndUpdate(
+          { slug },
+          { $set: { peserta: mergePesertaList } },
+          { new: true, session }
+        );
+
+        const getUser = await UserModel.findOne({
+          _id: iduser[i],
+        })
+          .select("kelas")
+          .session(session);
+
+        const extractUser = [...getUser.kelas];
+
+        const selectKelas = extractUser.filter(
+          (v) => v.kelas.toString() === get._id.toString()
+        );
+        const withoutSelectedKelas = extractUser.filter(
+          (v) => v.kelas.toString() !== get._id.toString()
+        );
+
+        selectKelas[0].status = status;
+
+        const mergeKelasList = [...withoutSelectedKelas, ...selectKelas];
+
+        await UserModel.findOneAndUpdate(
+          { _id: iduser[i] },
+          { $set: { kelas: mergeKelasList } },
+          { new: true, session }
+        );
+
+        await classEnrollmentLog.create({
+          user: iduser[i],
+          kelas: kelas._id,
+        });
+
+        const user = await UserModel.findOne({
+          _id: iduser[i],
+        });
+
+        await sendClassEnrollmentMail(user.email, kelas.nama, user.username);
       }
-
-      const mergePesertaList = [...withoutSelected, ...selectPeserta];
-
-      await KelasModel.findOneAndUpdate(
-        { slug },
-        { $set: { peserta: mergePesertaList } },
-        { new: true, session }
-      );
-
-      const getUser = await UserModel.findOne({
-        _id: iduser,
-      })
-        .select("kelas")
-        .session(session);
-
-      const extractUser = [...getUser.kelas];
-
-      const selectKelas = extractUser.filter(
-        (v) => v.kelas.toString() === get._id.toString()
-      );
-      const withoutSelectedKelas = extractUser.filter(
-        (v) => v.kelas.toString() !== get._id.toString()
-      );
-
-      selectKelas[0].status = status;
-
-      const mergeKelasList = [...withoutSelectedKelas, ...selectKelas];
-
-      const resp = await UserModel.findOneAndUpdate(
-        { _id: iduser },
-        { $set: { kelas: mergeKelasList } },
-        { new: true, session }
-      );
-
-      await classEnrollmentLog.create({
-        user: iduser,
-        kelas: kelas._id,
-      });
-
-      const user = await UserModel.findOne({
-        _id: iduser,
-      });
 
       await session.commitTransaction();
 
-      await sendClassEnrollmentMail(user.email, kelas.nama, user.username);
-
-      response(200, resp, "Berhasil merubah status", res);
+      response(200, {}, "Berhasil merubah status", res);
     } catch (error) {
       console.log(error);
       response(500, error, "Server error", res);

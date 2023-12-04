@@ -61,7 +61,7 @@ router.put(
 );
 router.put("/adminSlug/:slug", auth.admin, Controller.updateKelasAdminSlug);
 router.put("/status/nd", auth.server, Controller.updateKelasWithND);
-router.put("/approval/:slug/:iduser", auth.admin, Controller.approvePeserta);
+router.put("/approval/:slug", auth.admin, Controller.approvePeserta);
 router.get(
   "/instruktur/:instruktur",
   auth.instruktur,
