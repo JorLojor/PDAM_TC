@@ -15,6 +15,7 @@ const { sendClassEnrollmentMail } = require("../service/mail/config");
 const { paginateArray, getInstructorClass } = require("../service");
 const Ranking = require("../models/ranking");
 const classEnrollmentLog = require("../models/classEnrollmentLog");
+const evaluationFormResult = require("../models/evaluationFormResult");
 
 module.exports = {
   getAllKelas: async (req, res) => {
@@ -1729,7 +1730,7 @@ module.exports = {
       const user = await UserModel.findById(req.user.id);
 
       for (let i = 0; i < user.kelas.length; i++) {
-        if (user.kelas[i].kelas == kelas._id) {
+        if (user.kelas[i].kelas.toString() == kelas._id.toString()) {
           if (user.kelas[i].isDone == true) {
             isDone = true;
 
