@@ -15,6 +15,7 @@ const { sendClassEnrollmentMail } = require("../service/mail/config");
 const { paginateArray, getInstructorClass } = require("../service");
 const Ranking = require("../models/ranking");
 const classEnrollmentLog = require("../models/classEnrollmentLog");
+const evaluationFormResult = require("../models/evaluationFormResult");
 
 module.exports = {
   getAllKelas: async (req, res) => {
@@ -420,10 +421,10 @@ module.exports = {
             _id: { $in: ids },
           }).populate("materi peserta kategori trainingMethod");
 
-        if (kelas.length > 0) {
-          for (let i = 0; i < kelas.length; i++) {
-            let instruktur = null;
-            let nilai = "-";
+          if (kelas.length > 0) {
+            for (let i = 0; i < kelas.length; i++) {
+              let instruktur = null;
+              let nilai = "-";
 
               for (let j = 0; j < kelas[i].materi.length; j++) {
                 for (let k = 0; k < kelas[i].materi[j].instruktur.length; k++) {
@@ -455,16 +456,16 @@ module.exports = {
                 }
               }
 
-            data.push({
-              id: kelas[i]._id,
-              nama: kelas[i].nama,
-              methods: kelas[i].methods,
-              instruktur: instruktur ? instruktur.name : "",
-              nilai,
-            });
+              data.push({
+                id: kelas[i]._id,
+                nama: kelas[i].nama,
+                methods: kelas[i].methods,
+                instruktur: instruktur ? instruktur.name : "",
+                nilai,
+              });
+            }
           }
         }
-      }
 
         totalData = data.length;
 
@@ -1684,7 +1685,7 @@ module.exports = {
     const { slug } = req.params;
 
     try {
-      let kelas = await KelasModel.findOne({ slug: slug })
+      const kelas = await KelasModel.findOne({ slug })
         .populate({
           path: "materi",
           populate: {
@@ -1720,7 +1721,43 @@ module.exports = {
         response(404, id, "Materi tidak ditemukan", res);
       }
 
-      response(200, kelas, "Materi ditemukan", res);
+      let isEvaluated = false;
+      let isDone = false;
+
+      const user = await UserModel.findById(req.user.id);
+
+      for (let i = 0; i < user.kelas.length; i++) {
+        if (user.kelas[i].kelas == kelas._id) {
+          if (user.kelas[i].isDone == true) {
+            isDone = true;
+
+            break;
+          }
+        }
+      }
+
+      const checkEvaluationForm = await evaluationFormResult.findOne({
+        kelas: kelas._id,
+        $and: [
+          {
+            user: req.user.id,
+          },
+        ],
+      });
+
+      if (checkEvaluationForm) {
+        isEvaluated = true;
+      }
+
+      const data = {
+        _id: kelas._id,
+        nama: kelas.nama,
+        materi: kelas.materi,
+        isDone,
+        isEvaluated,
+      };
+
+      response(200, data, "Materi ditemukan", res);
     } catch (error) {
       response(500, error, error.message, res);
     }
