@@ -459,6 +459,7 @@ module.exports = {
               id: kelas[i]._id,
               nama: kelas[i].nama,
               methods: kelas[i].methods,
+              kategori: kelas[i].kategori.name,
               instruktur: instruktur ? instruktur.name : "",
               nilai,
             });
