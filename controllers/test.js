@@ -608,47 +608,6 @@ module.exports = {
 
       let data = [];
 
-      const columns = [
-        {
-          label: "User",
-          value: "user",
-        },
-        {
-          label: "NIPP",
-          value: "nipp",
-        },
-        {
-          label: "Tipe Peserta",
-          value: "tipe_peserta",
-        },
-        {
-          label: "Nilai Pre Test",
-          value: "nilai_pre_test",
-        },
-        {
-          label: "Durasi Pre Test",
-          value: "durasi_pre_test",
-        },
-        {
-          label: "Nilai Quiz",
-          value: "nilai_quiz",
-        },
-        {
-          label: "Durasi Quiz",
-          value: "durasi_quiz",
-        },
-        {
-          label: "Nilai Post Test",
-          value: "nilai_post_test",
-        },
-        {
-          label: "Durasi Post Test",
-          value: "durasi_post_test",
-        },
-      ];
-
-      let content = [];
-
       let postTestId = null;
       let preTestId = null;
       let quizIds = [];
@@ -759,7 +718,7 @@ module.exports = {
           quizDuration = converttoMinute(Math.floor(duration / answers.length));
         }
 
-        content.push({
+        data.push({
           user: user.name,
           nipp: user.nipp,
           tipe_peserta: user.userType == 1 ? "Internal" : "External",
@@ -772,14 +731,6 @@ module.exports = {
             postTestDuration.length > 0 ? postTestDuration : "-",
         });
       }
-
-      data = [
-        {
-          sheet: "Data",
-          columns,
-          content,
-        },
-      ];
 
       return response(200, data, "Data nilai user didapatkan", res);
     } catch (error) {
