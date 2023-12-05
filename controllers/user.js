@@ -732,7 +732,7 @@ module.exports = {
 
     const oldData = await userModel.findById(idUser);
 
-    if (picture) {
+    if (picture !== undefined) {
       const folderImage = path.join(
         __dirname,
         "..",
@@ -740,6 +740,8 @@ module.exports = {
         "profile-image",
         today
       );
+
+      await fs.promises.mkdir(folderImage, { recursive: true });
 
       let ext;
 
@@ -764,7 +766,7 @@ module.exports = {
       body.userImage = oldData.userImage;
     }
 
-    if (cvFile) {
+    if (cvFile !== undefined) {
       const folderCV = path.join(__dirname, "..", "upload", "cv", today);
 
       await fs.promises.mkdir(folderCV, { recursive: true });
