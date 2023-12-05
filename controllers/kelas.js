@@ -1601,9 +1601,10 @@ module.exports = {
 
   approvePeserta: async (req, res) => {
     const { slug } = req.params;
-    const { status, iduser } = req.body;
+    const { status, id } = req.body;
 
     const session = await mongoose.startSession();
+
     session.startTransaction();
 
     try {
@@ -1615,12 +1616,12 @@ module.exports = {
 
       const extracted = [...get.peserta];
 
-      for (let i = 0; i < iduser.length; i++) {
+      for (let i = 0; i < id.length; i++) {
         const selectPeserta = extracted.filter(
-          (v) => v.user.toString() === iduser[i]
+          (v) => v.user.toString() === id[i]
         );
         const withoutSelected = extracted.filter(
-          (v) => v.user.toString() !== iduser[i]
+          (v) => v.user.toString() !== id[i]
         );
 
         if (selectPeserta.length > 0) {
@@ -1636,7 +1637,7 @@ module.exports = {
         );
 
         const getUser = await UserModel.findOne({
-          _id: iduser[i],
+          _id: id[i],
         })
           .select("kelas")
           .session(session);
@@ -1655,18 +1656,18 @@ module.exports = {
         const mergeKelasList = [...withoutSelectedKelas, ...selectKelas];
 
         await UserModel.findOneAndUpdate(
-          { _id: iduser[i] },
+          { _id: id[i] },
           { $set: { kelas: mergeKelasList } },
           { new: true, session }
         );
 
         await classEnrollmentLog.create({
-          user: iduser[i],
+          user: id[i],
           kelas: kelas._id,
         });
 
         const user = await UserModel.findOne({
-          _id: iduser[i],
+          _id: id[i],
         });
 
         await sendClassEnrollmentMail(user.email, kelas.nama, user.username);
