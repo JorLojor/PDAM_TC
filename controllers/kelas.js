@@ -654,8 +654,49 @@ module.exports = {
         response(404, id, "Kelas tidak ditemukan", res);
       }
 
-      response(200, kelas, "kelas ditemukan", res);
+      let ids = [];
+
+      kelas.materi.map((m) => {
+        for (let i = 0; i < m.instruktur.length; i++) {
+          ids.push(m.instruktur[i]);
+        }
+      });
+
+      const instruktur = await UserModel.find({
+        _id: { $in: ids },
+      }).select("name");
+
+      const data = {
+        _id: kelas._id,
+        kodeKelas: kelas.kodeKelas,
+        nama: kelas.nama,
+        kapasitasPeserta: kelas.kapasitasPeserta,
+        description: kelas.description,
+        methods: kelas.methods,
+        materi: kelas.materi,
+        absensi: kelas.absensi,
+        peserta: kelas.peserta,
+        kodeNotaDinas: kelas.kodeNotaDinas,
+        kelasType: kelas.kelasType,
+        jadwal: kelas.jadwal,
+        kategori: kelas.kategori,
+        trainingMethod: kelas.trainingMethod,
+        kelasStatus: kelas.kelasStatus,
+        image: kelas.image,
+        linkPelatihan: kelas.linkPelatihan,
+        isActive: kelas.isActive,
+        status: kelas.status,
+        slug: kelas.slug,
+        createdAt: kelas.createdAt,
+        updatedAt: kelas.updatedAt,
+        __v: kelas.__v,
+        desainSertifikat: kelas.desainSertifikat,
+        instruktur,
+      };
+
+      response(200, data, "kelas ditemukan", res);
     } catch (error) {
+      console.log(error);
       response(500, error, "Server error", res);
     }
   },
