@@ -1372,20 +1372,18 @@ module.exports = {
 
       const { name } = req.query;
 
-      let totalData = await userModel.find({ ...req.body }).countDocuments();
-
       let ids = [];
 
       let data;
 
-      if (isPaginate === 0) {
+      if (!isPaginate || isPaginate === 0) {
         data = await userModel
           .find({ ...req.body })
           .sort({ name: 1 })
           .select("-password");
 
         if (name) {
-          let len = nama.length;
+          let len = name.length;
 
           data.map(async (u) => {
             if (u.name.substring(0, len).toLowerCase() == name.toLowerCase()) {
@@ -1401,7 +1399,7 @@ module.exports = {
 
         result = {
           data: data,
-          "total data": totalData,
+          "total data": data.length,
         };
         response(200, result, "get user", res);
         return;
@@ -1424,7 +1422,7 @@ module.exports = {
           .sort({ name: 1 })
           .select("-password");
 
-        let len = nama.length;
+        let len = name.length;
 
         data.map(async (u) => {
           if (u.name.substring(0, len).toLowerCase() == name.toLowerCase()) {
@@ -1446,7 +1444,7 @@ module.exports = {
 
       result = {
         data: data,
-        "total data": totalData,
+        "total data": data.length,
       };
 
       response(200, result, "Berhasil get filtered user", res);
