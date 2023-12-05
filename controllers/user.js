@@ -787,6 +787,7 @@ module.exports = {
     body.bidang = body.bidang ? JSON.parse(body.bidang) : [];
     body.pendidikan = body.pendidikan ? JSON.parse(body.pendidikan) : [];
     body.kompetensi = body.kompetensi ? JSON.parse(body.kompetensi) : [];
+    body.userType = body.tipe;
 
     try {
       const user = await userModel.findByIdAndUpdate(idUser, body, {
@@ -1376,7 +1377,7 @@ module.exports = {
 
       let data;
 
-      if (!isPaginate || isPaginate === 0) {
+      if (!isPaginate) {
         data = await userModel
           .find({ ...req.body })
           .sort({ name: 1 })
@@ -1426,12 +1427,9 @@ module.exports = {
 
         data.map(async (u) => {
           if (u.name.substring(0, len).toLowerCase() == name.toLowerCase()) {
+            console.log(u.name);
             ids.push(u._id);
           }
-        });
-
-        data.map(async (u) => {
-          ids.push(u._id);
         });
 
         data = await userModel
