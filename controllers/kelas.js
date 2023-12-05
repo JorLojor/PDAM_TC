@@ -644,6 +644,10 @@ module.exports = {
         .populate({
           path: "desainSertifikat.instruktur",
           model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+        })
+        .populate({
+          path: "materi.instruktur",
+          model: "User",
         });
 
       if (!kelas) {
