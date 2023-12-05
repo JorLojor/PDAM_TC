@@ -1369,17 +1369,35 @@ module.exports = {
   getWithFilter: async (req, res) => {
     try {
       const isPaginate = parseInt(req.query.paginate);
-      if (
-        req.body.name != undefined &&
-        req.body.name != null &&
-        req.body.name.trim() != ""
-      ) {
-        req.body.name = { $regex: "^" + req.body.name, $options: "i" };
-      }
+
+      const { name } = req.query;
+
       let totalData = await userModel.find({ ...req.body }).countDocuments();
 
+      let ids = [];
+
+      let data;
+
       if (isPaginate === 0) {
-        const data = await userModel.find({ ...req.body }).select("-password");
+        data = await userModel
+          .find({ ...req.body })
+          .sort({ name: 1 })
+          .select("-password");
+
+        if (name) {
+          let len = nama.length;
+
+          data.map(async (u) => {
+            if (u.name.substring(0, len).toLowerCase() == name.toLowerCase()) {
+              ids.push(u._id);
+            }
+          });
+
+          data = await userModel
+            .find({ _id: { $in: ids } })
+            .sort({ name: 1 })
+            .select("-password");
+        }
 
         result = {
           data: data,
@@ -1392,13 +1410,39 @@ module.exports = {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
 
-      const data = await userModel
+      data = await userModel
         .find({ ...req.body })
         .sort({ name: 1 })
         .select("-password")
         .skip((page - 1) * limit)
         .limit(limit);
       // .populate("kelas")
+
+      if (name) {
+        data = await userModel
+          .find({ ...req.body })
+          .sort({ name: 1 })
+          .select("-password");
+
+        let len = nama.length;
+
+        data.map(async (u) => {
+          if (u.name.substring(0, len).toLowerCase() == name.toLowerCase()) {
+            ids.push(u._id);
+          }
+        });
+
+        data.map(async (u) => {
+          ids.push(u._id);
+        });
+
+        data = await userModel
+          .find({ _id: { $in: ids } })
+          .sort({ name: 1 })
+          .select("-password")
+          .skip((page - 1) * limit)
+          .limit(limit);
+      }
 
       result = {
         data: data,
