@@ -14,6 +14,7 @@ const room = new Schema(
       ref: "Chat",
       index: true,
       required: false,
+      default: null,
     },
   },
   { timestamps: true }

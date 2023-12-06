@@ -1424,6 +1424,8 @@ module.exports = {
         .limit(limit);
       // .populate("kelas")
 
+      let totalData = await userModel.find({ ...req.body }).countDocuments();
+
       if (name) {
         data = await userModel
           .find({ ...req.body })
@@ -1445,11 +1447,15 @@ module.exports = {
           .select("-password")
           .skip((page - 1) * limit)
           .limit(limit);
+
+        totalData = await userModel
+          .find({ _id: { $in: ids } })
+          .countDocuments();
       }
 
       result = {
         data: data,
-        "total data": data.length,
+        "total data": totalData,
       };
 
       response(200, result, "Berhasil get filtered user", res);
