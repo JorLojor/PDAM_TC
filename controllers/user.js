@@ -442,7 +442,7 @@ module.exports = {
         bidang,
         link_cv,
         phone,
-      } = req.body;
+      } = req.fields;
 
       const cekUser = await userModel.findOne({
         username,
@@ -471,7 +471,11 @@ module.exports = {
       let valueKompetensi = kompetensi ? JSON.parse(kompetensi) : [];
       let valueBidang = bidang ? JSON.parse(bidang) : [];
 
-      const passwordHash = bcrypt.hashSync(password, 10);
+      const passwordHash = bcrypt.hashSync(password, 10, (err, hash) => {
+        if (err) {
+          console.log(err);
+        }
+      });
 
       let userType = 0;
 
@@ -503,6 +507,7 @@ module.exports = {
 
       response(200, user, "Register berhasil", res);
     } catch (error) {
+      console.log(error);
       response(500, error, error.message, res);
     }
   },
