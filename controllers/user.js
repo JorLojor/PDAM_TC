@@ -698,9 +698,30 @@ module.exports = {
     }
   },
 
-  getSingleUser: async (req, res) => {
+  getSingleUserPersonal: async (req, res) => {
     try {
       const id = req.body._id;
+      const user = await userModel.findOne({ _id: id }, "-password").populate({
+        path: "kelas.kelas",
+        populate: {
+          path: "kategori",
+        },
+      });
+
+      if (user) {
+        response(200, user, "Berhasil get single user", res);
+      } else {
+        response(400, user, "User tidak ditemukan", res);
+      }
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
+
+  getDetailedUser: async (req, res) => {
+    try {
+      const id = req.params.id;
+
       const user = await userModel.findOne({ _id: id }, "-password").populate({
         path: "kelas.kelas",
         populate: {

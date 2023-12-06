@@ -7,7 +7,7 @@ const formidable = require("express-formidable");
 //router.get('/all' ,userController.getAllUser);// note
 router.get("/all", userController.getAllUser);
 router.get("/certificate", auth.student, userController.getCertificate);
-router.post("/my", userController.getSingleUser);
+router.post("/my", userController.getSingleUserPersonal);
 router.get("/dashboard-card", auth.user, userController.dashboardCard);
 router.get(
   "/class-resolvement-class",
@@ -69,6 +69,7 @@ router.put("/forgot/pass", userController.forgotPassword);
 router.get("/reset-password/:code", userController.checkUserResetPassword);
 router.put("/reset/:id/:code", userController.resetPassword);
 router.get("/instruktur/:id", auth.user, userController.getInstructor); // get instructor
+router.get("/:id", auth.user, userController.getDetailedUser);
 router.put("/instruktur/rating/:id", auth.user, userController.rate);
 router.put("/forced/:id", auth.server, userController.forcedUpdate);
 module.exports = router;
