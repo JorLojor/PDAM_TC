@@ -861,7 +861,11 @@ module.exports = {
             detailKelas.desainSertifikat?.peserta
           );
 
-          data.push({ sertifikat, kelas: detailKelas.nama });
+          data.push({
+            sertifikat,
+            idKelas: detailKelas._id,
+            kelas: detailKelas.nama,
+          });
         }
       }
 
