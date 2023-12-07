@@ -862,13 +862,8 @@ module.exports = {
           );
 
           if ((parseInt(isThere) === 0 && sertifikat !== null) || (parseInt(isThere) === 1 && sertifikat === null)) {
-            data.push({ sertifikat, kelas: detailKelas?.nama });
+            data.push({ sertifikat, kelas: detailKelas?.nama, idKelas: detailKelas?._id });
           }
-          data.push({
-            sertifikat,
-            idKelas: detailKelas._id,
-            kelas: detailKelas.nama,
-          });
         }
       }
 
