@@ -596,6 +596,149 @@ module.exports = {
     }
   },
 
+  getStudentDataExport: async (req, res) => {
+    try {
+      const { id } = req.params;
+
+      const result = await testAnswer
+        .find({
+          class: id,
+        })
+        .populate("test");
+
+      let data = [];
+
+      let postTestId = null;
+      let preTestId = null;
+      let quizIds = [];
+
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].test.type == "pre") {
+          preTestId = result[i].test._id;
+
+          break;
+        }
+      }
+
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].test.type == "post") {
+          postTestId = result[i].test._id;
+
+          break;
+        }
+      }
+
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].test.type == "quiz") {
+          quizIds.push(result[i].test._id);
+        }
+      }
+
+      const kelas = await Kelas.findById(id);
+
+      let postTest = 0;
+      let postTestDuration = "";
+      let preTest = 0;
+      let preTestDuration = "";
+      let quiz = 0;
+      let quizDuration = "";
+
+      for (var i = 0; i < kelas.peserta.length; i++) {
+        const user = await User.findById(kelas.peserta[i].user);
+
+        if (preTestId) {
+          const preTestScore = await testAnswer.findOne({
+            test: preTestId,
+            $and: [
+              {
+                class: id,
+              },
+              {
+                user: user._id,
+              },
+            ],
+          });
+
+          if (preTestScore) {
+            preTest = preTestScore.nilai;
+            preTestDuration = converttoMinute(
+              converttoSecond(preTestScore.finishAt, preTestScore.startAt)
+            );
+          }
+        }
+
+        if (postTestId) {
+          const postTestScore = await testAnswer
+            .findOne({
+              test: postTestId,
+              $and: [
+                {
+                  class: id,
+                },
+                {
+                  user: user._id,
+                },
+              ],
+            })
+            .populate("user", "name");
+
+          if (postTestScore) {
+            postTest = postTestScore.nilai;
+            postTestDuration = converttoMinute(
+              converttoSecond(postTest.finishAt, postTest.startAt)
+            );
+          }
+        }
+
+        if (quizIds.length > 0) {
+          let score = 0;
+          let duration = 0;
+
+          for (var i = 0; i < quizIds.length; i++) {
+            const quizTest = await TestAnswer.findOne({
+              test: quizIds[i],
+              $and: [
+                {
+                  class: id,
+                },
+                {
+                  user: user._id,
+                },
+              ],
+            });
+
+            if (quizTest) {
+              score = score + quizTest.nilai;
+              duration =
+                duration + converttoSecond(quizTest.finishAt, quizTest.startAt);
+            }
+          }
+
+          quiz = score / quizLength;
+          quizDuration = converttoMinute(Math.floor(duration / answers.length));
+        }
+
+        data.push({
+          user: user.name,
+          nipp: user.nipp,
+          tipe_peserta: user.userType == 1 ? "Internal" : "External",
+          nilai_pre_test: preTest.toString(),
+          durasi_pre_test: preTestDuration.length > 0 ? preTestDuration : "-",
+          nilai_quiz: quiz.toString(),
+          durasi_quiz: quizDuration.length > 0 ? quizDuration : "-",
+          nilai_post_test: postTest.toString(),
+          durasi_post_test:
+            postTestDuration.length > 0 ? postTestDuration : "-",
+        });
+      }
+
+      return response(200, data, "Data nilai user didapatkan", res);
+    } catch (error) {
+      console.log(error);
+      return response(500, error, error.message, res);
+    }
+  },
+
   getStudentDataQuiz: async (req, res) => {
     try {
       const { id } = req.params;

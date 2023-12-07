@@ -644,14 +644,59 @@ module.exports = {
         .populate({
           path: "desainSertifikat.instruktur",
           model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+        })
+        .populate({
+          path: "materi.instruktur",
+          model: "User",
         });
 
       if (!kelas) {
         response(404, id, "Kelas tidak ditemukan", res);
       }
 
-      response(200, kelas, "kelas ditemukan", res);
+      let ids = [];
+
+      kelas.materi.map((m) => {
+        for (let i = 0; i < m.instruktur.length; i++) {
+          ids.push(m.instruktur[i]);
+        }
+      });
+
+      const instruktur = await UserModel.find({
+        _id: { $in: ids },
+      }).select("name");
+
+      const data = {
+        _id: kelas._id,
+        kodeKelas: kelas.kodeKelas,
+        nama: kelas.nama,
+        kapasitasPeserta: kelas.kapasitasPeserta,
+        description: kelas.description,
+        methods: kelas.methods,
+        materi: kelas.materi,
+        absensi: kelas.absensi,
+        peserta: kelas.peserta,
+        kodeNotaDinas: kelas.kodeNotaDinas,
+        kelasType: kelas.kelasType,
+        jadwal: kelas.jadwal,
+        kategori: kelas.kategori,
+        trainingMethod: kelas.trainingMethod,
+        kelasStatus: kelas.kelasStatus,
+        image: kelas.image,
+        linkPelatihan: kelas.linkPelatihan,
+        isActive: kelas.isActive,
+        status: kelas.status,
+        slug: kelas.slug,
+        createdAt: kelas.createdAt,
+        updatedAt: kelas.updatedAt,
+        __v: kelas.__v,
+        desainSertifikat: kelas.desainSertifikat,
+        instruktur,
+      };
+
+      response(200, data, "kelas ditemukan", res);
     } catch (error) {
+      console.log(error);
       response(500, error, "Server error", res);
     }
   },
@@ -1601,9 +1646,10 @@ module.exports = {
 
   approvePeserta: async (req, res) => {
     const { slug } = req.params;
-    const { status, iduser } = req.body;
+    const { status, id } = req.body;
 
     const session = await mongoose.startSession();
+
     session.startTransaction();
 
     try {
@@ -1615,12 +1661,12 @@ module.exports = {
 
       const extracted = [...get.peserta];
 
-      for (let i = 0; i < iduser.length; i++) {
+      for (let i = 0; i < id.length; i++) {
         const selectPeserta = extracted.filter(
-          (v) => v.user.toString() === iduser[i]
+          (v) => v.user.toString() === id[i]
         );
         const withoutSelected = extracted.filter(
-          (v) => v.user.toString() !== iduser[i]
+          (v) => v.user.toString() !== id[i]
         );
 
         if (selectPeserta.length > 0) {
@@ -1636,7 +1682,7 @@ module.exports = {
         );
 
         const getUser = await UserModel.findOne({
-          _id: iduser[i],
+          _id: id[i],
         })
           .select("kelas")
           .session(session);
@@ -1655,18 +1701,18 @@ module.exports = {
         const mergeKelasList = [...withoutSelectedKelas, ...selectKelas];
 
         await UserModel.findOneAndUpdate(
-          { _id: iduser[i] },
+          { _id: id[i] },
           { $set: { kelas: mergeKelasList } },
           { new: true, session }
         );
 
         await classEnrollmentLog.create({
-          user: iduser[i],
+          user: id[i],
           kelas: kelas._id,
         });
 
         const user = await UserModel.findOne({
-          _id: iduser[i],
+          _id: id[i],
         });
 
         await sendClassEnrollmentMail(user.email, kelas.nama, user.username);

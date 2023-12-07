@@ -442,7 +442,7 @@ module.exports = {
         bidang,
         link_cv,
         phone,
-      } = req.body;
+      } = req.fields;
 
       const cekUser = await userModel.findOne({
         username,
@@ -471,7 +471,11 @@ module.exports = {
       let valueKompetensi = kompetensi ? JSON.parse(kompetensi) : [];
       let valueBidang = bidang ? JSON.parse(bidang) : [];
 
-      const passwordHash = bcrypt.hashSync(password, 10);
+      const passwordHash = bcrypt.hashSync(password, 10, (err, hash) => {
+        if (err) {
+          console.log(err);
+        }
+      });
 
       let userType = 0;
 
@@ -503,6 +507,7 @@ module.exports = {
 
       response(200, user, "Register berhasil", res);
     } catch (error) {
+      console.log(error);
       response(500, error, error.message, res);
     }
   },
@@ -693,9 +698,30 @@ module.exports = {
     }
   },
 
-  getSingleUser: async (req, res) => {
+  getSingleUserPersonal: async (req, res) => {
     try {
       const id = req.body._id;
+      const user = await userModel.findOne({ _id: id }, "-password").populate({
+        path: "kelas.kelas",
+        populate: {
+          path: "kategori",
+        },
+      });
+
+      if (user) {
+        response(200, user, "Berhasil get single user", res);
+      } else {
+        response(400, user, "User tidak ditemukan", res);
+      }
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
+
+  getDetailedUser: async (req, res) => {
+    try {
+      const id = req.params.id;
+
       const user = await userModel.findOne({ _id: id }, "-password").populate({
         path: "kelas.kelas",
         populate: {
@@ -732,7 +758,7 @@ module.exports = {
 
     const oldData = await userModel.findById(idUser);
 
-    if (picture) {
+    if (picture !== undefined) {
       const folderImage = path.join(
         __dirname,
         "..",
@@ -740,6 +766,8 @@ module.exports = {
         "profile-image",
         today
       );
+
+      await fs.promises.mkdir(folderImage, { recursive: true });
 
       let ext;
 
@@ -764,7 +792,7 @@ module.exports = {
       body.userImage = oldData.userImage;
     }
 
-    if (cvFile) {
+    if (cvFile !== undefined) {
       const folderCV = path.join(__dirname, "..", "upload", "cv", today);
 
       await fs.promises.mkdir(folderCV, { recursive: true });
@@ -787,6 +815,7 @@ module.exports = {
     body.bidang = body.bidang ? JSON.parse(body.bidang) : [];
     body.pendidikan = body.pendidikan ? JSON.parse(body.pendidikan) : [];
     body.kompetensi = body.kompetensi ? JSON.parse(body.kompetensi) : [];
+    body.userType = body.tipe;
 
     try {
       const user = await userModel.findByIdAndUpdate(idUser, body, {
@@ -835,6 +864,11 @@ module.exports = {
           if ((parseInt(isThere) === 0 && sertifikat !== null) || (parseInt(isThere) === 1 && sertifikat === null)) {
             data.push({ sertifikat, kelas: detailKelas?.nama });
           }
+          data.push({
+            sertifikat,
+            idKelas: detailKelas._id,
+            kelas: detailKelas.nama,
+          });
         }
       }
 
@@ -1370,21 +1404,37 @@ module.exports = {
   getWithFilter: async (req, res) => {
     try {
       const isPaginate = parseInt(req.query.paginate);
-      if (
-        req.body.name != undefined &&
-        req.body.name != null &&
-        req.body.name.trim() != ""
-      ) {
-        req.body.name = { $regex: "^" + req.body.name, $options: "i" };
-      }
-      let totalData = await userModel.find({ ...req.body }).countDocuments();
 
-      if (isPaginate === 0) {
-        const data = await userModel.find({ ...req.body }).select("-password");
+      const { name } = req.query;
+
+      let ids = [];
+
+      let data;
+
+      if (!isPaginate) {
+        data = await userModel
+          .find({ ...req.body })
+          .sort({ name: 1 })
+          .select("-password");
+
+        if (name) {
+          let len = name.length;
+
+          data.map(async (u) => {
+            if (u.name.substring(0, len).toLowerCase() == name.toLowerCase()) {
+              ids.push(u._id);
+            }
+          });
+
+          data = await userModel
+            .find({ _id: { $in: ids } })
+            .sort({ name: 1 })
+            .select("-password");
+        }
 
         result = {
           data: data,
-          "total data": totalData,
+          "total data": data.length,
         };
         response(200, result, "get user", res);
         return;
@@ -1393,13 +1443,42 @@ module.exports = {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
 
-      const data = await userModel
+      data = await userModel
         .find({ ...req.body })
         .sort({ name: 1 })
         .select("-password")
         .skip((page - 1) * limit)
         .limit(limit);
       // .populate("kelas")
+
+      let totalData = await userModel.find({ ...req.body }).countDocuments();
+
+      if (name) {
+        data = await userModel
+          .find({ ...req.body })
+          .sort({ name: 1 })
+          .select("-password");
+
+        let len = name.length;
+
+        data.map(async (u) => {
+          if (u.name.substring(0, len).toLowerCase() == name.toLowerCase()) {
+            console.log(u.name);
+            ids.push(u._id);
+          }
+        });
+
+        data = await userModel
+          .find({ _id: { $in: ids } })
+          .sort({ name: 1 })
+          .select("-password")
+          .skip((page - 1) * limit)
+          .limit(limit);
+
+        totalData = await userModel
+          .find({ _id: { $in: ids } })
+          .countDocuments();
+      }
 
       result = {
         data: data,

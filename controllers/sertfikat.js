@@ -104,7 +104,7 @@ module.exports = {
       response(400, null, "Gambar desain harus diupload!", res);
       return;
     }
-    let path = req.file.path.replaceAll('\\', '/')
+    let path = req.file.path.replaceAll("\\", "/");
     let desain = "/upload/" + path.split("/upload/")[1];
 
     try {
@@ -161,10 +161,8 @@ module.exports = {
 
   deleteSertifikat: async (req, res) => {
     const id = req.params.id;
-    const session = await mongoose.startSession();
-    session.startTransaction();
     try {
-      const check = await KelasModel.find().session(session);
+      const check = await KelasModel.find();
 
       const kelasHasSameCertificate = check.filter(
         (v) =>
@@ -175,24 +173,19 @@ module.exports = {
       );
 
       if (kelasHasSameCertificate.length !== 0) {
-        const selectedIds = kelasHasSameCertificate.map((v) => {
-          return v._id;
-        });
-        await KelasModel.updateMany(
-          { _id: { $in: selectedIds } },
-          { $set: { desainSertifikat: null } },
-          { new: true, session }
+        return response(
+          400,
+          {},
+          "sertifikat sedang digunakan, tidak dapat dihapus",
+          res
         );
       }
 
       const result = await sertifikatModel.findByIdAndDelete(id);
-      await session.commitTransaction();
+
       response(200, result, "sertifikat berhasil di hapus", res);
     } catch (error) {
       response(500, error, error.message, res);
-      await session.abortTransaction();
-    } finally {
-      session.endSession();
     }
   },
 
