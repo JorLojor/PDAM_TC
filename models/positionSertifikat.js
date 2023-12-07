@@ -10,6 +10,7 @@ const positionSertifikatSchema = new Schema(
     width: { type: Number, required: false },
     height: { type: Number, required: false },
     radius: { type: Number, required: false },
+    fontFamily: { type: String, required: false },
   },
   { timestamps: false,_id:false }
 );
