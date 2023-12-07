@@ -801,9 +801,10 @@ module.exports = {
   getCertificate: async (req, res) => {
     try {
       const id = req.user.id;
+      const { isThere } = req.query
 
       const kelasName =
-        req.query.kelas && req.query.kelas.length > 0 ? req.query.kelas : null;
+        req.query.kelas && req.query.kelas.length > 0 ? req.query.kelas : '';
 
       const user = await userModel.findById(id);
 
@@ -821,18 +822,19 @@ module.exports = {
       if (kelas.length > 0) {
         for (let i = 0; i < kelas.length; i++) {
           const detailKelas = await Kelas.findById(kelas[i]);
-
           if (kelasName) {
-            if (!detailKelas.nama.includes(kelasName)) {
+            if (!detailKelas.nama.toLowerCase().includes(kelasName.toLowerCase())) {
               continue;
             }
           }
 
           const sertifikat = await Sertifikat.findById(
-            detailKelas.desainSertifikat?.peserta
+            detailKelas?.desainSertifikat?.peserta
           );
 
-          data.push({ sertifikat, kelas: detailKelas.nama });
+          if ((parseInt(isThere) === 0 && sertifikat !== null) || (parseInt(isThere) === 1 && sertifikat === null)) {
+            data.push({ sertifikat, kelas: detailKelas?.nama });
+          }
         }
       }
 
@@ -1327,9 +1329,8 @@ module.exports = {
       let user = data.map((val, idx) => {
         return {
           value: val._id,
-          label: `${val.name} (${val.username}) - ${
-            val.userType === 1 ? "Internal" : "Eksternal"
-          }`,
+          label: `${val.name} (${val.username}) - ${val.userType === 1 ? "Internal" : "Eksternal"
+            }`,
         };
       });
 
