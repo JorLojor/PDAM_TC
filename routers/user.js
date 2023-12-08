@@ -54,6 +54,7 @@ router.post(
 );
 router.post("/register", userController.register);
 router.post("/login", userController.login);
+router.post("/import", auth.admin, formidable(), userController.importData);
 router.put("/status", auth.admin, userController.updateStatusUser);
 router.put("/password/:id", auth.user, userController.updatePassword);
 router.put(

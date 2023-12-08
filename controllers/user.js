@@ -23,6 +23,7 @@ const path = require("path");
 const Ranking = require("../models/ranking");
 const { getInstructorClass } = require("../service");
 const classEnrollmentLog = require("../models/classEnrollmentLog");
+
 module.exports = {
   getbyEmail: async (req, res) => {
     try {
@@ -830,10 +831,9 @@ module.exports = {
   getCertificate: async (req, res) => {
     try {
       const id = req.user.id;
-      const { isThere } = req.query
 
       const kelasName =
-        req.query.kelas && req.query.kelas.length > 0 ? req.query.kelas : '';
+        req.query.kelas && req.query.kelas.length > 0 ? req.query.kelas : null;
 
       const user = await userModel.findById(id);
 
@@ -851,19 +851,22 @@ module.exports = {
       if (kelas.length > 0) {
         for (let i = 0; i < kelas.length; i++) {
           const detailKelas = await Kelas.findById(kelas[i]);
+
           if (kelasName) {
-            if (!detailKelas.nama.toLowerCase().includes(kelasName.toLowerCase())) {
+            if (!detailKelas.nama.includes(kelasName)) {
               continue;
             }
           }
 
           const sertifikat = await Sertifikat.findById(
-            detailKelas?.desainSertifikat?.peserta
+            detailKelas.desainSertifikat?.peserta
           );
 
-          if ((parseInt(isThere) === 0 && sertifikat !== null) || (parseInt(isThere) === 1 && sertifikat === null)) {
-            data.push({ sertifikat, kelas: detailKelas?.nama, idKelas: detailKelas?._id });
-          }
+          data.push({
+            sertifikat,
+            idKelas: detailKelas._id,
+            kelas: detailKelas.nama,
+          });
         }
       }
 
@@ -1358,8 +1361,9 @@ module.exports = {
       let user = data.map((val, idx) => {
         return {
           value: val._id,
-          label: `${val.name} (${val.username}) - ${val.userType === 1 ? "Internal" : "Eksternal"
-            }`,
+          label: `${val.name} (${val.username}) - ${
+            val.userType === 1 ? "Internal" : "Eksternal"
+          }`,
         };
       });
 
@@ -1781,6 +1785,103 @@ module.exports = {
         data: forceUpdate,
       });
     } catch (error) {
+      res.json({
+        message: error.message,
+        data: [],
+      });
+    }
+  },
+
+  importData: async (req, res) => {
+    try {
+      const csvFile = req.files["csv"];
+
+      if (!csvFile || csvFile == undefined) {
+        return response(500, {}, "Mohon upload file csv", res);
+      }
+
+      if (csvFile.type !== "text/csv") {
+        return response(500, {}, "Mohon upload file csv", res);
+      }
+
+      const folder = path.join(__dirname, "..", "upload", "imports");
+
+      if (!fs.existsSync(folder)) {
+        await fs.promises.mkdir(folder, { recursive: true });
+      }
+
+      const oldPath = csvFile.path;
+
+      const name = `data.csv`;
+
+      const newPath = folder + `/${name}`;
+
+      await fs.promises.copyFile(oldPath, newPath, 0, function (err) {
+        if (err) throw err;
+      });
+
+      const data = fs
+        .readFileSync("upload/imports/data.csv")
+        .toString()
+        .split("\n")
+        .map((e) => e.trim())
+        .map((e) => e.split(";").map((e) => e.trim()));
+
+      for (let i = 1; i < data.length; i++) {
+        const checkUsername = await userModel.findOne({
+          username: data[i][5],
+        });
+
+        if (checkUsername) {
+          return response(
+            400,
+            {
+              username: data[i][5],
+            },
+            "Username sudah terdaftar",
+            res
+          );
+        }
+
+        const checkEmail = await userModel.findOne({
+          email: data[i][4],
+        });
+
+        if (checkEmail) {
+          return response(
+            400,
+            {
+              email: data[i][4],
+            },
+            "Username sudah terdaftar",
+            res
+          );
+        }
+      }
+
+      for (let i = 1; i < data.length; i++) {
+        const password = bcrypt.hashSync(data[i][6], 10, (err, hash) => {
+          if (err) {
+            console.log(err);
+          }
+        });
+
+        await userModel.create({
+          name: data[i][1],
+          nipp: data[i][2],
+          instansi: data[i][3],
+          email: data[i][4],
+          username: data[i][5],
+          password: password,
+          userType: data[i][7],
+        });
+      }
+
+      fs.rmSync(folder, { recursive: true });
+
+      return response(201, data, "import data sukses", res);
+    } catch (error) {
+      console.log(error);
       res.json({
         message: error.message,
         data: [],
