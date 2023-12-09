@@ -139,6 +139,45 @@ module.exports = {
     }
   },
 
+  uploadCKfinder: async (req, res) => {
+    try{
+      let upload = req.files[`upload`];
+      // const today = new Date().toISOString().slice(0, 10);
+
+      const folder = path.join(__dirname, "..", "upload", "news", "images");
+
+      await fs.promises.mkdir(folder, { recursive: true });
+
+      let ext;
+
+      if (upload.type == "image/png") {
+        ext = "png";
+      } else if (upload.type == "image/jpg") {
+        ext = "jpg";
+      } else if (upload.type == "image/jpeg") {
+        ext = "jpeg";
+      }
+      const fileName = `${Math.floor(Math.random() * 3029312131248)}.${ext}`
+      const newPath = folder + '/'+fileName;
+
+      var oldPath = upload.path;
+
+      fs.promises.copyFile(oldPath, newPath, 0, function (err) {
+        if (err) throw err;
+      });
+      const url = `${process.env.ENV == 'development' ? "http://localhost:3128" : "https://pdamtc.ondevelopment.site"}/upload/news/images/${fileName}`;
+      const data = {
+        "uploaded": 1,
+        "fileName": fileName,
+        "url": url
+      }
+      return res.status(200).json(data);
+    }catch (error) {
+      console.log(error);
+
+      return response(500, error, "Server error", res);}
+  },
+
   store: async (req, res) => {
     try {
       const title = req.fields[`title`];
