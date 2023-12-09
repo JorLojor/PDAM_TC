@@ -1827,59 +1827,74 @@ module.exports = {
         .map((e) => e.trim())
         .map((e) => e.split(";").map((e) => e.trim()));
 
+      // for (let i = 1; i < data.length; i++) {
+      //   const checkUsername = await userModel.findOne({
+      //     username: data[i][5],
+      //   });
+
+      //   if (checkUsername) {
+      //     continue
+      // return response(
+      //   400,
+      //   {
+      //     username: data[i][5],
+      //   },
+      //   "Username sudah terdaftar",
+      //   res
+      // );
+      // }
+
+      // const checkEmail = await userModel.findOne({
+      //   email: data[i][4],
+      // });
+
+      //   if (checkEmail) {
+      //     return response(
+      //       400,
+      //       {
+      //         email: data[i][4],
+      //       },
+      //       "Username sudah terdaftar",
+      //       res
+      //     );
+      //   }
+      // }
+
       for (let i = 1; i < data.length; i++) {
-        const checkUsername = await userModel.findOne({
-          username: data[i][5],
-        });
+        if (data[i][0] != '') {
+          const checkUsername = await userModel.findOne({
+            username: data[i][5],
+          });
 
-        if (checkUsername) {
-          return response(
-            400,
-            {
-              username: data[i][5],
-            },
-            "Username sudah terdaftar",
-            res
-          );
-        }
-
-        const checkEmail = await userModel.findOne({
-          email: data[i][4],
-        });
-
-        if (checkEmail) {
-          return response(
-            400,
-            {
-              email: data[i][4],
-            },
-            "Username sudah terdaftar",
-            res
-          );
-        }
-      }
-
-      for (let i = 1; i < data.length; i++) {
-        const password = bcrypt.hashSync(data[i][6], 10, (err, hash) => {
-          if (err) {
-            console.log(err);
+          if (checkUsername != null) {
+            continue
+            // return response(
+            //   400,
+            //   {
+            //     username: data[i][5],
+            //   },
+            //   "Username sudah terdaftar",
+            //   res
+            // );
           }
-        });
+          const salt = bcrypt.genSaltSync(10);
+          const password = bcrypt.hashSync(data[i][6], salt);
 
-        await userModel.create({
-          name: data[i][1],
-          nipp: data[i][2],
-          instansi: data[i][3],
-          email: data[i][4],
-          username: data[i][5],
-          password: password,
-          userType: data[i][7],
-        });
+          await userModel.create({
+            name: data[i][1],
+            nipp: data[i][2],
+            instansi: data[i][3],
+            email: data[i][4],
+            username: data[i][5],
+            password: password,
+            userType: data[i][7],
+          });
+        }
       }
 
       fs.rmSync(folder, { recursive: true });
 
-      return response(201, data, "import data sukses", res);
+      return response(201, data.length, "import data sukses", res);
     } catch (error) {
       console.log(error);
       res.json({

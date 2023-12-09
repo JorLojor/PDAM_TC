@@ -11,5 +11,6 @@ router.get("/:id", Controller.show);
 router.post("/", auth.user, formidable(), Controller.store);
 router.put("/:id", auth.user, formidable(), Controller.update);
 router.delete("/:id", auth.user, Controller.destroy);
+router.post('/upload/ckfinder', formidable(), Controller.uploadCKfinder);
 
 module.exports = router;
