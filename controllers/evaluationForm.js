@@ -167,40 +167,30 @@ module.exports = {
     try {
       const { kelas, user } = req.params;
 
+      const { instruktur } = req.query;
+
+      const validUser = await User.findById(user);
+
+      if (!validUser) return response(400, {}, "User tidak ditemukan", res);
+
+      const form = await EvaluationForm.find();
+
       let message = [];
 
-      const result = await EvaluationFormAnswer.find({
-        kelas,
-        $and: [
-          {
-            user,
-          },
-        ],
-      })
-        .populate("user")
-        .populate("evaluationForm")
-        .populate("evaluationFormQuestion")
-        .populate("instructor")
-        .populate("kelas");
+      let result;
 
-      if (result.length > 0) {
-        const form = await EvaluationForm.find();
+      if (instruktur) {
+        const validInstruktur = await User.findById(instruktur);
 
-        let instructorIds = [];
-
-        for (let i = 0; i < result.length; i++) {
-          if (result[i].instructor) {
-            instructorIds.push(result[i].instructor._id);
-          }
+        if (!validInstruktur) {
+          return response(400, {}, "Instruktur tidak ditemukan", res);
         }
 
-        const instructor = await User.find({
-          _id: { $in: instructorIds },
-        });
+        let ids = [];
 
         for (let i = 0; i < form.length; i++) {
-          if (form[i].name == "Sapras") {
-            const messageData = await evaluationFormMessage.findOne({
+          if (form[i].name == "Sapras" || form[i].name == "Materi") {
+            const resultByForm = await EvaluationFormAnswer.find({
               kelas,
               $and: [
                 {
@@ -212,13 +202,148 @@ module.exports = {
               ],
             });
 
-            message.push({
-              form: form[i].name,
-              instructor: "",
-              message: messageData.message,
-            });
+            if (resultByForm.length > 0) {
+              for (let j = 0; j < resultByForm.length; j++) {
+                ids.push(resultByForm[j]._id);
+              }
+            }
           } else if (form[i].name == "Instruktur") {
-            for (let j = 0; j < instructor.length; j++) {
+            const resultByForm = await EvaluationFormAnswer.find({
+              kelas,
+              $and: [
+                {
+                  user,
+                },
+                {
+                  evaluationForm: form[i]._id,
+                },
+                {
+                  instructor: instruktur,
+                },
+              ],
+            });
+
+            if (resultByForm.length > 0) {
+              for (let j = 0; j < resultByForm.length; j++) {
+                ids.push(resultByForm[j]._id);
+              }
+            }
+          }
+        }
+
+        if (ids.length > 0) {
+          result = await EvaluationFormAnswer.find({
+            _id: { $in: ids },
+          })
+            .populate("user")
+            .populate("evaluationForm")
+            .populate("evaluationFormQuestion")
+            .populate("instructor")
+            .populate("kelas");
+
+          if (result.length > 0) {
+            let instructorIds = [];
+
+            for (let i = 0; i < result.length; i++) {
+              if (result[i].instructor) {
+                instructorIds.push(result[i].instructor._id);
+              }
+            }
+
+            const instructor = await User.findById(instruktur);
+
+            for (let i = 0; i < form.length; i++) {
+              if (form[i].name == "Sapras") {
+                const messageData = await evaluationFormMessage.findOne({
+                  kelas,
+                  $and: [
+                    {
+                      user,
+                    },
+                    {
+                      evaluationForm: form[i]._id,
+                    },
+                  ],
+                });
+
+                message.push({
+                  form: form[i].name,
+                  instructor: "",
+                  message: messageData.message,
+                });
+              } else if (form[i].name == "Instruktur") {
+                const messageData = await evaluationFormMessage.findOne({
+                  kelas,
+                  $and: [
+                    {
+                      user,
+                    },
+                    {
+                      evaluationForm: form[i]._id,
+                    },
+                    {
+                      instructor,
+                    },
+                  ],
+                });
+
+                message.push({
+                  form: form[i].name,
+                  instructor: instructor.name,
+                  message: messageData.message,
+                });
+              } else if (form[i].name == "Materi") {
+                const messageData = await evaluationFormMessage.findOne({
+                  kelas,
+                  $and: [
+                    {
+                      user,
+                    },
+                    {
+                      evaluationForm: form[i]._id,
+                    },
+                  ],
+                });
+
+                message.push({
+                  form: form[i].name,
+                  instructor: "",
+                  message: messageData.message,
+                });
+              }
+            }
+          }
+        }
+      } else {
+        result = await EvaluationFormAnswer.find({
+          kelas,
+          $and: [
+            {
+              user,
+            },
+          ],
+        })
+          .populate("user")
+          .populate("evaluationForm")
+          .populate("evaluationFormQuestion")
+          .populate("instructor")
+          .populate("kelas");
+
+        if (result.length > 0) {
+          let instructorIds = [];
+
+          for (let i = 0; i < result.length; i++) {
+            if (result[i].instructor) {
+              instructorIds.push(result[i].instructor._id);
+            }
+          }
+
+          const instructor = await User.find({
+            _id: { $in: instructorIds },
+          });
+
+          for (let i = 0; i < form.length; i++) {
+            if (form[i].name == "Sapras") {
               const messageData = await evaluationFormMessage.findOne({
                 kelas,
                 $and: [
@@ -228,36 +353,56 @@ module.exports = {
                   {
                     evaluationForm: form[i]._id,
                   },
+                ],
+              });
+
+              message.push({
+                form: form[i].name,
+                instructor: "",
+                message: messageData.message,
+              });
+            } else if (form[i].name == "Instruktur") {
+              for (let j = 0; j < instructor.length; j++) {
+                const messageData = await evaluationFormMessage.findOne({
+                  kelas,
+                  $and: [
+                    {
+                      user,
+                    },
+                    {
+                      evaluationForm: form[i]._id,
+                    },
+                    {
+                      instructor: instructor[j]._id,
+                    },
+                  ],
+                });
+
+                message.push({
+                  form: form[i].name,
+                  instructor: instructor[j].name,
+                  message: messageData.message,
+                });
+              }
+            } else if (form[i].name == "Materi") {
+              const messageData = await evaluationFormMessage.findOne({
+                kelas,
+                $and: [
                   {
-                    instructor: instructor[j]._id,
+                    user,
+                  },
+                  {
+                    evaluationForm: form[i]._id,
                   },
                 ],
               });
 
               message.push({
                 form: form[i].name,
-                instructor: instructor[j].name,
+                instructor: "",
                 message: messageData.message,
               });
             }
-          } else if (form[i].name == "Materi") {
-            const messageData = await evaluationFormMessage.findOne({
-              kelas,
-              $and: [
-                {
-                  user,
-                },
-                {
-                  evaluationForm: form[i]._id,
-                },
-              ],
-            });
-
-            message.push({
-              form: form[i].name,
-              instructor: "",
-              message: messageData.message,
-            });
           }
         }
       }
