@@ -831,9 +831,10 @@ module.exports = {
   getCertificate: async (req, res) => {
     try {
       const id = req.user.id;
+      const { isThere } = req.query
 
       const kelasName =
-        req.query.kelas && req.query.kelas.length > 0 ? req.query.kelas : null;
+        req.query.kelas && req.query.kelas.length > 0 ? req.query.kelas : '';
 
       const user = await userModel.findById(id);
 
@@ -853,7 +854,7 @@ module.exports = {
           const detailKelas = await Kelas.findById(kelas[i]);
 
           if (kelasName) {
-            if (!detailKelas.nama.includes(kelasName)) {
+            if (!detailKelas.nama.toLowerCase().includes(kelasName.toLowerCase())) {
               continue;
             }
           }
@@ -862,11 +863,9 @@ module.exports = {
             detailKelas.desainSertifikat?.peserta
           );
 
-          data.push({
-            sertifikat,
-            idKelas: detailKelas._id,
-            kelas: detailKelas.nama,
-          });
+          if ((parseInt(isThere) === 0 && sertifikat !== null) || (parseInt(isThere) === 1 && sertifikat === null)) {
+            data.push({ sertifikat, kelas: detailKelas?.nama, idKelas: detailKelas?._id });
+          }
         }
       }
 
