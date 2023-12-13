@@ -1763,7 +1763,7 @@ module.exports = {
         .populate({
           path: "trainingMethod",
         })
-        .select("materi nama")
+        .select("materi nama linkPelatihan")
         .exec();
 
       if (!kelas) {
@@ -1802,6 +1802,7 @@ module.exports = {
         _id: kelas._id,
         nama: kelas.nama,
         materi: kelas.materi,
+        linkPelatihan: kelas.linkPelatihan,
         isDone,
         isEvaluated,
       };
