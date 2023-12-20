@@ -443,6 +443,7 @@ module.exports = {
         bidang,
         link_cv,
         phone,
+        tipe
       } = req.fields;
 
       const cekUser = await userModel.findOne({
@@ -502,6 +503,7 @@ module.exports = {
         bidang: valueBidang,
         link_cv,
         phone,
+        userType: tipe
       });
 
       await user.save();
