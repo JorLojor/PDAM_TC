@@ -441,10 +441,66 @@ module.exports = {
         pendidikan,
         kompetensi,
         bidang,
-        link_cv,
+        // link_cv,
         phone,
         tipe
       } = req.fields;
+      const picture = req.files["userImage"];
+      const cvFile = req.files["cv"];
+      let link_cv_user = ''
+      let userImage = ''
+      const id_cv = Math.floor(Math.random() * 49829482938)
+      const id_image = Math.floor(Math.random() * 49829482938)
+      const today = new Date().toISOString().slice(0, 10);
+      if (picture !== undefined) {
+        const folderImage = path.join(
+          __dirname,
+          "..",
+          "upload",
+          "profile-image",
+          today
+        );
+
+        await fs.promises.mkdir(folderImage, { recursive: true });
+
+        let ext;
+
+        if (picture.type == "image/png") {
+          ext = "png";
+        } else if (picture.type == "image/jpg") {
+          ext = "jpg";
+        } else if (picture.type == "image/jpeg") {
+          ext = "jpeg";
+        }
+
+        const newPicturePath = folderImage + `/profile-image${id_image}.${ext}`;
+
+        var oldPicturePath = picture.path;
+
+        fs.promises.copyFile(oldPicturePath, newPicturePath, 0, function (err) {
+          if (err) throw err;
+        });
+
+        userImage = `upload/profile-image/${today}/profile-image${id_image}.${ext}`;
+      }
+
+      if (cvFile !== undefined) {
+        const folderCV = path.join(__dirname, "..", "upload", "cv", today);
+
+        await fs.promises.mkdir(folderCV, { recursive: true });
+
+        console.log(folderCV.type);
+
+        const newCVPath = folderCV + `/cv${id_cv}.pdf`;
+
+        var oldCVPath = cvFile.path;
+
+        fs.promises.copyFile(oldCVPath, newCVPath, 0, function (err) {
+          if (err) throw err;
+        });
+
+        link_cv_user = `upload/cv/${today}/cv${id_cv}.pdf`;
+      } 
 
       const cekUser = await userModel.findOne({
         username,
@@ -501,7 +557,8 @@ module.exports = {
         pendidikan: valuePendidikan,
         kompetensi: valueKompetensi,
         bidang: valueBidang,
-        link_cv,
+        link_cv : link_cv_user,
+        userImage,
         phone,
         userType: tipe
       });
@@ -1226,6 +1283,7 @@ module.exports = {
       const hasMateri = await Materi.find({
         instruktur: idUser,
       });
+      console.log(hasMateri)
       if (hasMateri.length > 0) {
         return response(
           400,
@@ -1236,9 +1294,16 @@ module.exports = {
       }
 
       const user = await userModel.findByIdAndRemove(idUser);
+      if(user.userImage != '' && user.userImage != null && user.userImage != undefined){
+        fs.unlinkSync(user.userImage);
+      }
+      if(user.link_cv != '' && user.link_cv != null && user.link_cv != undefined){
+        fs.unlinkSync(user.link_cv);
+      }
 
       return response(200, user, "Berhasil delete user", res);
     } catch (error) {
+      console.log(error)
       res.status(500).json({ error: "Internal server error, coba lagi" });
     }
   },
@@ -1362,9 +1427,8 @@ module.exports = {
       let user = data.map((val, idx) => {
         return {
           value: val._id,
-          label: `${val.name} (${val.username}) - ${
-            val.userType === 1 ? "Internal" : "Eksternal"
-          }`,
+          label: `${val.name} (${val.username}) - ${val.userType === 1 ? "Internal" : "Eksternal"
+            }`,
         };
       });
 
