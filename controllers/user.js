@@ -1283,6 +1283,7 @@ module.exports = {
       const hasMateri = await Materi.find({
         instruktur: idUser,
       });
+      console.log(hasMateri)
       if (hasMateri.length > 0) {
         return response(
           400,
@@ -1293,9 +1294,16 @@ module.exports = {
       }
 
       const user = await userModel.findByIdAndRemove(idUser);
+      if(user.userImage != '' && user.userImage != null && user.userImage != undefined){
+        fs.unlinkSync(user.userImage);
+      }
+      if(user.link_cv != '' && user.link_cv != null && user.link_cv != undefined){
+        fs.unlinkSync(user.link_cv);
+      }
 
       return response(200, user, "Berhasil delete user", res);
     } catch (error) {
+      console.log(error)
       res.status(500).json({ error: "Internal server error, coba lagi" });
     }
   },
