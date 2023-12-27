@@ -39,13 +39,13 @@ module.exports = {
       if (nama) {
         data = await sertifikatModel
           .find({ nama })
-          .skip((page - 1) * limit)
+          // .skip((page - 1) * limit)
           .limit(limit);
       } else {
         data = await sertifikatModel
           .find()
-          .skip((page - 1) * limit)
-          .limit(limit);
+          // .skip((page - 1) * limit)
+          // .limit(limit);
       }
 
       result = {

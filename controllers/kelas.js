@@ -1251,7 +1251,7 @@ module.exports = {
         description: description ?? checkKelas.description,
         methods: methods ?? checkKelas.methods,
         kategori: kategori ?? checkKelas.kategori,
-        peserta: peserta ?? checkKelas.peserta,
+        peserta: peserta.length <= 0 ? checkKelas.peserta : peserta,
         materi: materi ? JSON.parse(materi) : checkKelas.materi,
         absensi:
           collectedAbsensi.length !== 0 ? collectedAbsensi : checkKelas.absensi,
