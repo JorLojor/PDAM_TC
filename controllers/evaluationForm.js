@@ -103,8 +103,26 @@ module.exports = {
 
       if (!data) data = [];
 
+      let nilaiInstruktur;
+
+      if (data.length > 3) {
+        let nilaiIntrukturTotal = 0;
+
+        for (let i = 2; i < data.length; i++) {
+          nilaiIntrukturTotal = nilaiIntrukturTotal + data[i].instruktur;
+        }
+
+        nilaiInstruktur = nilaiIntrukturTotal - (data.length - 2);
+      } else {
+        nilaiInstruktur = data[2].instruktur;
+      }
+
       let result = {
-        data,
+        _id: data[0]._id,
+        kelas: data[0].kelas,
+        sapras: data[0].sapras,
+        materi: data[1].materi,
+        instruktur: nilaiInstruktur,
         page,
         limit,
         totalData,

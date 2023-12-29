@@ -554,10 +554,10 @@ module.exports = {
 
   update: async (req, res) => {
     const session = await mongoose.startSession();
-      session.startTransaction();
+    session.startTransaction();
     try {
       const id = req.params.id;
-      
+
       let { user, kelas, absenName, time } = req.body;
 
       const oldData = await Absensi.findById(id);
@@ -602,7 +602,7 @@ module.exports = {
 
   destroy: async (req, res) => {
     const session = await mongoose.startSession();
-      session.startTransaction();
+    session.startTransaction();
     try {
       const id = req.params.id;
 
