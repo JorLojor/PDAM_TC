@@ -7,6 +7,8 @@ const Kelas = require("../models/kelas");
 const User = require("../models/user");
 
 const response = require("../respons/response");
+const { paginateArray } = require("../service/index.js");
+const { default: mongoose } = require("mongoose");
 
 module.exports = {
   index: async (req, res) => {
@@ -83,52 +85,68 @@ module.exports = {
         return response(400, {}, "kelas tidak ditemukan", res);
       }
 
+      const targetClass = await Kelas.findById(kelas).populate("peserta");
+
+      let data = [];
+
+      const p = targetClass.peserta;
+
+      for (let i = 0; i < p.length; i++) {
+        let evaluationResult = await EvaluationFormResult.find({
+          kelas,
+          $and: [
+            {
+              user: new mongoose.Types.ObjectId(p[i].user),
+            },
+          ],
+        }).populate("user");
+
+        if (evaluationResult.length > 2) {
+          let nilaiInstruktur = 0;
+
+          if (evaluationResult.length > 3) {
+            let nilaiIntrukturTotal = 0;
+
+            for (let i = 2; i < evaluationResult.length; i++) {
+              nilaiIntrukturTotal =
+                nilaiIntrukturTotal + evaluationResult[i].instruktur;
+            }
+
+            nilaiInstruktur =
+              nilaiIntrukturTotal - (evaluationResult.length - 2);
+          } else {
+            nilaiInstruktur = evaluationResult[2].instruktur;
+          }
+
+          data.push({
+            _id: evaluationResult[0]._id,
+            kelas: evaluationResult[0].kelas,
+            user: evaluationResult[0].user,
+            sapras: evaluationResult[0].sapras,
+            materi: evaluationResult[1].materi,
+            instruktur: nilaiInstruktur,
+            createdAt: evaluationResult[0].createdAt,
+            updatedAt: evaluationResult[0].updatedAt,
+          });
+        }
+      }
+
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
 
-      let data = await EvaluationFormResult.find({
+      const classDataSum = await EvaluationFormResult.find({
         kelas,
-      }).populate("user");
-
-      const totalData = data.length;
-
-      if (page > 0) {
-        data = await EvaluationFormResult.find({
-          kelas,
-        })
-          .skip((page - 1) * limit)
-          .limit(limit)
-          .populate("user");
-      }
+      }).countDocuments();
 
       if (!data) data = [];
 
-      let nilaiInstruktur;
-
-      if (data.length > 3) {
-        let nilaiIntrukturTotal = 0;
-
-        for (let i = 2; i < data.length; i++) {
-          nilaiIntrukturTotal = nilaiIntrukturTotal + data[i].instruktur;
-        }
-
-        nilaiInstruktur = nilaiIntrukturTotal - (data.length - 2);
-      } else {
-        nilaiInstruktur = data[2].instruktur;
-      }
+      data = paginateArray(data, limit, page);
 
       let result = {
-        _id: data[0]._id,
-        kelas: data[0].kelas,
-        user: data[0].user,
-        sapras: data[0].sapras,
-        materi: data[1].materi,
-        instruktur: nilaiInstruktur,
-        createdAt: data[0].createdAt,
-        updatedAt: data[0].updatedAt,
+        data,
         page,
         limit,
-        totalData,
+        totalData: classDataSum,
         datalength: data.length,
       };
 
