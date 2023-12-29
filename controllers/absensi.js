@@ -4,7 +4,7 @@ const Absensi = require("../models/absensiPeserta");
 const response = require("../respons/response");
 const mongoose = require("mongoose");
 const moment = require("moment");
-const convertDate = require("../service/index");
+const { convertDate, paginateArray } = require("../service/index");
 
 module.exports = {
   index: async (req, res) => {
@@ -440,6 +440,73 @@ module.exports = {
       };
 
       return response(200, result, "Berhasil get all absensi", res);
+    } catch (error) {
+      console.log(error);
+
+      return response(500, error, "Server error", res);
+    }
+  },
+
+  show: async (req, res) => {
+    try {
+      const isPaginate = req.query.paginate
+        ? parseInt(req.query.paginate)
+        : null;
+
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      const kelas = req.params.kelas;
+      const user = req.params.user;
+
+      let data = [];
+
+      const targetClass = await Kelas.findById(kelas);
+      const targetUser = await User.findById(user);
+
+      const jadwal = targetClass.jadwal;
+
+      for (let i = 0; i < jadwal.length; i++) {
+        let hadir = false;
+
+        const absen = await Absensi.find({
+          user,
+          $and: [
+            {
+              kelas,
+            },
+          ],
+        }).populate("user kelas");
+
+        for (let j = 0; j < absen.length; j++) {
+          if (
+            moment(absen[j].date).format("YYYY-MM-DD") ==
+            moment(jadwal[i].tanggal).format("YYYY-MM-DD")
+          ) {
+            data.push(absen[j]);
+
+            hadir = true;
+          }
+        }
+
+        if (!hadir) {
+          data.push({
+            user: targetUser,
+            kelas: targetClass,
+            status: "tidak hadir",
+            time: "",
+          });
+        }
+      }
+
+      data = paginateArray(data, limit, page);
+
+      result = {
+        data,
+        "total data": data.length,
+      };
+
+      return response(200, result, "Berhasil get absensi", res);
     } catch (error) {
       console.log(error);
 

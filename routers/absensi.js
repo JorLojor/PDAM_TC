@@ -5,6 +5,7 @@ const auth = require("../middleware/auth");
 const Controller = require("../controllers/absensi");
 
 absenRouter.get("/", auth.user, Controller.index);
+absenRouter.get("/:kelas/:user", auth.user, Controller.show);
 absenRouter.post("/store", auth.user, Controller.store);
 absenRouter.put("/:id", auth.user, Controller.update);
 absenRouter.delete("/:id", auth.user, Controller.destroy);
