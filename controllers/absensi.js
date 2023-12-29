@@ -483,7 +483,10 @@ module.exports = {
             moment(absen[j].date).format("YYYY-MM-DD") ==
             moment(jadwal[i].tanggal).format("YYYY-MM-DD")
           ) {
-            data.push(absen[j]);
+            data.push({
+              jadwal: moment(jadwal[i].tanggal).format("YYYY-MM-DD"),
+              data: absen[j],
+            });
 
             hadir = true;
           }
@@ -491,6 +494,7 @@ module.exports = {
 
         if (!hadir) {
           data.push({
+            jadwal: moment(jadwal[i].tanggal).format("YYYY-MM-DD"),
             user: targetUser,
             kelas: targetClass,
             status: "tidak hadir",
