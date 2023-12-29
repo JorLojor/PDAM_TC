@@ -120,9 +120,12 @@ module.exports = {
       let result = {
         _id: data[0]._id,
         kelas: data[0].kelas,
+        user: data[0].user,
         sapras: data[0].sapras,
         materi: data[1].materi,
         instruktur: nilaiInstruktur,
+        createdAt: data[0].createdAt,
+        updatedAt: data[0].updatedAt,
         page,
         limit,
         totalData,
