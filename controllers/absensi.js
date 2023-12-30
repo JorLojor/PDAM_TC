@@ -449,10 +449,6 @@ module.exports = {
 
   show: async (req, res) => {
     try {
-      const isPaginate = req.query.paginate
-        ? parseInt(req.query.paginate)
-        : null;
-
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
 
@@ -465,6 +461,7 @@ module.exports = {
       const targetUser = await User.findById(user);
 
       const jadwal = targetClass.jadwal;
+      const absensi = targetClass.absensi;
 
       for (let i = 0; i < jadwal.length; i++) {
         let hadir = false;
@@ -483,8 +480,19 @@ module.exports = {
             moment(absen[j].date).format("YYYY-MM-DD") ==
             moment(jadwal[i].tanggal).format("YYYY-MM-DD")
           ) {
+            let time = "";
+
+            for (let k = 0; k < absensi.length; k++) {
+              if (absensi[k].name == absen[j].absenName) {
+                time = absen[j].time;
+
+                break;
+              }
+            }
+
             data.push({
               jadwal: moment(jadwal[i].tanggal).format("YYYY-MM-DD"),
+              abesnTime: time,
               data: absen[j],
             });
 
@@ -493,13 +501,18 @@ module.exports = {
         }
 
         if (!hadir) {
-          data.push({
-            jadwal: moment(jadwal[i].tanggal).format("YYYY-MM-DD"),
-            user: targetUser,
-            kelas: targetClass,
-            status: "tidak hadir",
-            time: "",
-          });
+          for (let k = 0; k < absensi.length; k++) {
+            console.log(absensi[k]);
+            data.push({
+              jadwal: moment(jadwal[i].tanggal).format("YYYY-MM-DD"),
+              user: targetUser,
+              kelas: targetClass,
+              absenName: absensi[k].name,
+              abesnTime: absensi[k].time,
+              status: "tidak hadir",
+              time: "",
+            });
+          }
         }
       }
 
