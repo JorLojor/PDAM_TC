@@ -484,7 +484,7 @@ module.exports = {
 
             for (let k = 0; k < absensi.length; k++) {
               if (absensi[k].name == absen[j].absenName) {
-                time = absen[j].time;
+                time = absensi[k].time;
 
                 break;
               }
