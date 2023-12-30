@@ -15,7 +15,7 @@ const { sendClassEnrollmentMail } = require("../service/mail/config");
 const { paginateArray, getInstructorClass } = require("../service");
 const Ranking = require("../models/ranking");
 const classEnrollmentLog = require("../models/classEnrollmentLog");
-const evaluationFormResult = require("../models/evaluationFormResult");
+const EvaluationFormResult = require("../models/evaluationFormResult");
 
 module.exports = {
   getAllKelas: async (req, res) => {
@@ -331,6 +331,160 @@ module.exports = {
       };
 
       response(200, result, "berhasil Get all kelas hari ini", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
+
+  getWholeReport: async (req, res) => {
+    try {
+      let { startDate, endDate } = req.query;
+
+      if (startDate && endDate) {
+        startDate = moment(startDate).format("MMM DD YYYY");
+        endDate = moment(endDate).format("MMM DD YYYY");
+      } else {
+        return response(400, {}, "mohon input startDate dan endDate", res);
+      }
+
+      var ids = [];
+      var peserta = [];
+      var dataAbsensi = [];
+      var evaluasi = [];
+
+      const kelas = await KelasModel.find();
+
+      kelas.map((k) => {
+        if (
+          moment(k.jadwal[0].tanggal).format("MMM DD YYYY") >= startDate &&
+          moment(k.jadwal[k.jadwal.length - 1].tanggal).format("MMM DD YYYY") <=
+            endDate
+        ) {
+          ids.push(k._id);
+        }
+      });
+
+      const filteredKelas = await KelasModel.find({
+        _id: { $in: ids },
+      });
+
+      for (let i = 0; i < filteredKelas.length; i++) {
+        for (let j = 0; j < filteredKelas[i].peserta.length; j++) {
+          const user = await UserModel.findById(
+            filteredKelas[i].peserta[j].user
+          );
+
+          peserta.push({ kelas: filteredKelas[i].nama, user });
+
+          for (let k = 0; k < filteredKelas[i].jadwal.length; k++) {
+            let hadir = false;
+
+            const absen = await Absensi.find({
+              user: filteredKelas[i].peserta[j].user,
+              $and: [
+                {
+                  kelas: filteredKelas[i]._id,
+                },
+              ],
+            }).populate("user kelas");
+
+            for (let l = 0; l < absen.length; l++) {
+              if (
+                moment(absen[l].date).format("YYYY-MM-DD") ==
+                moment(filteredKelas[i].jadwal[k].tanggal).format("YYYY-MM-DD")
+              ) {
+                let time = "";
+
+                for (let m = 0; m < filteredKelas[i].absensi.length; m++) {
+                  if (filteredKelas[i].absensi[m].name == absen[l].absenName) {
+                    time = filteredKelas[i].absensi[m].time;
+
+                    break;
+                  }
+                }
+
+                dataAbsensi.push({
+                  kelas: filteredKelas[i].nama,
+                  jadwal: moment(filteredKelas[i].jadwal[k].tanggal).format(
+                    "YYYY-MM-DD"
+                  ),
+                  abesnTime: time,
+                  data: absen[l],
+                });
+
+                hadir = true;
+              }
+            }
+
+            if (!hadir) {
+              for (let l = 0; l < filteredKelas[i].absensi.length; l++) {
+                dataAbsensi.push({
+                  jadwal: moment(filteredKelas[i].jadwal[k].tanggal).format(
+                    "YYYY-MM-DD"
+                  ),
+                  user,
+                  kelas: filteredKelas[i].nama,
+                  absenName: filteredKelas[i].absensi[l].name,
+                  abesnTime: filteredKelas[i].absensi[l].time,
+                  status: "tidak hadir",
+                  time: "",
+                });
+              }
+            }
+          }
+
+          let evaluationResult = await EvaluationFormResult.find({
+            kelas: filteredKelas[i]._id,
+            $and: [
+              {
+                user: new mongoose.Types.ObjectId(
+                  filteredKelas[i].peserta[j].user
+                ),
+              },
+            ],
+          }).populate("user");
+
+          if (evaluationResult.length > 2) {
+            let nilaiInstruktur = 0;
+
+            if (evaluationResult.length > 3) {
+              let nilaiIntrukturTotal = 0;
+
+              for (let k = 2; k < evaluationResult.length; k++) {
+                nilaiIntrukturTotal =
+                  nilaiIntrukturTotal + evaluationResult[k].instruktur;
+              }
+
+              nilaiInstruktur =
+                nilaiIntrukturTotal - (evaluationResult.length - 2);
+            } else {
+              nilaiInstruktur = evaluationResult[2].instruktur;
+            }
+
+            evaluasi.push({
+              _id: evaluationResult[0]._id,
+              kelas: filteredKelas[i].nama,
+              user: user.name,
+              sapras: evaluationResult[0].sapras,
+              materi: evaluationResult[1].materi,
+              instruktur: nilaiInstruktur,
+              createdAt: evaluationResult[0].createdAt,
+              updatedAt: evaluationResult[0].updatedAt,
+            });
+          }
+        }
+      }
+
+      const result = [
+        {
+          kelas: filteredKelas,
+          peserta,
+          absen: dataAbsensi,
+          evaluasi,
+        },
+      ];
+
+      response(200, result, "berhasil Get laporan", res);
     } catch (error) {
       response(500, error, error.message, res);
     }
@@ -1785,7 +1939,7 @@ module.exports = {
         }
       }
 
-      const checkEvaluationForm = await evaluationFormResult.findOne({
+      const checkEvaluationForm = await EvaluationFormResult.findOne({
         kelas: kelas._id,
         $and: [
           {
