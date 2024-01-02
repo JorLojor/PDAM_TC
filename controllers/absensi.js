@@ -447,6 +447,91 @@ module.exports = {
     }
   },
 
+  showByClass: async (req, res) => {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = parseInt(req.query.limit) || 10;
+
+      const kelas = req.params.kelas;
+
+      let data = [];
+
+      const targetClass = await Kelas.findById(kelas);
+
+      const jadwal = targetClass.jadwal;
+      const absensi = targetClass.absensi;
+
+      for (let l = 0; l < targetClass.peserta.length; l++) {
+        for (let i = 0; i < jadwal.length; i++) {
+          let hadir = false;
+
+          const user = await User.findById(targetClass.peserta[l].user);
+
+          const absen = await Absensi.find({
+            user: targetClass.peserta[l].user,
+            $and: [
+              {
+                kelas,
+              },
+            ],
+          }).populate("user kelas");
+
+          for (let j = 0; j < absen.length; j++) {
+            if (
+              moment(absen[j].date).format("YYYY-MM-DD") ==
+              moment(jadwal[i].tanggal).format("YYYY-MM-DD")
+            ) {
+              let time = "";
+
+              for (let k = 0; k < absensi.length; k++) {
+                if (absensi[k].name == absen[j].absenName) {
+                  time = absensi[k].time;
+
+                  break;
+                }
+              }
+
+              data.push({
+                jadwal: moment(jadwal[i].tanggal).format("YYYY-MM-DD"),
+                abesnTime: time,
+                data: absen[j],
+              });
+
+              hadir = true;
+            }
+          }
+
+          if (!hadir) {
+            for (let k = 0; k < absensi.length; k++) {
+              data.push({
+                jadwal: moment(jadwal[i].tanggal).format("YYYY-MM-DD"),
+                user,
+                kelas: targetClass,
+                absenName: absensi[k].name,
+                abesnTime: absensi[k].time,
+                status: "tidak hadir",
+                time: "",
+              });
+            }
+          }
+        }
+      }
+
+      data = paginateArray(data, limit, page);
+
+      result = {
+        data,
+        "total data": data.length,
+      };
+
+      return response(200, result, "Berhasil get absensi", res);
+    } catch (error) {
+      console.log(error);
+
+      return response(500, error, "Server error", res);
+    }
+  },
+
   show: async (req, res) => {
     try {
       const page = parseInt(req.query.page) || 1;

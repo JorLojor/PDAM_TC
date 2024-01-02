@@ -23,6 +23,7 @@ const path = require("path");
 const Ranking = require("../models/ranking");
 const { getInstructorClass } = require("../service");
 const classEnrollmentLog = require("../models/classEnrollmentLog");
+const EvaluationFormResult = require("../models/evaluationFormResult");
 
 module.exports = {
   getbyEmail: async (req, res) => {
@@ -443,14 +444,14 @@ module.exports = {
         bidang,
         // link_cv,
         phone,
-        tipe
+        tipe,
       } = req.fields;
       const picture = req.files["userImage"];
       const cvFile = req.files["cv"];
-      let link_cv_user = ''
-      let userImage = ''
-      const id_cv = Math.floor(Math.random() * 49829482938)
-      const id_image = Math.floor(Math.random() * 49829482938)
+      let link_cv_user = "";
+      let userImage = "";
+      const id_cv = Math.floor(Math.random() * 49829482938);
+      const id_image = Math.floor(Math.random() * 49829482938);
       const today = new Date().toISOString().slice(0, 10);
       if (picture !== undefined) {
         const folderImage = path.join(
@@ -500,7 +501,7 @@ module.exports = {
         });
 
         link_cv_user = `upload/cv/${today}/cv${id_cv}.pdf`;
-      } 
+      }
 
       const cekUser = await userModel.findOne({
         username,
@@ -557,10 +558,10 @@ module.exports = {
         pendidikan: valuePendidikan,
         kompetensi: valueKompetensi,
         bidang: valueBidang,
-        link_cv : link_cv_user,
+        link_cv: link_cv_user,
         userImage,
         phone,
-        userType: tipe
+        userType: tipe,
       });
 
       await user.save();
@@ -890,10 +891,10 @@ module.exports = {
   getCertificate: async (req, res) => {
     try {
       const id = req.user.id;
-      const { isThere } = req.query
+      const { isThere } = req.query;
 
       const kelasName =
-        req.query.kelas && req.query.kelas.length > 0 ? req.query.kelas : '';
+        req.query.kelas && req.query.kelas.length > 0 ? req.query.kelas : "";
 
       const user = await userModel.findById(id);
 
@@ -913,17 +914,37 @@ module.exports = {
           const detailKelas = await Kelas.findById(kelas[i]);
 
           if (kelasName) {
-            if (!detailKelas.nama.toLowerCase().includes(kelasName.toLowerCase())) {
+            if (
+              !detailKelas.nama.toLowerCase().includes(kelasName.toLowerCase())
+            ) {
               continue;
             }
+          }
+
+          const evaluated = await EvaluationFormResult.findOne({
+            user: id,
+            $and: {
+              kelas: kelas[i],
+            },
+          });
+
+          if (!evaluated) {
+            continue;
           }
 
           const sertifikat = await Sertifikat.findById(
             detailKelas.desainSertifikat?.peserta
           );
 
-          if ((parseInt(isThere) === 0 && sertifikat !== null) || (parseInt(isThere) === 1 && sertifikat === null)) {
-            data.push({ sertifikat, kelas: detailKelas?.nama, idKelas: detailKelas?._id });
+          if (
+            (parseInt(isThere) === 0 && sertifikat !== null) ||
+            (parseInt(isThere) === 1 && sertifikat === null)
+          ) {
+            data.push({
+              sertifikat,
+              kelas: detailKelas?.nama,
+              idKelas: detailKelas?._id,
+            });
           }
         }
       }
@@ -1283,7 +1304,7 @@ module.exports = {
       const hasMateri = await Materi.find({
         instruktur: idUser,
       });
-      console.log(hasMateri)
+      console.log(hasMateri);
       if (hasMateri.length > 0) {
         return response(
           400,
@@ -1294,16 +1315,24 @@ module.exports = {
       }
 
       const user = await userModel.findByIdAndRemove(idUser);
-      if(user.userImage != '' && user.userImage != null && user.userImage != undefined){
+      if (
+        user.userImage != "" &&
+        user.userImage != null &&
+        user.userImage != undefined
+      ) {
         fs.unlinkSync(user.userImage);
       }
-      if(user.link_cv != '' && user.link_cv != null && user.link_cv != undefined){
+      if (
+        user.link_cv != "" &&
+        user.link_cv != null &&
+        user.link_cv != undefined
+      ) {
         fs.unlinkSync(user.link_cv);
       }
 
       return response(200, user, "Berhasil delete user", res);
     } catch (error) {
-      console.log(error)
+      console.log(error);
       res.status(500).json({ error: "Internal server error, coba lagi" });
     }
   },
@@ -1427,8 +1456,9 @@ module.exports = {
       let user = data.map((val, idx) => {
         return {
           value: val._id,
-          label: `${val.name} (${val.username}) - ${val.userType === 1 ? "Internal" : "Eksternal"
-            }`,
+          label: `${val.name} (${val.username}) - ${
+            val.userType === 1 ? "Internal" : "Eksternal"
+          }`,
         };
       });
 
@@ -1926,13 +1956,13 @@ module.exports = {
       // }
 
       for (let i = 1; i < data.length; i++) {
-        if (data[i][0] != '') {
+        if (data[i][0] != "") {
           const checkUsername = await userModel.findOne({
             username: data[i][5],
           });
 
           if (checkUsername != null) {
-            continue
+            continue;
             // return response(
             //   400,
             //   {
