@@ -34,7 +34,7 @@ module.exports = {
       }
 
       page = parseInt(page) || 1;
-      limits = parseInt(limits) || 4;
+      limits = parseInt(limits) || 5;
 
       const data = await News.find()
         .populate({
@@ -50,7 +50,7 @@ module.exports = {
         "total data": totalData,
       };
 
-      return response(200, data, "berhasil get berita", res);
+      return response(200, result, "berhasil get berita", res);
     } catch (error) {
       return response(500, error, "Server error", res);
     }
@@ -60,7 +60,7 @@ module.exports = {
     try {
       const id = req.params.id;
 
-      const data = await News.findOneAndRemove(id);
+      const data = await News.findOneAndRemove({_id: id});
 
       return response(200, data, "berhasil hapus berita", res);
     } catch (error) {

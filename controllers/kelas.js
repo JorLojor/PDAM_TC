@@ -47,9 +47,9 @@ module.exports = {
 
       let data = await KelasModel.find()
         .skip((halaman - 1) * batas)
-        .sort({ createdAt: -1 })
         .limit(batas)
-        .populate("materi kategori trainingMethod");
+        .populate("materi kategori trainingMethod")
+        .sort({ createdAt: -1 });
 
       if (userType || fromDate || toDate) {
         let ids = [];
@@ -112,9 +112,9 @@ module.exports = {
           _id: { $in: ids },
         })
           .skip((halaman - 1) * batas)
-          .sort({ createdAt: -1 })
           .limit(batas)
-          .populate("materi kategori trainingMethod");
+          .populate("materi kategori trainingMethod")
+          .sort({ createdAt: -1 });
 
         totalData = data.length;
       }
@@ -1994,7 +1994,7 @@ module.exports = {
         })
         .populate({
           path: "trainingMethod",
-        });
+        }).sort({ createdAt: -1 });
 
       let ids = [];
 
@@ -2107,7 +2107,7 @@ module.exports = {
           })
           .populate({
             path: "trainingMethod",
-          });
+          }).sort({ createdAt: -1 });
       }
 
       if (!req.query.page || req.query.page === 0) {
@@ -2145,7 +2145,7 @@ module.exports = {
             })
             .populate({
               path: "trainingMethod",
-            });
+            }).sort({ createdAt: -1 });
         }
 
         if (data) {
@@ -2185,7 +2185,7 @@ module.exports = {
             })
             .populate({
               path: "trainingMethod",
-            });
+            }).sort({ createdAt: -1 });
         } else {
           data = await KelasModel.find({ ...req.body })
             .skip((page - 1) * limit)
@@ -2202,7 +2202,7 @@ module.exports = {
             })
             .populate({
               path: "trainingMethod",
-            });
+            }).sort({ createdAt: -1 });
         }
 
         if (methods) {
@@ -2222,7 +2222,7 @@ module.exports = {
               })
               .populate({
                 path: "trainingMethod",
-              });
+              }).sort({ createdAt: -1 });
           } else {
             data = await KelasModel.find()
               .populate("materi")
@@ -2237,7 +2237,7 @@ module.exports = {
               })
               .populate({
                 path: "trainingMethod",
-              });
+              }).sort({ createdAt: -1 });
           }
 
           ids = [];
@@ -2269,7 +2269,7 @@ module.exports = {
             })
             .populate({
               path: "trainingMethod",
-            });
+            }).sort({ createdAt: -1 });
         }
 
         totalData = rawData.length;
