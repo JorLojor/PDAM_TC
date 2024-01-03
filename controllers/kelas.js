@@ -255,7 +255,7 @@ module.exports = {
     }
   },
 
-  getTodayClass: async (req, res) => {
+  getTodayClass: async (req, res) => { 
     try {
       let { startDate, endDate } = req.query;
 
@@ -1981,7 +1981,7 @@ module.exports = {
 
       const toDate = req.query.toDate ? req.query.toDate : null;
 
-      let data = await KelasModel.find({ ...req.body })
+      let data = await KelasModel.find({ ...req.body }).populate("peserta.user")
         .populate("materi")
         .populate("kategori")
         .populate({
@@ -2095,7 +2095,7 @@ module.exports = {
         data = await KelasModel.find({
           _id: { $in: ids },
         })
-          .populate("materi")
+          .populate("materi").populate("peserta.user")
           .populate("kategori")
           .populate({
             path: "desainSertifikat.peserta",
@@ -2133,7 +2133,7 @@ module.exports = {
           data = await KelasModel.find({
             _id: { $in: ids },
           })
-            .populate("materi")
+            .populate("materi").populate("peserta.user")
             .populate("kategori")
             .populate({
               path: "desainSertifikat.peserta",
@@ -2173,7 +2173,7 @@ module.exports = {
           })
             .skip((page - 1) * limit)
             .limit(limit)
-            .populate("materi")
+            .populate("materi").populate("peserta.user")
             .populate("kategori")
             .populate({
               path: "desainSertifikat.peserta",
@@ -2190,7 +2190,7 @@ module.exports = {
           data = await KelasModel.find({ ...req.body })
             .skip((page - 1) * limit)
             .limit(limit)
-            .populate("materi")
+            .populate("materi").populate("peserta.user")
             .populate("kategori")
             .populate({
               path: "desainSertifikat.peserta",
@@ -2210,7 +2210,7 @@ module.exports = {
             data = await KelasModel.find({
               _id: { $in: ids },
             })
-              .populate("materi")
+              .populate("materi").populate("peserta.user")
               .populate("kategori")
               .populate({
                 path: "desainSertifikat.peserta",
@@ -2224,7 +2224,7 @@ module.exports = {
                 path: "trainingMethod",
               }).sort({ createdAt: -1 });
           } else {
-            data = await KelasModel.find()
+            data = await KelasModel.find().populate("peserta.user")
               .populate("materi")
               .populate("kategori")
               .populate({
@@ -2257,6 +2257,7 @@ module.exports = {
           })
             .skip((page - 1) * limit)
             .limit(limit)
+            .populate("peserta.user")
             .populate("materi")
             .populate("kategori")
             .populate({
