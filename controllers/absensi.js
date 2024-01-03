@@ -705,10 +705,19 @@ module.exports = {
           kelas,
           absenName,
           time,
+          status: "hadir"
         });
         absen.save({ session });
       } else {
-        return response(403, {}, "Absen Tidak diakui", res);
+        let absen = new Absensi({
+          user,
+          kelas,
+          absenName,
+          time,
+          status: "terlambat"
+        });
+        absen.save({ session });
+        // return response(403, {}, "Absen Tidak diakui", res);
       }
 
       session.commitTransaction();

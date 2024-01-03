@@ -1456,9 +1456,8 @@ module.exports = {
       let user = data.map((val, idx) => {
         return {
           value: val._id,
-          label: `${val.name} (${val.username}) - ${
-            val.userType === 1 ? "Internal" : "Eksternal"
-          }`,
+          label: `${val.name} (${val.username}) - ${val.userType === 1 ? "Internal" : "Eksternal"
+            }`,
         };
       });
 
@@ -1998,4 +1997,21 @@ module.exports = {
       });
     }
   },
+  hapusCV: async function (req, res) {
+    const { id } = req.params;
+    try {
+      const user = await userModel.findOne(
+        { _id: id }
+      );
+      fs.unlink(user.link_cv, (err) => {
+        if (err) {
+          return response(500, err, err, res);
+        }
+      });
+      await userModel.findOneAndUpdate({ _id: id }, { link_cv: '' }, { new: true })
+      return response(200, null, "berhasil hapus cv", res);
+    } catch (error) {
+      return response(500, error, error.message, res);
+    }
+  }
 };

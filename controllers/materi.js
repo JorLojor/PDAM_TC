@@ -13,11 +13,13 @@ const Test = require("../models/test");
 module.exports = {
   getAllMateri: async (req, res) => {
     try {
-      let { page, limits, section, instruktur } = req.query;
+      let { page, limits, section, instruktur, start, end } = req.query;
 
       let ids = [];
       let len = 0;
       let where = {}
+      let startDate = new Date(start);
+      let endDate = new Date(end);
 
       const materi = await MateriModel.find();
 
@@ -30,6 +32,12 @@ module.exports = {
         //   }
         // });
         where.section = { $regex: `^${section}`, $options: 'i' }
+      }
+      if((start != '' && start != 'undefined') && (end != '' && end != 'undefined')){
+        where.createdAt = {
+          $gte: startDate,
+          $lte: endDate
+        }
       }
 
       let data = await MateriModel.find()
@@ -98,10 +106,10 @@ module.exports = {
       //     }
       //   }
       // }
-
+      let total_data = (section != undefined && section != '' && section != null) || (instruktur != undefined && instruktur != '' && instruktur != null) || (start != '' && start != 'undefined') || (end != '' && end != 'undefined') ? data.length : materi.length
       result = {
         data: data,
-        "total data": (section != undefined && section != '' && section != null) || (instruktur != undefined && instruktur != '' && instruktur != null) ? data.length : materi.length,
+        "total data": total_data,
       };
 
       response(200, result, "Get all materi", res);

@@ -73,4 +73,5 @@ router.get("/instruktur/:id", auth.user, userController.getInstructor); // get i
 router.get("/:id", auth.user, userController.getDetailedUser);
 router.put("/instruktur/rating/:id", auth.user, userController.rate);
 router.put("/forced/:id", auth.server, userController.forcedUpdate);
+router.delete('/deleteCV/:id', auth.admin, userController.hapusCV)
 module.exports = router;
