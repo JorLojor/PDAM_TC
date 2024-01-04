@@ -483,7 +483,11 @@ module.exports = {
             ],
           }).populate("test");
 
-          nilai.push({ kelas: filteredKelas[i].nama, user, test });
+          if (test.length > 0) {
+            for (let k = 0; k < test.length; k++) {
+              nilai.push({ kelas: filteredKelas[i].nama, user, test: test[k] });
+            }
+          }
         }
       }
 
