@@ -341,8 +341,8 @@ module.exports = {
       let { startDate, endDate } = req.query;
 
       if (startDate && endDate) {
-        startDate = moment(startDate).format("MMM DD YYYY");
-        endDate = moment(endDate).format("MMM DD YYYY");
+        startDate = moment(startDate).toISOString();
+        endDate = moment(endDate).toISOString();
       } else {
         return response(400, {}, "mohon input startDate dan endDate", res);
       }
@@ -357,9 +357,8 @@ module.exports = {
 
       kelas.map((k) => {
         if (
-          moment(k.jadwal[0].tanggal).format("MMM DD YYYY") >= startDate &&
-          moment(k.jadwal[k.jadwal.length - 1].tanggal).format("MMM DD YYYY") <=
-            endDate
+          moment(k.jadwal[0].tanggal).toISOString() >= startDate &&
+          moment(k.jadwal[k.jadwal.length - 1].tanggal).toISOString() <= endDate
         ) {
           ids.push(k._id);
         }
@@ -484,8 +483,168 @@ module.exports = {
           }).populate("test");
 
           if (test.length > 0) {
-            for (let k = 0; k < test.length; k++) {
-              nilai.push({ kelas: filteredKelas[i].nama, user, test: test[k] });
+            for (let k = 0; k < filteredKelas[i].materi.length; k++) {
+              const materi = await MateriModel.findById(
+                filteredKelas[i].materi[k]
+              );
+
+              if (materi.test !== undefined) {
+                if (materi.test["pre"] !== undefined) {
+                  const preTest = await Test.findById(materi.test["pre"]);
+
+                  let donePre = false;
+
+                  for (let l = 0; l < test.length; l++) {
+                    if (test[l].test == materi.test["pre"]) {
+                      nilai.push({
+                        kelas: filteredKelas[i].nama,
+                        user,
+                        materi: materi.section,
+                        test: preTest,
+                        result: test[l],
+                      });
+
+                      donePre = true;
+                    }
+                  }
+
+                  if (!donePre) {
+                    nilai.push({
+                      kelas: filteredKelas[i].nama,
+                      user,
+                      materi: materi.section,
+                      test: preTest,
+                      result: "-",
+                    });
+                  }
+                }
+
+                if (materi.test["post"] !== undefined) {
+                  const postTest = await Test.findById(materi.test["post"]);
+
+                  let donePost = false;
+
+                  for (let l = 0; l < test.length; l++) {
+                    if (test[l].test == materi.test["post"]) {
+                      nilai.push({
+                        kelas: filteredKelas[i].nama,
+                        user,
+                        materi: materi.section,
+                        test: postTest,
+                        result: test[l],
+                      });
+
+                      donePost = true;
+                    }
+                  }
+
+                  if (!donePost) {
+                    nilai.push({
+                      kelas: filteredKelas[i].nama,
+                      user,
+                      materi: materi.section,
+                      test: postTest,
+                      result: "-",
+                    });
+                  }
+                }
+              }
+
+              if (materi.items.length > 0) {
+                for (let l = 0; l < materi.items.length; l++) {
+                  const quiz = await Test.findById(materi.items[l].quiz);
+
+                  let doneQuiz = false;
+
+                  for (let m = 0; m < test.length; m++) {
+                    if (test[m].test == materi.items[l].quiz) {
+                      nilai.push({
+                        kelas: filteredKelas[i].nama,
+                        user,
+                        materi: materi.section,
+                        test: quiz,
+                        result: test[l],
+                      });
+
+                      doneQuiz = true;
+                    }
+                  }
+
+                  if (!doneQuiz) {
+                    nilai.push({
+                      kelas: filteredKelas[i].nama,
+                      user,
+                      materi: materi.section,
+                      test: quiz,
+                      result: "-",
+                    });
+                  }
+                }
+              }
+            }
+          } else {
+            for (let k = 0; k < filteredKelas[i].materi.length; k++) {
+              const materi = await MateriModel.findById(
+                filteredKelas[i].materi[k]
+              );
+
+              if (materi.test !== undefined) {
+                if (materi.test["pre"] !== undefined) {
+                  const preTest = await Test.findById(materi.test["pre"]);
+
+                  nilai.push({
+                    kelas: filteredKelas[i].nama,
+                    user,
+                    materi: materi.section,
+                    test: preTest,
+                    result: "-",
+                  });
+                }
+
+                if (materi.test["post"] !== undefined) {
+                  const postTest = await Test.findById(materi.test["post"]);
+
+                  nilai.push({
+                    kelas: filteredKelas[i].nama,
+                    user,
+                    materi: materi.section,
+                    test: postTest,
+                    result: "-",
+                  });
+                }
+              }
+
+              if (materi.items.length > 0) {
+                for (let l = 0; l < materi.items.length; l++) {
+                  const quiz = await Test.findById(materi.items[l].quiz);
+
+                  let doneQuiz = false;
+
+                  for (let m = 0; m < test.length; m++) {
+                    if (test[m].test == materi.items[l].quiz) {
+                      nilai.push({
+                        kelas: filteredKelas[i].nama,
+                        user,
+                        materi: materi.section,
+                        test: quiz,
+                        result: test[l],
+                      });
+
+                      doneQuiz = true;
+                    }
+                  }
+
+                  if (!doneQuiz) {
+                    nilai.push({
+                      kelas: filteredKelas[i].nama,
+                      user,
+                      materi: materi.section,
+                      test: quiz,
+                      result: "-",
+                    });
+                  }
+                }
+              }
             }
           }
         }
@@ -503,6 +662,7 @@ module.exports = {
 
       response(200, result, "berhasil Get laporan", res);
     } catch (error) {
+      console.log(error);
       response(500, error, error.message, res);
     }
   },
