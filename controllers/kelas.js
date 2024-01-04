@@ -255,7 +255,7 @@ module.exports = {
     }
   },
 
-  getTodayClass: async (req, res) => { 
+  getTodayClass: async (req, res) => {
     try {
       let { startDate, endDate } = req.query;
 
@@ -350,6 +350,7 @@ module.exports = {
       var ids = [];
       var peserta = [];
       var dataAbsensi = [];
+      var nilai = [];
       var evaluasi = [];
 
       const kelas = await KelasModel.find();
@@ -472,6 +473,17 @@ module.exports = {
               updatedAt: evaluationResult[0].updatedAt,
             });
           }
+
+          const test = await TestAnswer.find({
+            class: filteredKelas[i]._id,
+            $and: [
+              {
+                user: filteredKelas[i].peserta[j].user,
+              },
+            ],
+          }).populate("test");
+
+          nilai.push({ kelas: filteredKelas[i].nama, user, test });
         }
       }
 
@@ -481,6 +493,7 @@ module.exports = {
           peserta,
           absen: dataAbsensi,
           evaluasi,
+          nilai,
         },
       ];
 
@@ -1981,7 +1994,8 @@ module.exports = {
 
       const toDate = req.query.toDate ? req.query.toDate : null;
 
-      let data = await KelasModel.find({ ...req.body }).populate("peserta.user")
+      let data = await KelasModel.find({ ...req.body })
+        .populate("peserta.user")
         .populate("materi")
         .populate("kategori")
         .populate({
@@ -1994,7 +2008,8 @@ module.exports = {
         })
         .populate({
           path: "trainingMethod",
-        }).sort({ createdAt: -1 });
+        })
+        .sort({ createdAt: -1 });
 
       let ids = [];
 
@@ -2095,7 +2110,8 @@ module.exports = {
         data = await KelasModel.find({
           _id: { $in: ids },
         })
-          .populate("materi").populate("peserta.user")
+          .populate("materi")
+          .populate("peserta.user")
           .populate("kategori")
           .populate({
             path: "desainSertifikat.peserta",
@@ -2107,7 +2123,8 @@ module.exports = {
           })
           .populate({
             path: "trainingMethod",
-          }).sort({ createdAt: -1 });
+          })
+          .sort({ createdAt: -1 });
       }
 
       if (!req.query.page || req.query.page === 0) {
@@ -2133,7 +2150,8 @@ module.exports = {
           data = await KelasModel.find({
             _id: { $in: ids },
           })
-            .populate("materi").populate("peserta.user")
+            .populate("materi")
+            .populate("peserta.user")
             .populate("kategori")
             .populate({
               path: "desainSertifikat.peserta",
@@ -2145,7 +2163,8 @@ module.exports = {
             })
             .populate({
               path: "trainingMethod",
-            }).sort({ createdAt: -1 });
+            })
+            .sort({ createdAt: -1 });
         }
 
         if (data) {
@@ -2173,7 +2192,8 @@ module.exports = {
           })
             .skip((page - 1) * limit)
             .limit(limit)
-            .populate("materi").populate("peserta.user")
+            .populate("materi")
+            .populate("peserta.user")
             .populate("kategori")
             .populate({
               path: "desainSertifikat.peserta",
@@ -2185,12 +2205,14 @@ module.exports = {
             })
             .populate({
               path: "trainingMethod",
-            }).sort({ createdAt: -1 });
+            })
+            .sort({ createdAt: -1 });
         } else {
           data = await KelasModel.find({ ...req.body })
             .skip((page - 1) * limit)
             .limit(limit)
-            .populate("materi").populate("peserta.user")
+            .populate("materi")
+            .populate("peserta.user")
             .populate("kategori")
             .populate({
               path: "desainSertifikat.peserta",
@@ -2202,7 +2224,8 @@ module.exports = {
             })
             .populate({
               path: "trainingMethod",
-            }).sort({ createdAt: -1 });
+            })
+            .sort({ createdAt: -1 });
         }
 
         if (methods) {
@@ -2210,7 +2233,8 @@ module.exports = {
             data = await KelasModel.find({
               _id: { $in: ids },
             })
-              .populate("materi").populate("peserta.user")
+              .populate("materi")
+              .populate("peserta.user")
               .populate("kategori")
               .populate({
                 path: "desainSertifikat.peserta",
@@ -2222,9 +2246,11 @@ module.exports = {
               })
               .populate({
                 path: "trainingMethod",
-              }).sort({ createdAt: -1 });
+              })
+              .sort({ createdAt: -1 });
           } else {
-            data = await KelasModel.find().populate("peserta.user")
+            data = await KelasModel.find()
+              .populate("peserta.user")
               .populate("materi")
               .populate("kategori")
               .populate({
@@ -2237,7 +2263,8 @@ module.exports = {
               })
               .populate({
                 path: "trainingMethod",
-              }).sort({ createdAt: -1 });
+              })
+              .sort({ createdAt: -1 });
           }
 
           ids = [];
@@ -2270,7 +2297,8 @@ module.exports = {
             })
             .populate({
               path: "trainingMethod",
-            }).sort({ createdAt: -1 });
+            })
+            .sort({ createdAt: -1 });
         }
 
         totalData = rawData.length;
