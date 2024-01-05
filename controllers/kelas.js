@@ -366,7 +366,7 @@ module.exports = {
 
       const filteredKelas = await KelasModel.find({
         _id: { $in: ids },
-      });
+      }).populate('peserta.user', 'userType').populate('kategori', 'name').populate('trainingMethod', 'name');
 
       for (let i = 0; i < filteredKelas.length; i++) {
         for (let j = 0; j < filteredKelas[i].peserta.length; j++) {
@@ -465,6 +465,7 @@ module.exports = {
               _id: evaluationResult[0]._id,
               kelas: filteredKelas[i].nama,
               user: user.name,
+              nipp: user.nipp,
               sapras: evaluationResult[0].sapras,
               materi: evaluationResult[1].materi,
               instruktur: nilaiInstruktur,
