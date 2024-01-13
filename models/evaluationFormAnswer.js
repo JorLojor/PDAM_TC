@@ -29,7 +29,7 @@ const evaluationFormAnswer = new Schema(
       index: true,
     },
     value: {
-      type: Number,
+      type: Schema.Types.Mixed,
       index: true,
       default: 0,
     },
