@@ -923,9 +923,7 @@ module.exports = {
 
           const evaluated = await EvaluationFormResult.findOne({
             user: id,
-            $and: {
               kelas: kelas[i],
-            },
           });
 
           if (!evaluated) {

@@ -12,6 +12,11 @@ const evaluationFormQuestion = new Schema(
       ref: "EvaluationForm",
       index: true,
     },
+    type: {
+      type: String,
+      enum: ["rating", "essay"],
+      default: "rating",
+    }
   },
   { timestamps: true }
 );

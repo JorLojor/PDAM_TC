@@ -11,12 +11,9 @@ const response = require("../respons/response");
 module.exports = {
   index: async (req, res) => {
     try {
-      const page = parseInt(req.query.page) || 1;
-      const limit = parseInt(req.query.limit) || 10;
-
       let result;
 
-      if (page == 0) {
+      if (req.query.page == 0) {
         const data = await EvaluationFormQuestion.find().populate(
           "evaluationForm"
         );
@@ -26,6 +23,8 @@ module.exports = {
           "total data": data.length,
         };
       } else {
+        const page = parseInt(req.query.page) || 1;
+        const limit = parseInt(req.query.limit) || 10;
         const data = await EvaluationFormQuestion.find()
           .populate("evaluationForm")
           .skip((page - 1) * limit)
@@ -144,7 +143,9 @@ module.exports = {
           form.map(async (f) => {
             const question = await EvaluationFormQuestion.find({
               evaluationForm: f._id,
-            }).countDocuments();
+              type: "rating"
+            });
+            const questId = question.map(quest => quest._id)
 
             const answer = await EvaluationFormAnswer.find({
               evaluationForm: f._id,
@@ -159,9 +160,11 @@ module.exports = {
             });
 
             let answerValue = 0;
-
+            
             answer.map((a) => {
-              answerValue = answerValue + a.value;
+              if(!isNaN(parseInt(a.value))) {
+                answerValue = answerValue + parseInt(a.value);
+              }
             });
 
             const hasResult = await EvaluationFormResult.findOne({
@@ -178,20 +181,22 @@ module.exports = {
                 await EvaluationFormResult.create({
                   kelas,
                   user,
-                  sapras: answerValue / question,
+                  sapras: answerValue / question.length,
                 });
               } else {
                 await EvaluationFormResult.findByIdAndUpdate(
                   hasResult._id,
                   {
-                    sapras: answerValue / question,
+                    sapras: answerValue / question.length,
                   },
                   { new: true }
                 );
               }
             } else if (f.name == "Instruktur") {
+              //cari cara buat filter by question type
               const answerCount = await EvaluationFormAnswer.find({
                 evaluationForm: f._id,
+                evaluationFormQuestion: { $in: questId },
                 $and: [
                   {
                     user,
@@ -202,19 +207,19 @@ module.exports = {
                 ],
               }).countDocuments();
 
-              const multi = answerCount / question;
+              const multi = answerCount / question.length;
 
               if (!hasResult) {
                 await EvaluationFormResult.create({
                   kelas,
                   user,
-                  instruktur: answerValue / (question * multi),
+                  instruktur: answerValue / (question.length * multi),
                 });
               } else {
                 await EvaluationFormResult.findByIdAndUpdate(
                   hasResult._id,
                   {
-                    instruktur: answerValue / (question * multi),
+                    instruktur: answerValue / (question.length * multi),
                   },
                   { new: true }
                 );
@@ -224,13 +229,13 @@ module.exports = {
                 await EvaluationFormResult.create({
                   kelas,
                   user,
-                  materi: answerValue / question,
+                  materi: answerValue / question.length,
                 });
               } else {
                 await EvaluationFormResult.findByIdAndUpdate(
                   hasResult._id,
                   {
-                    materi: answerValue / question,
+                    materi: answerValue / question.length,
                   },
                   { new: true }
                 );
@@ -281,8 +286,9 @@ module.exports = {
         form.map(async (f) => {
           const question = await EvaluationFormQuestion.find({
             evaluationForm: f._id,
-          }).countDocuments();
-
+            type: "rating"
+          });
+          const questId = question.map(quest => quest._id)
           const answer = await EvaluationFormAnswer.find({
             evaluationForm: f._id,
             $and: [
@@ -298,7 +304,9 @@ module.exports = {
           let answerValue = 0;
 
           answer.map((a) => {
-            answerValue = answerValue + a.value;
+            if(!isNaN(parseInt(a.value))) {
+              answerValue = answerValue + parseInt(a.value);
+            }
           });
 
           const hasResult = await EvaluationFormResult.findOne({
@@ -315,13 +323,13 @@ module.exports = {
               await EvaluationFormResult.create({
                 kelas,
                 user,
-                sapras: answerValue / question,
+                sapras: answerValue / question.length,
               });
             } else {
               await EvaluationFormResult.findByIdAndUpdate(
                 hasResult._id,
                 {
-                  sapras: answerValue / question,
+                  sapras: answerValue / question.length,
                 },
                 { new: true }
               );
@@ -329,6 +337,7 @@ module.exports = {
           } else if (f.name == "Instruktur") {
             const answerCount = await EvaluationFormAnswer.find({
               evaluationForm: f._id,
+              evaluationFormQuestion: { $in: questId },
               $and: [
                 {
                   user,
@@ -339,19 +348,19 @@ module.exports = {
               ],
             }).countDocuments();
 
-            const multi = answerCount / question;
+            const multi = answerCount / question.length;
 
             if (!hasResult) {
               await EvaluationFormResult.create({
                 kelas,
                 user,
-                instruktur: answerValue / (question * multi),
+                instruktur: answerValue / (question.length * multi),
               });
             } else {
               await EvaluationFormResult.findByIdAndUpdate(
                 hasResult._id,
                 {
-                  instruktur: answerValue / (question * multi),
+                  instruktur: answerValue / (question.length * multi),
                 },
                 { new: true }
               );
@@ -361,13 +370,13 @@ module.exports = {
               await EvaluationFormResult.create({
                 kelas,
                 user,
-                materi: answerValue / question,
+                materi: answerValue / question.length,
               });
             } else {
               await EvaluationFormResult.findByIdAndUpdate(
                 hasResult._id,
                 {
-                  materi: answerValue / question,
+                  materi: answerValue / question.length,
                 },
                 { new: true }
               );
@@ -418,7 +427,7 @@ module.exports = {
 
   store: async (req, res) => {
     try {
-      const { name, evaluationForm } = req.body;
+      const { name, evaluationForm, type } = req.body;
 
       if (!name) {
         return response(400, {}, "mohon isi nama pertanyaan", res);
@@ -435,6 +444,7 @@ module.exports = {
       const result = await EvaluationFormQuestion.create({
         name,
         evaluationForm,
+        type
       });
 
       return response(200, result, "Berhasil tambah pertanyaan", res);
@@ -446,7 +456,7 @@ module.exports = {
   update: async (req, res) => {
     try {
       const id = req.params.id;
-      const { name, evaluationForm } = req.body;
+      const { name, evaluationForm, type } = req.body;
 
       if (!name) {
         return response(400, {}, "mohon isi nama pertanyaan", res);
@@ -465,6 +475,7 @@ module.exports = {
         {
           name,
           evaluationForm,
+          type
         },
         { new: true }
       );
