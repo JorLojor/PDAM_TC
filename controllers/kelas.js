@@ -794,6 +794,7 @@ module.exports = {
                 methods: kelas[i].methods,
                 kategori: kelas[i].kategori.name,
                 instruktur: instruktur ? instruktur.name : "",
+                slug: kelas[i].slug,
                 nilai,
               });
             }
