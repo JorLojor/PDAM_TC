@@ -575,7 +575,7 @@ module.exports = {
 
   register: async (req, res) => {
     try {
-      const { name, email, username, password, is_enrollment, kelas } =
+      const { name, email, username, password, is_enrollment, kelas, nipp, phone, instansi } =
         req.body;
 
       // const cekUser = await userModel.findOne({
@@ -616,6 +616,9 @@ module.exports = {
         email,
         username,
         password: passwordHash,
+        nipp,
+        phone,
+        instansi
       });
 
       await user.save();
