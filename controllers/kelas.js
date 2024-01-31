@@ -178,41 +178,43 @@ module.exports = {
               user: u._id,
               $and: [
                 {
-                  absenName: { $in: ["Absen Masuk", "ABSEN MULAI"] },
+                  status: {
+                    $in: ["Absen Masuk", "ABSEN MULAI", "hadir", "masuk"],
+                  },
                 },
               ],
             });
 
             if (absen.length > 0) {
               for (let i = 0; i < targetClass.jadwal.length; i++) {
-                let masuk = false;
+                // let masuk = false;
 
-                for (let j = 0; j < absen.length; j++) {
-                  if (
-                    moment(absen[j].date).format("YYYY-MM-DD") ==
-                    moment(targetClass.jadwal[i].tanggal).format("YYYY-MM-DD")
-                  ) {
-                    masuk = true;
+                // for (let j = 0; j < absen.length; j++) {
+                //   if (
+                //     moment(absen[j].createdAt).format("YYYY-MM-DD") ==
+                //     moment(targetClass.jadwal[i].tanggal).format("YYYY-MM-DD")
+                //   ) {
+                //     masuk = true;
 
-                    break;
-                  }
-                }
+                //     break;
+                //   }
+                // }
 
-                if (masuk) {
-                  absenBox.push({
-                    tanggal: moment(targetClass.jadwal[i].tanggal).format(
-                      "YYYY-MM-DD"
-                    ),
-                    status: "masuk",
-                  });
-                } else {
-                  absenBox.push({
-                    tanggal: moment(targetClass.jadwal[i].tanggal).format(
-                      "YYYY-MM-DD"
-                    ),
-                    status: "tidak masuk",
-                  });
-                }
+                absenBox.push({
+                  tanggal: moment(targetClass.jadwal[i].tanggal).format(
+                    "YYYY-MM-DD"
+                  ),
+                  status: absen[j].status,
+                });
+                // if (masuk) {
+                // } else {
+                //   absenBox.push({
+                //     tanggal: moment(targetClass.jadwal[i].tanggal).format(
+                //       "YYYY-MM-DD"
+                //     ),
+                //     status: "tidak masuk",
+                //   });
+                // }
               }
             } else {
               targetClass.jadwal.map((j) => {
@@ -366,7 +368,10 @@ module.exports = {
 
       const filteredKelas = await KelasModel.find({
         _id: { $in: ids },
-      }).populate('peserta.user', 'userType').populate('kategori', 'name').populate('trainingMethod', 'name');
+      })
+        .populate("peserta.user", "userType")
+        .populate("kategori", "name")
+        .populate("trainingMethod", "name");
 
       for (let i = 0; i < filteredKelas.length; i++) {
         for (let j = 0; j < filteredKelas[i].peserta.length; j++) {

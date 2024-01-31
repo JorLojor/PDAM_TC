@@ -562,23 +562,33 @@ module.exports = {
 
         for (let j = 0; j < absen.length; j++) {
           if (
-            moment(absen[j].date).format("YYYY-MM-DD") ==
+            moment(absen[j].createdAt).format("YYYY-MM-DD") ==
             moment(jadwal[i].tanggal).format("YYYY-MM-DD")
           ) {
-            let time = "";
+            // let time = "";
 
-            for (let k = 0; k < absensi.length; k++) {
-              if (absensi[k].name == absen[j].absenName) {
-                time = absensi[k].time;
+            // for (let k = 0; k < absensi.length; k++) {
+            //   if (absensi[k].name == absen[j].absenName) {
+            //     time = absensi[k].time;
 
-                break;
-              }
-            }
+            //     break;
+            //   }
+            // }
+
+            // data.push({
+            //   jadwal: moment(jadwal[i].tanggal).format("YYYY-MM-DD"),
+            //   abesnTime: time,
+            //   data: absen[j],
+            // });
 
             data.push({
               jadwal: moment(jadwal[i].tanggal).format("YYYY-MM-DD"),
-              abesnTime: time,
-              data: absen[j],
+              user: targetUser,
+              kelas: targetClass,
+              absenName: absen[j].name,
+              abesnTime: absen[j].time,
+              status: absen[j].status,
+              time: absen[j].time,
             });
 
             hadir = true;
@@ -587,14 +597,13 @@ module.exports = {
 
         if (!hadir) {
           for (let k = 0; k < absensi.length; k++) {
-            console.log(absensi[k]);
             data.push({
               jadwal: moment(jadwal[i].tanggal).format("YYYY-MM-DD"),
               user: targetUser,
               kelas: targetClass,
               absenName: absensi[k].name,
               abesnTime: absensi[k].time,
-              status: "tidak hadir",
+              status: "Tidak hadir",
               time: "",
             });
           }
@@ -705,7 +714,7 @@ module.exports = {
           kelas,
           absenName,
           time,
-          status: "hadir"
+          status: "hadir",
         });
         absen.save({ session });
       } else {
@@ -714,7 +723,7 @@ module.exports = {
           kelas,
           absenName,
           time,
-          status: "terlambat"
+          status: "terlambat",
         });
         absen.save({ session });
         // return response(403, {}, "Absen Tidak diakui", res);
