@@ -240,8 +240,9 @@ module.exports = {
                 title === related &&
                 parentCode.split(".")[0] === kodeMateri
               ) {
-                const [base, attachmentPath] = file.path.split("/upload/");
-                const cleanedAttachmentPath = attachmentPath.replace(/\s/g, "");
+                const filterPath = file.path.replaceAll('\\','/')
+                const pathlama = filterPath.split("/upload/");
+                const cleanedAttachmentPath = pathlama[1].replace(/\s/g, "");
                 attachmentFiles.push(cleanedAttachmentPath);
               }
             });

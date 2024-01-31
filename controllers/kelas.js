@@ -45,7 +45,7 @@ module.exports = {
 
       let totalData = await KelasModel.countDocuments();
 
-      let data = await KelasModel.find()
+      let data = await KelasModel.find({status: 'published'})
         .skip((halaman - 1) * batas)
         .limit(batas)
         .populate("materi kategori trainingMethod")
@@ -54,7 +54,7 @@ module.exports = {
       if (userType || fromDate || toDate) {
         let ids = [];
 
-        const kelas = await KelasModel.find();
+        const kelas = await KelasModel.find({status: 'published'});
 
         if (userType) {
           await Promise.all(
@@ -110,6 +110,7 @@ module.exports = {
 
         data = await KelasModel.find({
           _id: { $in: ids },
+          status: 'published'
         })
           .skip((halaman - 1) * batas)
           .limit(batas)

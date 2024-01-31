@@ -565,15 +565,15 @@ module.exports = {
             moment(absen[j].createdAt).format("YYYY-MM-DD") ==
             moment(jadwal[i].tanggal).format("YYYY-MM-DD")
           ) {
-            // let time = "";
+            let time = "";
 
-            // for (let k = 0; k < absensi.length; k++) {
-            //   if (absensi[k].name == absen[j].absenName) {
-            //     time = absensi[k].time;
+            for (let k = 0; k < absensi.length; k++) {
+              if (absensi[k].name == absen[j].absenName) {
+                time = absensi[k].time;
 
-            //     break;
-            //   }
-            // }
+                break;
+              }
+            }
 
             // data.push({
             //   jadwal: moment(jadwal[i].tanggal).format("YYYY-MM-DD"),
@@ -585,8 +585,8 @@ module.exports = {
               jadwal: moment(jadwal[i].tanggal).format("YYYY-MM-DD"),
               user: targetUser,
               kelas: targetClass,
-              absenName: absen[j].name,
-              abesnTime: absen[j].time,
+              absenName: absen[j].absenName,
+              abesnTime: time,
               status: absen[j].status,
               time: absen[j].time,
             });
@@ -745,7 +745,7 @@ module.exports = {
     try {
       const id = req.params.id;
 
-      let { user, kelas, absenName, time } = req.body;
+      let { user, kelas, absenName, time, status } = req.body;
 
       const oldData = await Absensi.findById(id);
 
@@ -764,6 +764,9 @@ module.exports = {
       if (!time) {
         time = oldData.time;
       }
+      if (!status) {
+        status = oldData.status;
+      }
 
       await Absensi.findByIdAndUpdate(
         id,
@@ -772,6 +775,7 @@ module.exports = {
           kelas,
           absenName,
           time,
+          status
         },
         {
           new: true,
