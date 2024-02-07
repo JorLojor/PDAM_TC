@@ -33,7 +33,7 @@ module.exports = {
         // });
         where.section = { $regex: `^${section}`, $options: 'i' }
       }
-      if((start != '' && start != 'undefined') && (end != '' && end != 'undefined')){
+      if ((start != '' && start != 'undefined') && (end != '' && end != 'undefined')) {
         where.createdAt = {
           $gte: startDate,
           $lte: endDate
@@ -240,7 +240,7 @@ module.exports = {
                 title === related &&
                 parentCode.split(".")[0] === kodeMateri
               ) {
-                const filterPath = file.path.replaceAll('\\','/')
+                const filterPath = file.path.replaceAll('\\', '/')
                 const pathlama = filterPath.split("/upload/");
                 const cleanedAttachmentPath = pathlama[1].replace(/\s/g, "");
                 attachmentFiles.push(cleanedAttachmentPath);

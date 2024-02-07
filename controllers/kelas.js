@@ -31,7 +31,7 @@ module.exports = {
 
       const fromDate2 = fromDate
         ? moment(req.query.fromDate).format("ddd MMM DD YYYY") +
-          "07:00:00 GMT+0700 (Western Indonesia Time)"
+        "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
       const toDate = req.query.toDate
@@ -40,12 +40,12 @@ module.exports = {
 
       const toDate2 = toDate
         ? moment(req.query.toDate).format("ddd MMM DD YYYY") +
-          "07:00:00 GMT+0700 (Western Indonesia Time)"
+        "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
       let totalData = await KelasModel.countDocuments();
 
-      let data = await KelasModel.find({status: 'published'})
+      let data = await KelasModel.find(req.headers['authorization'] == null ? { status: 'published' } : {})
         .skip((halaman - 1) * batas)
         .limit(batas)
         .populate("materi kategori trainingMethod")
@@ -54,7 +54,7 @@ module.exports = {
       if (userType || fromDate || toDate) {
         let ids = [];
 
-        const kelas = await KelasModel.find({status: 'published'});
+        const kelas = await KelasModel.find(req.headers['authorization'] == null ? { status: 'published' } : {});
 
         if (userType) {
           await Promise.all(
@@ -107,10 +107,10 @@ module.exports = {
             })
           );
         }
-
+        let checkAuth = req.headers['authorization'] == null ? { status: 'published' } : {}
         data = await KelasModel.find({
           _id: { $in: ids },
-          status: 'published'
+          ...checkAuth
         })
           .skip((halaman - 1) * batas)
           .limit(batas)
@@ -1486,8 +1486,8 @@ module.exports = {
               filtered[0].status === "pending"
                 ? "pending"
                 : filtered[0].status === "Approved"
-                ? "draft"
-                : "declined";
+                  ? "draft"
+                  : "declined";
           }
         }
       }
@@ -2239,7 +2239,7 @@ module.exports = {
               for (var i = 0; i < k.jadwal.length; i++) {
                 if (
                   moment(k.jadwal[i].tanggal).format("YYYY-MM-DD") >=
-                    fromDate &&
+                  fromDate &&
                   moment(k.jadwal[i].tanggal).format("YYYY-MM-DD") <= toDate
                 ) {
                   ids.push(k._id);
@@ -2540,7 +2540,7 @@ module.exports = {
             for (let j = 0; j < registered[i].kelas.length; j++) {
               if (
                 registered[i].kelas[j].kelas.toString() ==
-                  getKelas._id.toString() &&
+                getKelas._id.toString() &&
                 registered[i].kelas[j].status == status
               ) {
                 pesertaIds.push(registered[i]._id);
@@ -2598,7 +2598,7 @@ module.exports = {
           for (let j = 0; j < registered[i].kelas.length; j++) {
             if (
               registered[i].kelas[j].kelas.toString() ==
-                getKelas._id.toString() &&
+              getKelas._id.toString() &&
               registered[i].kelas[j].status == status
             ) {
               pesertaIds.push(registered[i]._id);
