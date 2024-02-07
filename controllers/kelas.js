@@ -187,34 +187,14 @@ module.exports = {
 
             if (absen.length > 0) {
               for (let i = 0; i < targetClass.jadwal.length; i++) {
-                // let masuk = false;
-
-                // for (let j = 0; j < absen.length; j++) {
-                //   if (
-                //     moment(absen[j].createdAt).format("YYYY-MM-DD") ==
-                //     moment(targetClass.jadwal[i].tanggal).format("YYYY-MM-DD")
-                //   ) {
-                //     masuk = true;
-
-                //     break;
-                //   }
-                // }
-
-                absenBox.push({
-                  tanggal: moment(targetClass.jadwal[i].tanggal).format(
-                    "YYYY-MM-DD"
-                  ),
-                  status: absen[j].status,
-                });
-                // if (masuk) {
-                // } else {
-                //   absenBox.push({
-                //     tanggal: moment(targetClass.jadwal[i].tanggal).format(
-                //       "YYYY-MM-DD"
-                //     ),
-                //     status: "tidak masuk",
-                //   });
-                // }
+                for (let j = 0; j < absen.length; j++) {
+                  absenBox.push({
+                    tanggal: moment(targetClass.jadwal[i].tanggal).format(
+                      "YYYY-MM-DD"
+                    ),
+                    status: absen[j].status,
+                  });
+                }
               }
             } else {
               targetClass.jadwal.map((j) => {
