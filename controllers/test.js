@@ -534,6 +534,8 @@ module.exports = {
           }
         }
 
+        let answer = 0;
+
         if (quizIds.length > 0) {
           let score = 0;
           let duration = 0;
@@ -553,13 +555,14 @@ module.exports = {
 
             if (quizTest) {
               score = score + quizTest.nilai;
+              answer = answer + quizTest.answers.length;
               duration =
                 duration + converttoSecond(quizTest.finishAt, quizTest.startAt);
             }
           }
 
-          quiz = score / quizLength;
-          quizDuration = converttoMinute(Math.floor(duration / answers.length));
+          quiz = score / quizIds.length;
+          quizDuration = converttoMinute(Math.floor(duration / answer));
         }
 
         data.push({
@@ -690,6 +693,8 @@ module.exports = {
           }
         }
 
+        answer = 0;
+
         if (quizIds.length > 0) {
           let score = 0;
           let duration = 0;
@@ -709,13 +714,15 @@ module.exports = {
 
             if (quizTest) {
               score = score + quizTest.nilai;
+              answer = answer + quizTest.answers.length;
+
               duration =
                 duration + converttoSecond(quizTest.finishAt, quizTest.startAt);
             }
           }
 
-          quiz = score / quizLength;
-          quizDuration = converttoMinute(Math.floor(duration / answers.length));
+          quiz = score / quizIds.length;
+          quizDuration = converttoMinute(Math.floor(duration / answer));
         }
 
         data.push({
@@ -754,6 +761,7 @@ module.exports = {
 
       let data = [];
       let quizIds = [];
+      let quiz = [];
 
       for (let i = 0; i < result.length; i++) {
         if (result[i].test.type == "quiz") {
@@ -766,68 +774,79 @@ module.exports = {
       let quizAverage = 0;
       let quizDurationAverage = "";
 
-      let quiz = [];
-
       for (var i = 0; i < kelas.peserta.length; i++) {
+        let quizScoreLength = 0;
+        let quizDurationLength = 0;
+
         const user = await User.findById(kelas.peserta[i].user);
 
-        if (quizIds.length > 0) {
-          let duration = 0;
-          let score = 0;
+        if (user) {
+          if (quizIds.length > 0) {
+            let duration = 0;
+            let score = 0;
 
-          for (var i = 0; i < quizIds.length; i++) {
-            const quizTest = await TestAnswer.findOne({
-              test: quizIds[i],
-              $and: [
-                {
-                  class: id,
-                },
-                {
-                  user: user._id,
-                },
-              ],
-            });
-
-            if (quizTest) {
-              score = score + quizTest.nilai;
-              duration =
-                duration + converttoSecond(quizTest.finishAt, quizTest.startAt);
-
-              quiz.push({
-                nilai: quizTest.nilai,
-                durasi: converttoMinute(
-                  converttoSecond(quizTest.finishAt, quizTest.startAt)
-                ),
+            for (var j = 0; j < quizIds.length; j++) {
+              const quizTest = await TestAnswer.findOne({
+                test: quizIds[j],
+                $and: [
+                  {
+                    class: id,
+                  },
+                  {
+                    user: user._id,
+                  },
+                ],
               });
+
+              if (quizTest) {
+                score = score + quizTest.nilai;
+                quizScoreLength = quizScoreLength + quizTest.nilai;
+
+                duration =
+                  duration +
+                  converttoSecond(quizTest.finishAt, quizTest.startAt);
+
+                quizDurationLength =
+                  quizDurationLength +
+                  converttoSecond(quizTest.finishAt, quizTest.startAt);
+
+                quiz.push({
+                  nilai: quizTest.nilai,
+                  durasi: converttoMinute(
+                    converttoSecond(quizTest.finishAt, quizTest.startAt)
+                  ),
+                });
+              }
             }
+
+            quizAverage = quizScoreLength ? score / quizIds.length : 0;
+
+            quizDurationAverage = quizDurationLength
+              ? converttoMinute(Math.floor(duration / quizDurationLength))
+              : "00:00";
+
+            data.push({
+              kelasId: id,
+              userId: user._id,
+              name: user.name,
+              nipp: user.nipp,
+              type: user.userType == 1 ? "Internal" : "External",
+              quizAverage,
+              quizDurationAverage,
+              length: quizIds.length,
+            });
+          } else {
+            data.push({
+              kelasId: id,
+              userId: user._id,
+              name: user.name,
+              nipp: user.nipp,
+              type: user.userType == 1 ? "Internal" : "External",
+              quizAverage: 0,
+              quizDurationAverage: "",
+              length: 0,
+            });
           }
-
-          quizAverage = score / quizLength;
-          quizDurationAverage = converttoMinute(
-            Math.floor(duration / quizLength)
-          );
-
-          data.push({
-            kelasId: id,
-            userId: user._id,
-            name: user.name,
-            nipp: user.nipp,
-            type: user.userType == 1 ? "Internal" : "External",
-            quizAverage,
-            quizDurationAverage,
-            length: quizIds.length,
-          });
-        } else {
-          data.push({
-            kelasId: id,
-            userId: user._id,
-            name: user.name,
-            nipp: user.nipp,
-            type: user.userType == 1 ? "Internal" : "External",
-            quizAverage: 0,
-            quizDurationAverage: "",
-            length: 0,
-          });
         }
       }
 
