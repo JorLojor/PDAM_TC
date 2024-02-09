@@ -9,6 +9,8 @@ const multer = require("multer");
 const response = require("../respons/response");
 const _ = require("lodash");
 const Test = require("../models/test");
+const fs = require('fs');
+const path = require('path');
 
 module.exports = {
   getAllMateri: async (req, res) => {
@@ -363,6 +365,31 @@ module.exports = {
     }
   },
 
+  deleteAttachment: async (req, res) => {
+    try {
+      const { id } = req.params
+      const { attach } = req.body
+      const itemId = new mongoose.Types.ObjectId(id)
+      const filePath = 'upload/' + attach;
+
+      const absoluteFilePath = path.resolve(filePath);
+
+      fs.unlink(absoluteFilePath, (err) => {
+        if (err) {
+          response(500, err, 'gagal hapus file', res);
+        } else {
+          console.log('File deleted successfully');
+        }
+      });
+      await MateriModel.findOneAndUpdate({ "items._id": itemId },
+        { $pull: { "items.$[item].attachment": attach } },
+        { arrayFilters: [{ "item._id": itemId }] })
+      response(200, {}, "Materi berhasil diubah", res);
+    } catch (error) {
+      response(500, error, error.message, res);
+    }
+  },
+
   updateMateri: async (req, res) => {
     const idMaterial = req.params.id;
     const { data } = req.body;
@@ -379,16 +406,26 @@ module.exports = {
 
       const newItems = items.map((val, idx) => {
         let attachmentFiles = [...checkMateri.items[idx].attachment];
-        if (req.files) {
-          req.files.map((file) => {
-            const [context, related, parentCode] = file.filename.split("---");
-            if (val.attachment.index === idx) {
-              const [base, attachmentPath] = file.path.split("/upload/");
-              const cleanedAttachmentPath = attachmentPath.replace(/\s/g, "");
-              attachmentFiles.push("/upload/" + cleanedAttachmentPath);
-            }
-          });
-        }
+        val.attachment.forEach((v, i) => {
+          if (typeof v === "object" && v.originName != null && v.originName !== undefined) {
+            const file = req.files.find(f => f.originalname === v.originName)
+            const filterPath = file.path.replaceAll('\\', '/')
+            const pathlama = filterPath.split("/upload/");
+            const cleanedAttachmentPath = pathlama[1].replace(/\s/g, "");
+            attachmentFiles.push(cleanedAttachmentPath);
+            // console.log('yikes', v.originName)
+          }
+        })
+        // if (req.files) {
+        //   req.files.map((file) => {
+        //     const [context, related, parentCode] = file.filename.split("---");
+        //     if (val.attachment.index === idx) {
+        //       const [base, attachmentPath] = file.path.split("/upload/");
+        //       const cleanedAttachmentPath = attachmentPath.replace(/\s/g, "");
+        //       attachmentFiles.push("/upload/" + cleanedAttachmentPath);
+        //     }
+        //   });
+        // }
         return {
           ...val,
           attachment:
