@@ -43,9 +43,9 @@ module.exports = {
         "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
-      let totalData = await KelasModel.countDocuments();
+      let totalData = await KelasModel.find({ status: { $ne: 'deleted' } });
 
-      let data = await KelasModel.find(req.headers['authorization'] == null ? { status: 'published' } : {})
+      let data = await KelasModel.find(req.headers['authorization'] == null ? { status: 'published' } : { status: { $ne: 'deleted' } })
         .skip((halaman - 1) * batas)
         .limit(batas)
         .populate("materi kategori trainingMethod")
@@ -54,7 +54,7 @@ module.exports = {
       if (userType || fromDate || toDate) {
         let ids = [];
 
-        const kelas = await KelasModel.find(req.headers['authorization'] == null ? { status: 'published' } : {});
+        const kelas = await KelasModel.find(req.headers['authorization'] == null ? { status: 'published' } : { status: { $ne: 'deleted' } });
 
         if (userType) {
           await Promise.all(
@@ -107,7 +107,7 @@ module.exports = {
             })
           );
         }
-        let checkAuth = req.headers['authorization'] == null ? { status: 'published' } : {}
+        let checkAuth = req.headers['authorization'] == null ? { status: 'published' } : { status: { $ne: 'deleted' } }
         data = await KelasModel.find({
           _id: { $in: ids },
           ...checkAuth
@@ -134,7 +134,7 @@ module.exports = {
 
       result = {
         data: data,
-        "total data": totalData,
+        "total data": totalData.length,
       };
 
       response(200, result, "berhasil Get all kelas", res);
@@ -1695,14 +1695,15 @@ module.exports = {
     try {
       const checkKelas = await KelasModel.findOne({ _id: id }).session(session);
       if (checkKelas.peserta.length !== 0) {
+        await KelasModel.findOneAndUpdate({ _id: id }, { status: 'deleted' }, { new: true, session });
+        await session.commitTransaction();
         response(
-          500,
+          200,
           checkKelas,
-          "Kelas ini sudah memiliki peserta , tidak bisa dihapus!",
+          "berhasil",
           res
         );
-        await session.abortTransaction();
-        return;
+        return false;
       }
       const result = await KelasModel.findByIdAndDelete(id, { session });
 

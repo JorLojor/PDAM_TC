@@ -43,7 +43,7 @@ const kelasSchema = new Schema(
       type: String,
       required: false,
       default: "pending",
-      enum: ["pending", "draft", "publish", "ended"],
+      enum: ["pending", "draft", "publish", "ended", "deleted"],
     },
     linkEvaluasi: { type: String, required: false },
     slug: { type: String, required: true },
