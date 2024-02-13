@@ -17,8 +17,7 @@ module.exports = {
       const toDate = req.query.toDate ? moment(req.query.toDate) : null;
       const user = req.query.user;
 
-      let data;
-      let totalData;
+      console.log(kelas, user);
 
       if (kelas && user && fromDate) {
         totalData = await Absensi.find({
@@ -61,6 +60,7 @@ module.exports = {
                 $gte: fromDate.startOf("day").toDate(),
                 $lte: fromDate.endOf("day").toDate(),
               },
+              user,
             },
           ],
         }).countDocuments();
@@ -74,6 +74,7 @@ module.exports = {
                   $gte: fromDate.startOf("day").toDate(),
                   $lte: toDate.endOf("day").toDate(),
                 },
+                user,
               },
             ],
           }).countDocuments();
@@ -87,6 +88,7 @@ module.exports = {
                 $gte: fromDate.startOf("day").toDate(),
                 $lte: fromDate.endOf("day").toDate(),
               },
+              user,
             },
           ],
         }).countDocuments();
@@ -100,10 +102,20 @@ module.exports = {
                   $gte: fromDate.startOf("day").toDate(),
                   $lte: toDate.endOf("day").toDate(),
                 },
+                user,
               },
             ],
           }).countDocuments();
         }
+      } else if (kelas && user) {
+        totalData = await Absensi.find({
+          kelas,
+          $and: [
+            {
+              user,
+            },
+          ],
+        }).countDocuments();
       } else if (kelas) {
         totalData = await Absensi.find({
           kelas,
@@ -169,6 +181,17 @@ module.exports = {
               .populate("user", "name")
               .populate("kelas");
           }
+        } else if (kelas && user) {
+          data = await Absensi.find({
+            user,
+            $and: [
+              {
+                kelas,
+              },
+            ],
+          })
+            .populate("user", "name")
+            .populate("kelas");
         } else if (kelas && fromDate) {
           data = await Absensi.find({
             kelas,
@@ -317,6 +340,19 @@ module.exports = {
             .populate("kelas")
             .skip((page - 1) * limit)
             .limit(limit);
+        } else if (kelas && user) {
+          data = await Absensi.find({
+            user,
+            $and: [
+              {
+                kelas,
+              },
+            ],
+          })
+            .populate("user", "name")
+            .populate("kelas")
+            .skip((page - 1) * limit)
+            .limit(limit);
         }
       } else if (kelas && fromDate) {
         data = await Absensi.find({
@@ -352,6 +388,15 @@ module.exports = {
             .skip((page - 1) * limit)
             .limit(limit);
         }
+      } else if (kelas && user) {
+        data = await Absensi.find({
+          kelas,
+          $and: [{ user }],
+        })
+          .populate("user", "name")
+          .populate("kelas")
+          .skip((page - 1) * limit)
+          .limit(limit);
       } else if (user && fromDate) {
         data = await Absensi.find({
           user,
