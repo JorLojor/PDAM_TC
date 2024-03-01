@@ -150,7 +150,7 @@ module.exports = {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
 
-      const targetClass = await KelasModel.findById(kelas);
+      const targetClass = await KelasModel.findOne({ _id: kelas, status: { $ne: 'deleted' } });
 
       if (!targetClass) {
         return response(400, {}, "kelas tidak ditemukan", res);
@@ -737,6 +737,7 @@ module.exports = {
         if (ids.length > 0) {
           kelas = await KelasModel.find({
             _id: { $in: ids },
+            status: { $ne: "deleted" }
           }).populate("materi peserta kategori trainingMethod");
 
           if (kelas.length > 0) {
@@ -1471,11 +1472,12 @@ module.exports = {
           }
         }
       }
+      const randomNumber = Math.floor(Math.random() * 12948192821);
 
       const kelas = new KelasModel({
         kodeKelas,
         nama,
-        slug: _.kebabCase(nama),
+        slug: _.kebabCase(nama) + randomNumber,
         harga,
         kapasitasPeserta,
         description,
@@ -1662,7 +1664,7 @@ module.exports = {
         }
       );
 
-      console.log(result);
+      // console.log(result);
 
       response(200, result, "Kelas berhasil di update", res);
     } catch (error) {
@@ -1706,6 +1708,10 @@ module.exports = {
         return false;
       }
       const result = await KelasModel.findByIdAndDelete(id, { session });
+      await UserModel.updateMany(
+        { kelas: { $in: [id] } },
+        { $pull: { kelas: id } }
+      )
 
       await session.commitTransaction();
       response(200, result, "Kelas berhasil di hapus", res);
@@ -2493,7 +2499,7 @@ module.exports = {
         peserta = await UserModel.find({ _id: { $in: pesertaIds } });
 
         let registered = peserta.map((p) => p);
-        console.log(registered);
+        // console.log(registered);
 
         //? If Query has Type then Modify the Peserta
         if (type && type > -1) {
@@ -2653,7 +2659,7 @@ module.exports = {
     const { iduser } = req.params;
 
     try {
-      const get = await KelasModel.find({ "peserta.user": iduser })
+      const get = await KelasModel.find({ "peserta.user": iduser, status: {$ne: 'deleted'} })
         .populate("materi kategori")
         .populate({
           path: "materi.items.tugas",
@@ -2672,7 +2678,10 @@ module.exports = {
       const data = await RecentClass.find({
         user: req.user.id,
       })
-        .populate("kelas")
+        .populate({
+          path: "kelas",
+          match: { status: { $ne: "deleted" } }
+        })
         .sort({ number: 1 });
 
       response(200, data, "Kelas terbaru berhasil ditemukan", res);

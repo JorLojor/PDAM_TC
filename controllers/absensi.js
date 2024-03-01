@@ -17,7 +17,7 @@ module.exports = {
       const toDate = req.query.toDate ? moment(req.query.toDate) : null;
       const user = req.query.user;
 
-      console.log(kelas, user);
+      // console.log(kelas, user);
 
       if (kelas && user && fromDate) {
         totalData = await Absensi.find({

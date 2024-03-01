@@ -490,7 +490,7 @@ module.exports = {
 
         await fs.promises.mkdir(folderCV, { recursive: true });
 
-        console.log(folderCV.type);
+        // console.log(folderCV.type);
 
         const newCVPath = folderCV + `/cv${id_cv}.pdf`;
 
@@ -809,8 +809,8 @@ module.exports = {
     const picture = req.files["userImage"];
     const cvFile = req.files["cv"];
 
-    console.log(picture, cvFile);
-    console.log(req.fields);
+    // console.log(picture, cvFile);
+    // console.log(req.fields);
 
     let body;
 
@@ -861,7 +861,7 @@ module.exports = {
 
       await fs.promises.mkdir(folderCV, { recursive: true });
 
-      console.log(folderCV.type);
+      // console.log(folderCV.type);
 
       const newCVPath = folderCV + `/cv${idUser}.pdf`;
 
@@ -1305,7 +1305,7 @@ module.exports = {
       const hasMateri = await Materi.find({
         instruktur: idUser,
       });
-      console.log(hasMateri);
+      // console.log(hasMateri);
       if (hasMateri.length > 0) {
         return response(
           400,
@@ -1557,7 +1557,7 @@ module.exports = {
 
         data.map(async (u) => {
           if (u.name.substring(0, len).toLowerCase() == name.toLowerCase()) {
-            console.log(u.name);
+            // console.log(u.name);
             ids.push(u._id);
           }
         });
@@ -1583,7 +1583,7 @@ module.exports = {
     } catch (error) {
       console.log(error);
 
-      response(500, error, error.message, res);
+      response(500, error, error.message, res)
     }
   },
 
@@ -1665,7 +1665,10 @@ module.exports = {
     try {
       let get = await userModel
         .findById(id)
-        .populate("kelas.kelas")
+        .populate({
+          path: "kelas.kelas",
+          match: { status: { $ne: "deleted" } }
+        })
         .select("kelas");
 
       get = await Kategori.populate(get, {

@@ -312,13 +312,13 @@ module.exports = {
         status: status,
       };
 
-      console.log({ pengumpulan });
+      // console.log({ pengumpulan });
 
       let data = tugas.pengumpulanTugas;
 
       data.push(pengumpulan);
 
-      console.log({ data });
+      // console.log({ data });
 
       const result = await tugasSchema.findByIdAndUpdate(
         idTugas,
@@ -474,8 +474,8 @@ module.exports = {
       }
       const boxTugas = getTugas.pengumpulanTugas;
 
-      console.log({ boxTugas });
-      console.log({ idUser });
+      // console.log({ boxTugas });
+      // console.log({ idUser });
 
       const checkUserInsideBox = boxTugas.filter(
         (item) => item.user.toString() === idUser._id.toString()

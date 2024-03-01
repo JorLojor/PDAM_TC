@@ -51,6 +51,14 @@ const setting = new Schema(
       type: Number,
       required: false,
     },
+    kelas: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Kelas",
+        index: true,
+        required: false,
+      },
+    ],
   },
   { timestamps: true }
 );

@@ -82,6 +82,12 @@ router.post(
   auth.admin,
   Controller.updateInstructors
 );
+router.post(
+  "/kelas",
+  auth.user,
+  auth.admin,
+  Controller.updateKelas
+);
 router.post("/others", auth.user, auth.admin, Controller.updateOthersSetting);
 router.delete("/", auth.user, auth.admin, Controller.deleteBanner);
 

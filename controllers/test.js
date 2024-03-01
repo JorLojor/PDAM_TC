@@ -122,7 +122,7 @@ module.exports = {
           { upsert: true, new: true }
         );
 
-        console.log(materi);
+        // console.log(materi);
       }
 
       const materi = await MateriModel.findOne({
@@ -1124,7 +1124,7 @@ module.exports = {
       let user = req.query.user ?? null;
       let test = req.query.test ?? null;
 
-      console.log(user && test);
+      // console.log(user && test);
 
       let data = await testAnswer
         .find()
@@ -1713,7 +1713,7 @@ module.exports = {
               img: filePath,
               isTrue,
             });
-            console.log(filePath, newAnswer);
+            // console.log(filePath, newAnswer);
           } else {
             newAnswer.push({
               value,
@@ -2065,7 +2065,7 @@ module.exports = {
           });
         }
         question.answer.forEach((answer) => {
-          console.log(answer);
+          // console.log(answer);
           if (answer.img != null) {
             fs.unlinkSync(path.join(dirname, answer.img), {
               recursive: true,
@@ -2116,7 +2116,7 @@ module.exports = {
       let { data } = req.body;
       const { id } = req.params;
 
-      console.log(req.files);
+      // console.log(req.files);
 
       let imageTest = "/uploads/test-image/";
       const dataPertanyaan = JSON.parse(data);

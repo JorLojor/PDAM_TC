@@ -225,7 +225,7 @@ module.exports = {
 
       JSON.parse(data).map((value, index) => {
         const { kodeMateri, section, description, items, instruktur } = value;
-        const randomNumber = Math.floor(Math.random() * 100);
+        const randomNumber = Math.floor(Math.random() * 12948192821);
         const slug = _.kebabCase(section) + randomNumber;
         let itemsList = [];
 
@@ -374,19 +374,37 @@ module.exports = {
 
       const absoluteFilePath = path.resolve(filePath);
 
-      fs.unlink(absoluteFilePath, (err) => {
+      fs.access(absoluteFilePath, fs.constants.F_OK, (err) => {
         if (err) {
-          response(500, err, 'gagal hapus file', res);
+          if (err.code === 'ENOENT') {
+            return response(200, {}, "tidak ada file", res);
+          } else {
+            console.error('Error accessing file:', err);
+            return response(500, {}, "Internal Server Error", res);
+          }
         } else {
-          console.log('File deleted successfully');
+          fs.unlink(absoluteFilePath, (err) => {
+            if (err) {
+              console.error('Error deleting file:', err);
+              return response(500, {}, "Internal Server Error", res);
+            } else {
+              MateriModel.findOneAndUpdate({ "items._id": itemId },
+                { $pull: { "items.$[item].attachment": attach } },
+                { arrayFilters: [{ "item._id": itemId }] })
+                .then(() => {
+                  return response(200, {}, "Materi berhasil diubah", res);
+                })
+                .catch((err) => {
+                  console.error('Error updating MateriModel:', err);
+                  return response(500, {}, "Internal Server Error", res);
+                });
+            }
+          });
         }
       });
-      await MateriModel.findOneAndUpdate({ "items._id": itemId },
-        { $pull: { "items.$[item].attachment": attach } },
-        { arrayFilters: [{ "item._id": itemId }] })
-      response(200, {}, "Materi berhasil diubah", res);
     } catch (error) {
-      response(500, error, error.message, res);
+      console.error('Error:', error);
+      return response(500, {}, "Internal Server Error", res);
     }
   },
 
