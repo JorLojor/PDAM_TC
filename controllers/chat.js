@@ -281,6 +281,14 @@ module.exports = {
         for: receiver,
       });
 
+      await Room.findByIdAndUpdate(
+        id,
+        {
+          lastChat: newChat._id,
+        },
+        { new: true }
+      );
+
       let notification = await ChatNotification.findById(newNotif._id, {})
         .populate("sender")
         .populate("for")
