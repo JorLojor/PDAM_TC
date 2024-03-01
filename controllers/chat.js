@@ -345,6 +345,14 @@ module.exports = {
 
       const newChat = await Chat.create(newChatData);
 
+      await Room.findByIdAndUpdate(
+        id,
+        {
+          lastChat: newChat._id,
+        },
+        { new: true }
+      );
+
       if (newChat) {
         const getNewChat = await Chat.findOne({ _id: newChat._id }).populate(
           "sender"
