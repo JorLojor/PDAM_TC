@@ -575,8 +575,17 @@ module.exports = {
 
   register: async (req, res) => {
     try {
-      const { name, email, username, password, is_enrollment, kelas, nipp, phone, instansi } =
-        req.body;
+      const {
+        name,
+        email,
+        username,
+        password,
+        is_enrollment,
+        kelas,
+        nipp,
+        phone,
+        instansi,
+      } = req.body;
 
       // const cekUser = await userModel.findOne({
       //   $or: [{ username }, { email }],
@@ -618,7 +627,7 @@ module.exports = {
         password: passwordHash,
         nipp,
         phone,
-        instansi
+        instansi,
       });
 
       await user.save();
@@ -926,7 +935,7 @@ module.exports = {
 
           const evaluated = await EvaluationFormResult.findOne({
             user: id,
-              kelas: kelas[i],
+            kelas: kelas[i],
           });
 
           if (!evaluated) {
@@ -1099,6 +1108,41 @@ module.exports = {
         }
       });
 
+      let materis = [];
+
+      validKelas.materi.map((m) => {
+        materis.push(m);
+      });
+
+      if (materis) {
+        for (let i = 0; i < materis.length; i++) {
+          const materi = await Materi.findById(materis[i]);
+
+          for (let j = 0; j < materi.items.length; i++) {
+            console.log(materi.items[j].quiz);
+            const haveAnswered = await TestAnswer.findOne({
+              user: req.user.id,
+              $and: [
+                {
+                  test: materi.items[j].quiz,
+                },
+              ],
+            });
+
+            if (!haveAnswered) {
+              return response(
+                400,
+                {},
+                "Anda belum mengerjakan semua quiz yang tersedia",
+                res
+              );
+            }
+          }
+        }
+      }
+
+      return res.json({ validKelas, materis });
+
       if (valid) {
         const data = await ClassResolvementRequest.create({
           user: req.user.id,
@@ -1115,7 +1159,7 @@ module.exports = {
         return response(400, {}, "Anda tidak terdaftar di kelas ini", res);
       }
     } catch (error) {
-      console.log(error.message);
+      console.log(error);
 
       return res
         .status(500)
@@ -1457,8 +1501,9 @@ module.exports = {
       let user = data.map((val, idx) => {
         return {
           value: val._id,
-          label: `${val.name} (${val.username}) - ${val.userType === 1 ? "Internal" : "Eksternal"
-            }`,
+          label: `${val.name} (${val.username}) - ${
+            val.userType === 1 ? "Internal" : "Eksternal"
+          }`,
         };
       });
 
@@ -2001,18 +2046,20 @@ module.exports = {
   hapusCV: async function (req, res) {
     const { id } = req.params;
     try {
-      const user = await userModel.findOne(
-        { _id: id }
-      );
+      const user = await userModel.findOne({ _id: id });
       fs.unlink(user.link_cv, (err) => {
         if (err) {
           return response(500, err, err, res);
         }
       });
-      await userModel.findOneAndUpdate({ _id: id }, { link_cv: '' }, { new: true })
+      await userModel.findOneAndUpdate(
+        { _id: id },
+        { link_cv: "" },
+        { new: true }
+      );
       return response(200, null, "berhasil hapus cv", res);
     } catch (error) {
       return response(500, error, error.message, res);
     }
-  }
+  },
 };
