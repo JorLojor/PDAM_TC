@@ -1119,8 +1119,12 @@ module.exports = {
           for (let i = 0; i < materis.length; i++) {
             const materi = await Materi.findById(materis[i]);
 
-            for (let j = 0; j < materi.items.length; i++) {
-              if (materi.items[j].quiz) {
+            for (let j = 0; j < materi.items.length; j++) {
+              if (
+                materi.items[j].quiz != "" &&
+                materi.items[j].quiz &&
+                materi.items[j].quiz != undefined
+              ) {
                 const haveAnswered = await TestAnswer.findOne({
                   user: req.user.id,
                   $and: [
