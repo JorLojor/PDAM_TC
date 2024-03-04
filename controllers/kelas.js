@@ -1766,58 +1766,66 @@ module.exports = {
         session
       );
 
-      if (!resultkelas.peserta.includes(resultUser._id)) {
-        if (
-          (resultkelas.kelasType === 1 && resultUser.userType === 1) ||
-          (resultkelas.kelasType === 0 &&
-            (resultUser.userType === 1 || resultUser.userType === 0))
-        ) {
-          const extractedPesertaKelas = [...resultkelas.peserta];
-          const extractedKelasUser = [...resultUser.kelas];
+      if (resultkelas.peserta.length == resultkelas.kapasitasPeserta) {
+        response(401, resultkelas, "Kelas sudah penuh", res);
 
-          extractedPesertaKelas.push({
-            user: resultUser._id,
-          });
+        await session.abortTransaction();
 
-          extractedKelasUser.push({
-            kelas: resultkelas._id,
-          });
+        session.endSession();
+      } else {
+        if (!resultkelas.peserta.includes(resultUser._id)) {
+          if (
+            (resultkelas.kelasType === 1 && resultUser.userType === 1) ||
+            (resultkelas.kelasType === 0 &&
+              (resultUser.userType === 1 || resultUser.userType === 0))
+          ) {
+            const extractedPesertaKelas = [...resultkelas.peserta];
+            const extractedKelasUser = [...resultUser.kelas];
 
-          const resultEditKelas = await KelasModel.findOneAndUpdate(
-            { slug: slug },
-            { $set: { peserta: extractedPesertaKelas } },
-            { new: true, session }
-          );
-          const resultEditUser = await UserModel.findOneAndUpdate(
-            { _id: idUser },
-            { $set: { kelas: extractedKelasUser } },
-            { new: true, session }
-          );
+            extractedPesertaKelas.push({
+              user: resultUser._id,
+            });
 
-          await session.commitTransaction();
-          session.endSession();
+            extractedKelasUser.push({
+              kelas: resultkelas._id,
+            });
 
-          await sendClassEnrollmentMail(
-            resultUser.email,
-            resultkelas.nama,
-            resultUser.username
-          );
+            const resultEditKelas = await KelasModel.findOneAndUpdate(
+              { slug: slug },
+              { $set: { peserta: extractedPesertaKelas } },
+              { new: true, session }
+            );
+            const resultEditUser = await UserModel.findOneAndUpdate(
+              { _id: idUser },
+              { $set: { kelas: extractedKelasUser } },
+              { new: true, session }
+            );
 
-          response(200, resultkelas, "Berhasil enroll", res);
+            await session.commitTransaction();
+            session.endSession();
+
+            await sendClassEnrollmentMail(
+              resultUser.email,
+              resultkelas.nama,
+              resultUser.username
+            );
+
+            response(200, resultkelas, "Berhasil enroll", res);
+          } else {
+            response(
+              401,
+              resultkelas,
+              "Anda tidak bisa enroll untuk kelas ini (Status : Khusus Peserta Internal)",
+              res
+            );
+            await session.abortTransaction();
+            session.endSession();
+          }
         } else {
-          response(
-            401,
-            resultkelas,
-            "Anda tidak bisa enroll untuk kelas ini (Status : Khusus Peserta Internal)",
-            res
-          );
+          response(400, {}, "User sudah terdaftar di kelas", res);
           await session.abortTransaction();
           session.endSession();
         }
-      } else {
-        response(400, {}, "User sudah terdaftar di kelas", res);
-        await session.abortTransaction();
-        session.endSession();
       }
     } catch (error) {
       console.log(error);
