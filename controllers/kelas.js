@@ -235,16 +235,6 @@ module.exports = {
           "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
-      const date1 = moment().format("ddd MMM DD YYYY");
-
-      let ids = [];
-
-      let kelas = await KelasModel.find({
-        status: {
-          $ne: "deleted",
-        },
-      });
-
       let data = await KelasModel.find({
         status: {
           $ne: "deleted",
@@ -254,42 +244,6 @@ module.exports = {
         .limit(batas)
         .populate("materi kategori trainingMethod")
         .sort({ createdAt: -1 });
-
-      if (req.user.role > 1) {
-        kelas.map(async (k) => {
-          let date = k.jadwal[k.jadwal.length - 1].tanggal.replace(
-            " 07:00:00 GMT+0700 (Western Indonesia Time)",
-            ""
-          );
-
-          date = date.replace("T00:00:00.000Z", "");
-
-          date = moment(date).format("ddd MMM DD YYYY");
-
-          if (date == date1) {
-            ids.push(k._id);
-          } else if (moment(date).isAfter(date1)) {
-            ids.push(k._id);
-          }
-        });
-
-        data = await KelasModel.find({
-          _id: {
-            $in: ids,
-          },
-          $and: [
-            {
-              status: {
-                $ne: "deleted",
-              },
-            },
-          ],
-        })
-          .skip((halaman - 1) * batas)
-          .limit(batas)
-          .populate("materi kategori trainingMethod")
-          .sort({ createdAt: -1 });
-      }
 
       let totalData = data.length;
 
@@ -301,26 +255,6 @@ module.exports = {
             $ne: "deleted",
           },
         });
-
-        if (req.user.role > 1) {
-          kelas.map(async (k) => {
-            const date = new Date(
-              k.jadwal[k.jadwal.length - 1].tanggal
-            ).valueOf();
-
-            if (date >= date1) {
-              ids.push(k._id);
-            }
-          });
-
-          kelas = await KelasModel.find({
-            _id: {
-              $in: ids,
-            },
-          });
-
-          ids = [];
-        }
 
         if (userType) {
           await Promise.all(
