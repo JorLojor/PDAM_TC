@@ -53,6 +53,198 @@ module.exports = {
         },
       });
 
+      kelas.map(async (k) => {
+        let date = k.jadwal[k.jadwal.length - 1].tanggal.replace(
+          " 07:00:00 GMT+0700 (Western Indonesia Time)",
+          ""
+        );
+
+        date = date.replace("T00:00:00.000Z", "");
+
+        date = moment(date).format("ddd MMM DD YYYY");
+
+        if (date == date1) {
+          ids.push(k._id);
+        } else if (moment(date).isAfter(date1)) {
+          ids.push(k._id);
+        }
+      });
+
+      let data = await KelasModel.find({
+        _id: {
+          $in: ids,
+        },
+        $and: [
+          {
+            status: {
+              $ne: "deleted",
+            },
+          },
+        ],
+      })
+        .skip((halaman - 1) * batas)
+        .limit(batas)
+        .populate("materi kategori trainingMethod")
+        .sort({ createdAt: -1 });
+
+      let totalData = data.length;
+
+      if (userType || fromDate || toDate) {
+        let ids = [];
+
+        let kelas = await KelasModel.find({
+          status: {
+            $ne: "deleted",
+          },
+        });
+
+        kelas.map(async (k) => {
+          const date = new Date(
+            k.jadwal[k.jadwal.length - 1].tanggal
+          ).valueOf();
+
+          if (date >= date1) {
+            ids.push(k._id);
+          }
+        });
+
+        kelas = await KelasModel.find({
+          _id: {
+            $in: ids,
+          },
+        });
+
+        ids = [];
+
+        if (userType) {
+          await Promise.all(
+            kelas.map(async (k) => {
+              for (var i = 0; i < k.peserta.length; i++) {
+                const user = await UserModel.findById(k.peserta[i].user);
+
+                if (user && user.userType == userType) {
+                  ids.push(k._id);
+
+                  break;
+                }
+              }
+            })
+          );
+        }
+
+        if (fromDate) {
+          await Promise.all(
+            kelas.map(async (k) => {
+              for (var i = 0; i < k.jadwal.length; i++) {
+                if (k.jadwal[i].tanggal >= fromDate) {
+                  ids.push(k._id);
+
+                  break;
+                } else if (k.jadwal[i].tanggal >= fromDate2) {
+                  ids.push(k._id);
+
+                  break;
+                }
+              }
+            })
+          );
+        }
+
+        if (toDate) {
+          await Promise.all(
+            kelas.map(async (k) => {
+              for (var i = 0; i < k.jadwal.length; i++) {
+                if (k.jadwal[i].tanggal <= toDate) {
+                  ids.push(k._id);
+
+                  break;
+                } else if (k.jadwal[i].tanggal <= toDate2) {
+                  ids.push(k._id);
+
+                  break;
+                }
+              }
+            })
+          );
+        }
+
+        data = await KelasModel.find({
+          _id: { $in: ids },
+          $and: [
+            {
+              status: {
+                $ne: "deleted",
+              },
+            },
+          ],
+        })
+          .skip((halaman - 1) * batas)
+          .limit(batas)
+          .populate("materi kategori trainingMethod")
+          .sort({ createdAt: -1 });
+
+        totalData = data.length;
+      }
+
+      for (const kelas of data) {
+        for (let i = 0; i < kelas.peserta.length; i++) {
+          const peserta = kelas.peserta[i];
+          const userData = await UserModel.findOne({
+            _id: peserta.user,
+          });
+          if (userData) {
+            kelas.peserta[i].user = userData;
+          }
+        }
+      }
+
+      result = {
+        data: data,
+        "total data": totalData,
+      };
+
+      response(200, result, "berhasil Get all kelas", res);
+    } catch (error) {
+      console.log(error);
+      response(500, error, error.message, res);
+    }
+  },
+
+  getAllKelasAdmin: async (req, res) => {
+    try {
+      const halaman = parseInt(req.query.halaman) || 1;
+      const batas = parseInt(req.query.batas) || 5;
+
+      const { userType } = req.query;
+
+      const fromDate = req.query.fromDate
+        ? req.query.fromDate + "T00:00:00.000Z"
+        : null;
+
+      const fromDate2 = fromDate
+        ? moment(req.query.fromDate).format("ddd MMM DD YYYY") +
+          "07:00:00 GMT+0700 (Western Indonesia Time)"
+        : null;
+
+      const toDate = req.query.toDate
+        ? req.query.toDate + "T00:00:00.000Z" + "T00:00:00.000Z"
+        : null;
+
+      const toDate2 = toDate
+        ? moment(req.query.toDate).format("ddd MMM DD YYYY") +
+          "07:00:00 GMT+0700 (Western Indonesia Time)"
+        : null;
+
+      const date1 = moment().format("ddd MMM DD YYYY");
+
+      let ids = [];
+
+      let kelas = await KelasModel.find({
+        status: {
+          $ne: "deleted",
+        },
+      });
+
       let data = await KelasModel.find({
         status: {
           $ne: "deleted",
@@ -63,7 +255,7 @@ module.exports = {
         .populate("materi kategori trainingMethod")
         .sort({ createdAt: -1 });
 
-      if (req.user.role > 1 || !req.user) {
+      if (req.user.role > 1) {
         kelas.map(async (k) => {
           let date = k.jadwal[k.jadwal.length - 1].tanggal.replace(
             " 07:00:00 GMT+0700 (Western Indonesia Time)",
@@ -110,7 +302,7 @@ module.exports = {
           },
         });
 
-        if (req.user.role > 1 || !req.user) {
+        if (req.user.role > 1) {
           kelas.map(async (k) => {
             const date = new Date(
               k.jadwal[k.jadwal.length - 1].tanggal
@@ -219,6 +411,7 @@ module.exports = {
 
       response(200, result, "berhasil Get all kelas", res);
     } catch (error) {
+      console.log(error);
       response(500, error, error.message, res);
     }
   },
