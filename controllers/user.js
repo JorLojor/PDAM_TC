@@ -1120,23 +1120,24 @@ module.exports = {
             const materi = await Materi.findById(materis[i]);
 
             for (let j = 0; j < materi.items.length; i++) {
-              console.log(materi.items[j].quiz);
-              const haveAnswered = await TestAnswer.findOne({
-                user: req.user.id,
-                $and: [
-                  {
-                    test: materi.items[j].quiz,
-                  },
-                ],
-              });
+              if (materi.items[j].quiz) {
+                const haveAnswered = await TestAnswer.findOne({
+                  user: req.user.id,
+                  $and: [
+                    {
+                      test: materi.items[j].quiz,
+                    },
+                  ],
+                });
 
-              if (!haveAnswered) {
-                return response(
-                  400,
-                  {},
-                  "Anda belum mengerjakan semua quiz yang tersedia",
-                  res
-                );
+                if (!haveAnswered) {
+                  return response(
+                    400,
+                    {},
+                    "Anda belum mengerjakan semua quiz yang tersedia",
+                    res
+                  );
+                }
               }
             }
           }
