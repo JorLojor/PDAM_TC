@@ -44,7 +44,8 @@ module.exports = {
           users: { $in: ids },
         })
           .populate("users", "name")
-          .populate("lastChat");
+          .populate("lastChat")
+          .sort({ updatedAt: -1 });
       }
 
       if (isNaN(isPaginate)) {
