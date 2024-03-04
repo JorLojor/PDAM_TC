@@ -2386,7 +2386,11 @@ module.exports = {
           kelas = await KelasModel.find({
             _id: { $in: ids },
           });
-        } else if (status) {
+        }
+
+        if (status) {
+          ids = [];
+
           kelas.map(async (k) => {
             if (k.status == status) {
               ids.push(k._id);
@@ -2396,26 +2400,11 @@ module.exports = {
           kelas = await KelasModel.find({
             _id: { $in: ids },
           });
-        } else if (nama && status) {
-          len = nama.length;
-
-          kelas.map(async (k) => {
-            if (
-              k.nama.substring(0, len).toLowerCase() == nama.toLowerCase() &&
-              k.status == status
-            ) {
-              ids.push(k._id);
-            }
-          });
-
-          kelas = await KelasModel.find({
-            _id: { $in: ids },
-          });
         }
 
-        ids = [];
-
         if (userType < 2) {
+          ids = [];
+
           await Promise.all(
             kelas.map(async (k) => {
               let pesertaCount = 0;
@@ -2445,9 +2434,9 @@ module.exports = {
           });
         }
 
-        ids = [];
-
         if (fromDate && toDate) {
+          ids = [];
+
           await Promise.all(
             kelas.map(async (k) => {
               for (var i = 0; i < k.jadwal.length; i++) {
@@ -2464,6 +2453,8 @@ module.exports = {
             })
           );
         } else if (fromDate) {
+          ids = [];
+
           await Promise.all(
             kelas.map(async (k) => {
               for (var i = 0; i < k.jadwal.length; i++) {
@@ -2478,6 +2469,8 @@ module.exports = {
             })
           );
         } else if (toDate) {
+          ids = [];
+
           await Promise.all(
             kelas.map(async (k) => {
               for (var i = 0; i < k.jadwal.length; i++) {
