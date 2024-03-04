@@ -24,6 +24,7 @@ const Ranking = require("../models/ranking");
 const { getInstructorClass } = require("../service");
 const classEnrollmentLog = require("../models/classEnrollmentLog");
 const EvaluationFormResult = require("../models/evaluationFormResult");
+const { log } = require("console");
 
 module.exports = {
   getbyEmail: async (req, res) => {
@@ -1087,14 +1088,14 @@ module.exports = {
         ],
       });
 
-      if (haveSubmitted) {
-        return response(
-          400,
-          {},
-          "Anda sudah melakukan permohonan pada kelas ini",
-          res
-        );
-      }
+      // if (haveSubmitted) {
+      //   return response(
+      //     400,
+      //     {},
+      //     "Anda sudah melakukan permohonan pada kelas ini",
+      //     res
+      //   );
+      // }
 
       let valid = false;
 
@@ -1118,6 +1119,54 @@ module.exports = {
         if (materis) {
           for (let i = 0; i < materis.length; i++) {
             const materi = await Materi.findById(materis[i]);
+
+            if (
+              materi.test.pre != "" &&
+              materi.test.pre &&
+              materi.test.pre != undefined
+            ) {
+              const haveAnsweredPre = await TestAnswer.findOne({
+                user: req.user.id,
+                $and: [
+                  {
+                    test: materi.test.pre,
+                  },
+                ],
+              });
+
+              if (!haveAnsweredPre) {
+                return response(
+                  400,
+                  {},
+                  "Anda belum mengerjakan pre test pada kelas ini",
+                  res
+                );
+              }
+            }
+
+            if (
+              materi.test.post != "" &&
+              materi.test.post &&
+              materi.test.post != undefined
+            ) {
+              const haveAnsweredPost = await TestAnswer.findOne({
+                user: req.user.id,
+                $and: [
+                  {
+                    test: materi.test.post,
+                  },
+                ],
+              });
+
+              if (!haveAnsweredPost) {
+                return response(
+                  400,
+                  {},
+                  "Anda belum mengerjakan post test pada kelas ini",
+                  res
+                );
+              }
+            }
 
             for (let j = 0; j < materi.items.length; j++) {
               if (
