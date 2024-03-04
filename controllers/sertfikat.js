@@ -162,7 +162,7 @@ module.exports = {
   deleteSertifikat: async (req, res) => {
     const id = req.params.id;
     try {
-      const check = await KelasModel.find();
+      const check = await KelasModel.find({ status: { $ne: 'deleted' }});
 
       const kelasHasSameCertificate = check.filter(
         (v) =>

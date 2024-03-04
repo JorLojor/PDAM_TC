@@ -9,6 +9,8 @@ const multer = require("multer");
 const response = require("../respons/response");
 const _ = require("lodash");
 const Test = require("../models/test");
+const fs = require('fs');
+const path = require('path');
 
 module.exports = {
   getAllMateri: async (req, res) => {
@@ -33,7 +35,7 @@ module.exports = {
         // });
         where.section = { $regex: `^${section}`, $options: 'i' }
       }
-      if((start != '' && start != 'undefined') && (end != '' && end != 'undefined')){
+      if ((start != '' && start != 'undefined') && (end != '' && end != 'undefined')) {
         where.createdAt = {
           $gte: startDate,
           $lte: endDate
@@ -223,7 +225,7 @@ module.exports = {
 
       JSON.parse(data).map((value, index) => {
         const { kodeMateri, section, description, items, instruktur } = value;
-        const randomNumber = Math.floor(Math.random() * 100);
+        const randomNumber = Math.floor(Math.random() * 12948192821);
         const slug = _.kebabCase(section) + randomNumber;
         let itemsList = [];
 
@@ -240,8 +242,9 @@ module.exports = {
                 title === related &&
                 parentCode.split(".")[0] === kodeMateri
               ) {
-                const [base, attachmentPath] = file.path.split("/upload/");
-                const cleanedAttachmentPath = attachmentPath.replace(/\s/g, "");
+                const filterPath = file.path.replaceAll('\\', '/')
+                const pathlama = filterPath.split("/upload/");
+                const cleanedAttachmentPath = pathlama[1].replace(/\s/g, "");
                 attachmentFiles.push(cleanedAttachmentPath);
               }
             });
@@ -362,6 +365,49 @@ module.exports = {
     }
   },
 
+  deleteAttachment: async (req, res) => {
+    try {
+      const { id } = req.params
+      const { attach } = req.body
+      const itemId = new mongoose.Types.ObjectId(id)
+      const filePath = 'upload/' + attach;
+
+      const absoluteFilePath = path.resolve(filePath);
+
+      fs.access(absoluteFilePath, fs.constants.F_OK, (err) => {
+        if (err) {
+          if (err.code === 'ENOENT') {
+            return response(200, {}, "tidak ada file", res);
+          } else {
+            console.error('Error accessing file:', err);
+            return response(500, {}, "Internal Server Error", res);
+          }
+        } else {
+          fs.unlink(absoluteFilePath, (err) => {
+            if (err) {
+              console.error('Error deleting file:', err);
+              return response(500, {}, "Internal Server Error", res);
+            } else {
+              MateriModel.findOneAndUpdate({ "items._id": itemId },
+                { $pull: { "items.$[item].attachment": attach } },
+                { arrayFilters: [{ "item._id": itemId }] })
+                .then(() => {
+                  return response(200, {}, "Materi berhasil diubah", res);
+                })
+                .catch((err) => {
+                  console.error('Error updating MateriModel:', err);
+                  return response(500, {}, "Internal Server Error", res);
+                });
+            }
+          });
+        }
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      return response(500, {}, "Internal Server Error", res);
+    }
+  },
+
   updateMateri: async (req, res) => {
     const idMaterial = req.params.id;
     const { data } = req.body;
@@ -378,16 +424,26 @@ module.exports = {
 
       const newItems = items.map((val, idx) => {
         let attachmentFiles = [...checkMateri.items[idx].attachment];
-        if (req.files) {
-          req.files.map((file) => {
-            const [context, related, parentCode] = file.filename.split("---");
-            if (val.attachment.index === idx) {
-              const [base, attachmentPath] = file.path.split("/upload/");
-              const cleanedAttachmentPath = attachmentPath.replace(/\s/g, "");
-              attachmentFiles.push("/upload/" + cleanedAttachmentPath);
-            }
-          });
-        }
+        val.attachment.forEach((v, i) => {
+          if (typeof v === "object" && v.originName != null && v.originName !== undefined) {
+            const file = req.files.find(f => f.originalname === v.originName)
+            const filterPath = file.path.replaceAll('\\', '/')
+            const pathlama = filterPath.split("/upload/");
+            const cleanedAttachmentPath = pathlama[1].replace(/\s/g, "");
+            attachmentFiles.push(cleanedAttachmentPath);
+            // console.log('yikes', v.originName)
+          }
+        })
+        // if (req.files) {
+        //   req.files.map((file) => {
+        //     const [context, related, parentCode] = file.filename.split("---");
+        //     if (val.attachment.index === idx) {
+        //       const [base, attachmentPath] = file.path.split("/upload/");
+        //       const cleanedAttachmentPath = attachmentPath.replace(/\s/g, "");
+        //       attachmentFiles.push("/upload/" + cleanedAttachmentPath);
+        //     }
+        //   });
+        // }
         return {
           ...val,
           attachment:

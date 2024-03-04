@@ -6,7 +6,7 @@ router.post('/verify', async (req, res) => {
     try {
         const { captchaValue } = req.body;
         const { data } = await axios.post(
-            `https://www.google.com/recaptcha/api/siteverify?secret=6LekAx8pAAAAAD56RNNRRGN7WMj_JMRBWqrD5Kgy&response=${captchaValue}`, {}, {
+            `https://www.google.com/recaptcha/api/siteverify?secret=6LfJAWopAAAAAK5nEaXT7m5DMusMXzDqjcNU0-kA&response=${captchaValue}`, {}, {
             headers: {
                 "Content-Type": "application/x-www-form-urlencoded; charset=utf-8"
             },

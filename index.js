@@ -82,10 +82,10 @@ app.get("/", (req, res) => {
 });
 
 io.on("connection", (socket) => {
-  console.log("User connected to socket!");
+  // console.log("User connected to socket!");
 
   socket.on("send-message", async ({ room, sender, chat }) => {
-    console.log(room, sender, chat);
+    // console.log(room, sender, chat);
     try {
       const send = await storeIo({ room, sender, chat });
       const notif = await getNotifIo({ room, sender, chat });
@@ -98,7 +98,7 @@ io.on("connection", (socket) => {
   });
 
   socket.on("save-recent-class", async ({ id, id_user }) => {
-    console.log(id, id_user);
+    // console.log(id, id_user);
     try {
       const recentClass = await storeRecentClassIO({ id, id_user });
 

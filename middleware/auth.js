@@ -124,7 +124,7 @@ module.exports = {
 
     try {
       const token = authHeader.split(" ")[1];
-      console.log(authHeader);
+      // console.log(authHeader);
 
       if (!token || token === undefined) {
         res.status(401).send("Not Authorize");

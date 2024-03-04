@@ -56,6 +56,7 @@ testRouter.get("/:id", auth.user, Controller.getTest);
 testRouter.post("/answered", auth.user, Controller.getTestAnswerFiltered);
 testRouter.post("/checkAnswer", auth.user, Controller.testCheck);
 testRouter.post("/nilai/:id", auth.user, Controller.nilai);
+testRouter.post("/delete/answer/:idTest/:idAnswer", auth.user, Controller.deleteOneAnwer);
 
 //buat yang bisa post test
 testRouter.post(

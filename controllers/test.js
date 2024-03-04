@@ -122,7 +122,7 @@ module.exports = {
           { upsert: true, new: true }
         );
 
-        console.log(materi);
+        // console.log(materi);
       }
 
       const materi = await MateriModel.findOne({
@@ -655,59 +655,10 @@ module.exports = {
       for (var i = 0; i < kelas.peserta.length; i++) {
         const user = await User.findById(kelas.peserta[i].user);
 
-        if (preTestId) {
-          const preTestScore = await testAnswer.findOne({
-            test: preTestId,
-            $and: [
-              {
-                class: id,
-              },
-              {
-                user: user._id,
-              },
-            ],
-          });
-
-          if (preTestScore) {
-            preTest = preTestScore.nilai;
-            preTestDuration = converttoMinute(
-              converttoSecond(preTestScore.finishAt, preTestScore.startAt)
-            );
-          }
-        }
-
-        if (postTestId) {
-          const postTestScore = await testAnswer
-            .findOne({
-              test: postTestId,
-              $and: [
-                {
-                  class: id,
-                },
-                {
-                  user: user._id,
-                },
-              ],
-            })
-            .populate("user", "name");
-
-          if (postTestScore) {
-            postTest = postTestScore.nilai;
-            postTestDuration = converttoMinute(
-              converttoSecond(postTest.finishAt, postTest.startAt)
-            );
-          }
-        }
-
-        answer = 0;
-
-        if (quizIds.length > 0) {
-          let score = 0;
-          let duration = 0;
-
-          for (var i = 0; i < quizIds.length; i++) {
-            const quizTest = await TestAnswer.findOne({
-              test: quizIds[i],
+        if (user) {
+          if (preTestId) {
+            const preTestScore = await testAnswer.findOne({
+              test: preTestId,
               $and: [
                 {
                   class: id,
@@ -718,31 +669,82 @@ module.exports = {
               ],
             });
 
-            if (quizTest) {
-              score = score + quizTest.nilai;
-              answer = answer + quizTest.answers.length;
-
-              duration =
-                duration + converttoSecond(quizTest.finishAt, quizTest.startAt);
+            if (preTestScore) {
+              preTest = preTestScore.nilai;
+              preTestDuration = converttoMinute(
+                converttoSecond(preTestScore.finishAt, preTestScore.startAt)
+              );
             }
           }
 
-          quiz = score / quizIds.length;
-          quizDuration = converttoMinute(Math.floor(duration / answer));
-        }
+          if (postTestId) {
+            const postTestScore = await testAnswer
+              .findOne({
+                test: postTestId,
+                $and: [
+                  {
+                    class: id,
+                  },
+                  {
+                    user: user._id,
+                  },
+                ],
+              })
+              .populate("user", "name");
 
-        data.push({
-          user: user.name,
-          nipp: user.nipp,
-          tipe_peserta: user.userType == 1 ? "Internal" : "External",
-          nilai_pre_test: preTest.toString(),
-          durasi_pre_test: preTestDuration.length > 0 ? preTestDuration : "-",
-          nilai_quiz: quiz.toString(),
-          durasi_quiz: quizDuration.length > 0 ? quizDuration : "-",
-          nilai_post_test: postTest.toString(),
-          durasi_post_test:
-            postTestDuration.length > 0 ? postTestDuration : "-",
-        });
+            if (postTestScore) {
+              postTest = postTestScore.nilai;
+              postTestDuration = converttoMinute(
+                converttoSecond(postTest.finishAt, postTest.startAt)
+              );
+            }
+          }
+
+          answer = 0;
+
+          if (quizIds.length > 0) {
+            let score = 0;
+            let duration = 0;
+
+            for (var i = 0; i < quizIds.length; i++) {
+              const quizTest = await TestAnswer.findOne({
+                test: quizIds[i],
+                $and: [
+                  {
+                    class: id,
+                  },
+                  {
+                    user: user._id,
+                  },
+                ],
+              });
+
+              if (quizTest) {
+                score = score + quizTest.nilai;
+                answer = answer + quizTest.answers.length;
+
+                duration =
+                  duration + converttoSecond(quizTest.finishAt, quizTest.startAt);
+              }
+            }
+
+            quiz = score / quizIds.length;
+            quizDuration = converttoMinute(Math.floor(duration / answer));
+          }
+
+          data.push({
+            user: user.name,
+            nipp: user.nipp,
+            tipe_peserta: user.userType == 1 ? "Internal" : "External",
+            nilai_pre_test: preTest.toString(),
+            durasi_pre_test: preTestDuration.length > 0 ? preTestDuration : "-",
+            nilai_quiz: quiz.toString(),
+            durasi_quiz: quizDuration.length > 0 ? quizDuration : "-",
+            nilai_post_test: postTest.toString(),
+            durasi_post_test:
+              postTestDuration.length > 0 ? postTestDuration : "-",
+          });
+        }
       }
 
       return response(200, data, "Data nilai user didapatkan", res);
@@ -1122,7 +1124,7 @@ module.exports = {
       let user = req.query.user ?? null;
       let test = req.query.test ?? null;
 
-      console.log(user && test);
+      // console.log(user && test);
 
       let data = await testAnswer
         .find()
@@ -1570,6 +1572,28 @@ module.exports = {
     }
   },
 
+  deleteOneAnwer: async (req, res) => {
+    const session = await mongoose.startSession();
+
+    try {
+      const { idTest, idAnswer } = req.params;
+
+      await Test.updateOne(
+        { _id: idTest, "question.answer._id": idAnswer },
+        { $pull: { "question.$[outer].answer": { _id: idAnswer } } },
+        { arrayFilters: [{ "outer.answer._id": idAnswer }], session }
+      )
+
+      return response(200, {}, "Quiz Berhasil di perbaharui", res);
+    } catch (error) {
+      console.log(error);
+      response(500, error, error.message, res);
+      await session.abortTransaction();
+    } finally {
+      session.endSession();
+    }
+  },
+
   deleteTestAnswer: async (req, res) => {
     const session = await mongoose.startSession();
 
@@ -1711,7 +1735,7 @@ module.exports = {
               img: filePath,
               isTrue,
             });
-            console.log(filePath, newAnswer);
+            // console.log(filePath, newAnswer);
           } else {
             newAnswer.push({
               value,
@@ -2063,7 +2087,7 @@ module.exports = {
           });
         }
         question.answer.forEach((answer) => {
-          console.log(answer);
+          // console.log(answer);
           if (answer.img != null) {
             fs.unlinkSync(path.join(dirname, answer.img), {
               recursive: true,
@@ -2114,7 +2138,7 @@ module.exports = {
       let { data } = req.body;
       const { id } = req.params;
 
-      console.log(req.files);
+      // console.log(req.files);
 
       let imageTest = "/uploads/test-image/";
       const dataPertanyaan = JSON.parse(data);

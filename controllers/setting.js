@@ -20,6 +20,12 @@ module.exports = {
         populate: {
           path: "rating",
         },
+      }).populate({
+        path: "kelas",
+        select: "nama kategori image",
+        populate: {
+          path: "kategori",
+        },
       });
 
       return response(200, data, "berhasil get setting", res);
@@ -71,6 +77,7 @@ module.exports = {
       const class_count = req.body.class_count;
       const instructor_count = req.body.instructor_count;
       const participant_count = req.body.participant_count;
+      const kelas = req.body.kelas;
 
       let data;
 
@@ -93,10 +100,11 @@ module.exports = {
           our_class,
           instructors,
           youtube_link,
-          testimony,
+          // testimony,
           class_count,
           instructor_count,
           participant_count,
+          kelas
         });
       } else {
         data = await Setting.findByIdAndUpdate(
@@ -110,6 +118,7 @@ module.exports = {
             class_count: class_count ?? setting.class_count,
             instructor_count: instructor_count ?? setting.instructor_count,
             participant_count: participant_count ?? setting.participant_count,
+            kelas,
           },
           {
             new: true,
@@ -191,6 +200,33 @@ module.exports = {
         200,
         updateInstructors,
         "Berhasil mengupdate instruktur",
+        res
+      );
+    } catch (error) {
+      response(500, null, error.message, res);
+    }
+  },
+  updateKelas: async (req, res) => {
+    const { kelas } = req.body;
+    try {
+      const getSetting = await Setting.find().select("kelas");
+
+      const oldSetting = getSetting[0];
+
+      const updateKelas = await Setting.findByIdAndUpdate(
+        oldSetting._id,
+        {
+          $set: {
+            kelas,
+          },
+        },
+        { new: true }
+      );
+
+      return response(
+        200,
+        updateKelas,
+        "Berhasil mengupdate kelas",
         res
       );
     } catch (error) {
@@ -464,7 +500,7 @@ module.exports = {
           },
         });
 
-        console.log(tobeDeleted, registered);
+        // console.log(tobeDeleted, registered);
 
         if (tobeDeleted.length > 0) {
           tobeDeleted.map(async (t) => {
@@ -741,7 +777,7 @@ module.exports = {
           },
         });
 
-        console.log(tobeDeleted, registered);
+        // console.log(tobeDeleted, registered);
 
         if (tobeDeleted.length > 0) {
           tobeDeleted.map(async (t) => {
