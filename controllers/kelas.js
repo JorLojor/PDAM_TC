@@ -237,7 +237,7 @@ module.exports = {
 
       let totalData = await KelasModel.countDocuments();
 
-      let data = await KelasModel.find()
+      let data = await KelasModel.find({status: {$ne: "deleted"}})
         .skip((halaman - 1) * batas)
         .limit(batas)
         .populate("materi kategori trainingMethod")
@@ -246,7 +246,7 @@ module.exports = {
       if (userType || fromDate || toDate) {
         let ids = [];
 
-        const kelas = await KelasModel.find();
+        const kelas = await KelasModel.find({status: {$ne: "deleted"}});
 
         if (userType) {
           await Promise.all(
@@ -1899,7 +1899,7 @@ module.exports = {
         );
         return false;
       }
-
+      await KelasModel.deleteOne({ _id: id }, {session})
       await session.commitTransaction();
       response(200, {}, "Kelas berhasil di hapus", res);
     } catch (error) {
