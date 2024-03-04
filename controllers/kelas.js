@@ -53,52 +53,51 @@ module.exports = {
         },
       });
 
-      kelas.map(async (k) => {
-        let date = k.jadwal[k.jadwal.length - 1].tanggal.replace(
-          " 07:00:00 GMT+0700 (Western Indonesia Time)",
-          ""
-        );
-
-        date = date.replace("T00:00:00.000Z", "");
-
-        let oldDate = date;
-
-        date = moment(date).format("ddd MMM DD YYYY");
-
-        // date = moment(date).unix();
-
-        console.log(
-          oldDate,
-          date,
-          date1,
-          date == date1,
-          moment(date).isAfter(date1)
-        );
-
-        if (date == date1) {
-          ids.push(k._id);
-        } else if (moment(date).isAfter(date1)) {
-          ids.push(k._id);
-        }
-      });
-      console.log(ids);
-
       let data = await KelasModel.find({
-        _id: {
-          $in: ids,
+        status: {
+          $ne: "deleted",
         },
-        $and: [
-          {
-            status: {
-              $ne: "deleted",
-            },
-          },
-        ],
       })
         .skip((halaman - 1) * batas)
         .limit(batas)
         .populate("materi kategori trainingMethod")
         .sort({ createdAt: -1 });
+
+      if (req.user.role > 1 || !req.user) {
+        kelas.map(async (k) => {
+          let date = k.jadwal[k.jadwal.length - 1].tanggal.replace(
+            " 07:00:00 GMT+0700 (Western Indonesia Time)",
+            ""
+          );
+
+          date = date.replace("T00:00:00.000Z", "");
+
+          date = moment(date).format("ddd MMM DD YYYY");
+
+          if (date == date1) {
+            ids.push(k._id);
+          } else if (moment(date).isAfter(date1)) {
+            ids.push(k._id);
+          }
+        });
+
+        data = await KelasModel.find({
+          _id: {
+            $in: ids,
+          },
+          $and: [
+            {
+              status: {
+                $ne: "deleted",
+              },
+            },
+          ],
+        })
+          .skip((halaman - 1) * batas)
+          .limit(batas)
+          .populate("materi kategori trainingMethod")
+          .sort({ createdAt: -1 });
+      }
 
       let totalData = data.length;
 
@@ -111,23 +110,25 @@ module.exports = {
           },
         });
 
-        kelas.map(async (k) => {
-          const date = new Date(
-            k.jadwal[k.jadwal.length - 1].tanggal
-          ).valueOf();
+        if (req.user.role > 1 || !req.user) {
+          kelas.map(async (k) => {
+            const date = new Date(
+              k.jadwal[k.jadwal.length - 1].tanggal
+            ).valueOf();
 
-          if (date >= date1) {
-            ids.push(k._id);
-          }
-        });
+            if (date >= date1) {
+              ids.push(k._id);
+            }
+          });
 
-        kelas = await KelasModel.find({
-          _id: {
-            $in: ids,
-          },
-        });
+          kelas = await KelasModel.find({
+            _id: {
+              $in: ids,
+            },
+          });
 
-        ids = [];
+          ids = [];
+        }
 
         if (userType) {
           await Promise.all(
