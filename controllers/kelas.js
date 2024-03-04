@@ -223,7 +223,7 @@ module.exports = {
 
       const fromDate2 = fromDate
         ? moment(req.query.fromDate).format("ddd MMM DD YYYY") +
-          "07:00:00 GMT+0700 (Western Indonesia Time)"
+        "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
       const toDate = req.query.toDate
@@ -232,29 +232,21 @@ module.exports = {
 
       const toDate2 = toDate
         ? moment(req.query.toDate).format("ddd MMM DD YYYY") +
-          "07:00:00 GMT+0700 (Western Indonesia Time)"
+        "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
-      let data = await KelasModel.find({
-        status: {
-          $ne: "deleted",
-        },
-      })
+      let totalData = await KelasModel.countDocuments();
+
+      let data = await KelasModel.find()
         .skip((halaman - 1) * batas)
         .limit(batas)
         .populate("materi kategori trainingMethod")
         .sort({ createdAt: -1 });
 
-      let totalData = data.length;
-
       if (userType || fromDate || toDate) {
         let ids = [];
 
-        let kelas = await KelasModel.find({
-          status: {
-            $ne: "deleted",
-          },
-        });
+        const kelas = await KelasModel.find();
 
         if (userType) {
           await Promise.all(
@@ -307,16 +299,9 @@ module.exports = {
             })
           );
         }
-        let checkAuth = req.headers['authorization'] == null ? { status: 'published' } : { status: { $ne: 'deleted' } }
+
         data = await KelasModel.find({
           _id: { $in: ids },
-          $and: [
-            {
-              status: {
-                $ne: "deleted",
-              },
-            },
-          ],
         })
           .skip((halaman - 1) * batas)
           .limit(batas)
@@ -340,7 +325,7 @@ module.exports = {
 
       result = {
         data: data,
-        "total data": totalData.length,
+        "total data": totalData,
       };
 
       response(200, result, "berhasil Get all kelas", res);
@@ -1748,7 +1733,7 @@ module.exports = {
 
       let newAbsensi = absensi ? absensi : [];
 
-      let imageKelas; 
+      let imageKelas;
 
       if (req.file) {
         imageKelas = "/upload/" + req.file.path.split("/upload/")[1];
@@ -2869,7 +2854,7 @@ module.exports = {
     const { iduser } = req.params;
 
     try {
-      const get = await KelasModel.find({ "peserta.user": iduser, status: {$ne: 'deleted'} })
+      const get = await KelasModel.find({ "peserta.user": iduser, status: { $ne: 'deleted' } })
         .populate("materi kategori")
         .populate({
           path: "materi.items.tugas",
