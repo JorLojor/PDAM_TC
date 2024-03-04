@@ -1572,6 +1572,28 @@ module.exports = {
     }
   },
 
+  deleteOneAnwer: async (req, res) => {
+    const session = await mongoose.startSession();
+
+    try {
+      const { idTest, idAnswer } = req.params;
+
+      await Test.updateOne(
+        { _id: idTest, "question.answer._id": idAnswer },
+        { $pull: { "question.$[outer].answer": { _id: idAnswer } } },
+        { arrayFilters: [{ "outer.answer._id": idAnswer }], session }
+      )
+
+      return response(200, {}, "Quiz Berhasil di perbaharui", res);
+    } catch (error) {
+      console.log(error);
+      response(500, error, error.message, res);
+      await session.abortTransaction();
+    } finally {
+      session.endSession();
+    }
+  },
+
   deleteTestAnswer: async (req, res) => {
     const session = await mongoose.startSession();
 

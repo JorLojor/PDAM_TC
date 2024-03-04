@@ -43,18 +43,91 @@ module.exports = {
         "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
-      let totalData = await KelasModel.find({ status: { $ne: 'deleted' } });
+      const date1 = moment().format("ddd MMM DD YYYY");
 
-      let data = await KelasModel.find(req.headers['authorization'] == null ? { status: 'published' } : { status: { $ne: 'deleted' } })
+      let ids = [];
+
+      let kelas = await KelasModel.find({
+        status: {
+          $ne: "deleted",
+        },
+      });
+
+      kelas.map(async (k) => {
+        let date = k.jadwal[k.jadwal.length - 1].tanggal.replace(
+          " 07:00:00 GMT+0700 (Western Indonesia Time)",
+          ""
+        );
+
+        date = date.replace("T00:00:00.000Z", "");
+
+        let oldDate = date;
+
+        date = moment(date).format("ddd MMM DD YYYY");
+
+        // date = moment(date).unix();
+
+        console.log(
+          oldDate,
+          date,
+          date1,
+          date == date1,
+          moment(date).isAfter(date1)
+        );
+
+        if (date == date1) {
+          ids.push(k._id);
+        } else if (moment(date).isAfter(date1)) {
+          ids.push(k._id);
+        }
+      });
+      console.log(ids);
+
+      let data = await KelasModel.find({
+        _id: {
+          $in: ids,
+        },
+        $and: [
+          {
+            status: {
+              $ne: "deleted",
+            },
+          },
+        ],
+      })
         .skip((halaman - 1) * batas)
         .limit(batas)
         .populate("materi kategori trainingMethod")
         .sort({ createdAt: -1 });
 
+      let totalData = data.length;
+
       if (userType || fromDate || toDate) {
         let ids = [];
 
-        const kelas = await KelasModel.find(req.headers['authorization'] == null ? { status: 'published' } : { status: { $ne: 'deleted' } });
+        let kelas = await KelasModel.find({
+          status: {
+            $ne: "deleted",
+          },
+        });
+
+        kelas.map(async (k) => {
+          const date = new Date(
+            k.jadwal[k.jadwal.length - 1].tanggal
+          ).valueOf();
+
+          if (date >= date1) {
+            ids.push(k._id);
+          }
+        });
+
+        kelas = await KelasModel.find({
+          _id: {
+            $in: ids,
+          },
+        });
+
+        ids = [];
 
         if (userType) {
           await Promise.all(
@@ -110,7 +183,13 @@ module.exports = {
         let checkAuth = req.headers['authorization'] == null ? { status: 'published' } : { status: { $ne: 'deleted' } }
         data = await KelasModel.find({
           _id: { $in: ids },
-          ...checkAuth
+          $and: [
+            {
+              status: {
+                $ne: "deleted",
+              },
+            },
+          ],
         })
           .skip((halaman - 1) * batas)
           .limit(batas)
@@ -1541,7 +1620,7 @@ module.exports = {
 
       let newAbsensi = absensi ? absensi : [];
 
-      let imageKelas;
+      let imageKelas; 
 
       if (req.file) {
         imageKelas = "/upload/" + req.file.path.split("/upload/")[1];
@@ -1707,14 +1786,9 @@ module.exports = {
         );
         return false;
       }
-      const result = await KelasModel.findByIdAndDelete(id, { session });
-      await UserModel.updateMany(
-        { kelas: { $in: [id] } },
-        { $pull: { kelas: id } }
-      )
 
       await session.commitTransaction();
-      response(200, result, "Kelas berhasil di hapus", res);
+      response(200, {}, "Kelas berhasil di hapus", res);
     } catch (error) {
       response(500, error, error.message, res);
       await session.abortTransaction();
