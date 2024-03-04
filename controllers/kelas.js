@@ -31,7 +31,7 @@ module.exports = {
 
       const fromDate2 = fromDate
         ? moment(req.query.fromDate).format("ddd MMM DD YYYY") +
-        "07:00:00 GMT+0700 (Western Indonesia Time)"
+          "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
       const toDate = req.query.toDate
@@ -40,7 +40,7 @@ module.exports = {
 
       const toDate2 = toDate
         ? moment(req.query.toDate).format("ddd MMM DD YYYY") +
-        "07:00:00 GMT+0700 (Western Indonesia Time)"
+          "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
       const date1 = moment().format("ddd MMM DD YYYY");
@@ -223,7 +223,7 @@ module.exports = {
 
       const fromDate2 = fromDate
         ? moment(req.query.fromDate).format("ddd MMM DD YYYY") +
-        "07:00:00 GMT+0700 (Western Indonesia Time)"
+          "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
       const toDate = req.query.toDate
@@ -232,12 +232,12 @@ module.exports = {
 
       const toDate2 = toDate
         ? moment(req.query.toDate).format("ddd MMM DD YYYY") +
-        "07:00:00 GMT+0700 (Western Indonesia Time)"
+          "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
       let totalData = await KelasModel.countDocuments();
 
-      let data = await KelasModel.find({status: {$ne: "deleted"}})
+      let data = await KelasModel.find({ status: { $ne: "deleted" } })
         .skip((halaman - 1) * batas)
         .limit(batas)
         .populate("materi kategori trainingMethod")
@@ -246,7 +246,7 @@ module.exports = {
       if (userType || fromDate || toDate) {
         let ids = [];
 
-        const kelas = await KelasModel.find({status: {$ne: "deleted"}});
+        const kelas = await KelasModel.find({ status: { $ne: "deleted" } });
 
         if (userType) {
           await Promise.all(
@@ -342,7 +342,10 @@ module.exports = {
       const page = parseInt(req.query.page) || 1;
       const limit = parseInt(req.query.limit) || 10;
 
-      const targetClass = await KelasModel.findOne({ _id: kelas, status: { $ne: 'deleted' } });
+      const targetClass = await KelasModel.findOne({
+        _id: kelas,
+        status: { $ne: "deleted" },
+      });
 
       if (!targetClass) {
         return response(400, {}, "kelas tidak ditemukan", res);
@@ -929,7 +932,7 @@ module.exports = {
         if (ids.length > 0) {
           kelas = await KelasModel.find({
             _id: { $in: ids },
-            status: { $ne: "deleted" }
+            status: { $ne: "deleted" },
           }).populate("materi peserta kategori trainingMethod");
 
           if (kelas.length > 0) {
@@ -1659,8 +1662,8 @@ module.exports = {
               filtered[0].status === "pending"
                 ? "pending"
                 : filtered[0].status === "Approved"
-                  ? "draft"
-                  : "declined";
+                ? "draft"
+                : "declined";
           }
         }
       }
@@ -1889,17 +1892,16 @@ module.exports = {
     try {
       const checkKelas = await KelasModel.findOne({ _id: id }).session(session);
       if (checkKelas.peserta.length !== 0) {
-        await KelasModel.findOneAndUpdate({ _id: id }, { status: 'deleted' }, { new: true, session });
-        await session.commitTransaction();
-        response(
-          200,
-          checkKelas,
-          "berhasil",
-          res
+        await KelasModel.findOneAndUpdate(
+          { _id: id },
+          { status: "deleted" },
+          { new: true, session }
         );
+        await session.commitTransaction();
+        response(200, checkKelas, "berhasil", res);
         return false;
       }
-      await KelasModel.deleteOne({ _id: id }, {session})
+      await KelasModel.deleteOne({ _id: id }, { session });
       await session.commitTransaction();
       response(200, {}, "Kelas berhasil di hapus", res);
     } catch (error) {
@@ -2342,7 +2344,7 @@ module.exports = {
         req.body.isActive = true;
       }
 
-      const { nama, userType, methods } = req.query;
+      const { nama, userType, methods, status } = req.query;
 
       const fromDate = req.query.fromDate ? req.query.fromDate : null;
 
@@ -2367,13 +2369,14 @@ module.exports = {
 
       let ids = [];
 
-      if (nama || userType || fromDate || toDate) {
+      if (nama || userType || fromDate || toDate || status) {
         let kelas = await KelasModel.find();
 
         let len = 0;
 
         if (nama) {
           len = nama.length;
+
           kelas.map(async (k) => {
             if (k.nama.substring(0, len).toLowerCase() == nama.toLowerCase()) {
               ids.push(k._id);
@@ -2383,23 +2386,50 @@ module.exports = {
           kelas = await KelasModel.find({
             _id: { $in: ids },
           });
+        } else if (status) {
+          kelas.map(async (k) => {
+            if (k.status == status) {
+              ids.push(k._id);
+            }
+          });
+
+          kelas = await KelasModel.find({
+            _id: { $in: ids },
+          });
+        } else if (nama && status) {
+          len = nama.length;
+
+          kelas.map(async (k) => {
+            if (
+              k.nama.substring(0, len).toLowerCase() == nama.toLowerCase() &&
+              k.status == status
+            ) {
+              ids.push(k._id);
+            }
+          });
+
+          kelas = await KelasModel.find({
+            _id: { $in: ids },
+          });
         }
 
-        if (userType < 2) {
-          let pesertaCount = 0;
+        ids = [];
 
+        if (userType < 2) {
           await Promise.all(
             kelas.map(async (k) => {
+              let pesertaCount = 0;
+
               for (var i = 0; i < k.peserta.length; i++) {
                 const user = await UserModel.findById(k.peserta[i].user);
 
                 if (user && user.userType == userType) {
                   pesertaCount = pesertaCount + 1;
                 }
+              }
 
-                if (pesertaCount == k.peserta.length) {
-                  ids.push(k._id);
-                }
+              if (pesertaCount == k.peserta.length) {
+                ids.push(k._id);
               }
             })
           );
@@ -2415,13 +2445,15 @@ module.exports = {
           });
         }
 
+        ids = [];
+
         if (fromDate && toDate) {
           await Promise.all(
             kelas.map(async (k) => {
               for (var i = 0; i < k.jadwal.length; i++) {
                 if (
                   moment(k.jadwal[i].tanggal).format("YYYY-MM-DD") >=
-                  fromDate &&
+                    fromDate &&
                   moment(k.jadwal[i].tanggal).format("YYYY-MM-DD") <= toDate
                 ) {
                   ids.push(k._id);
@@ -2583,7 +2615,7 @@ module.exports = {
         }
 
         if (methods) {
-          if (nama || userType || fromDate || toDate) {
+          if (nama || userType || fromDate || toDate || status) {
             data = await KelasModel.find({
               _id: { $in: ids },
             })
@@ -2722,7 +2754,7 @@ module.exports = {
             for (let j = 0; j < registered[i].kelas.length; j++) {
               if (
                 registered[i].kelas[j].kelas.toString() ==
-                getKelas._id.toString() &&
+                  getKelas._id.toString() &&
                 registered[i].kelas[j].status == status
               ) {
                 pesertaIds.push(registered[i]._id);
@@ -2780,7 +2812,7 @@ module.exports = {
           for (let j = 0; j < registered[i].kelas.length; j++) {
             if (
               registered[i].kelas[j].kelas.toString() ==
-              getKelas._id.toString() &&
+                getKelas._id.toString() &&
               registered[i].kelas[j].status == status
             ) {
               pesertaIds.push(registered[i]._id);
@@ -2854,7 +2886,10 @@ module.exports = {
     const { iduser } = req.params;
 
     try {
-      const get = await KelasModel.find({ "peserta.user": iduser, status: { $ne: 'deleted' } })
+      const get = await KelasModel.find({
+        "peserta.user": iduser,
+        status: { $ne: "deleted" },
+      })
         .populate("materi kategori")
         .populate({
           path: "materi.items.tugas",
@@ -2875,7 +2910,7 @@ module.exports = {
       })
         .populate({
           path: "kelas",
-          match: { status: { $ne: "deleted" } }
+          match: { status: { $ne: "deleted" } },
         })
         .sort({ number: 1 });
 
