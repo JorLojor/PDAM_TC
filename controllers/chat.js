@@ -281,6 +281,14 @@ module.exports = {
         for: receiver,
       });
 
+      await Room.findByIdAndUpdate(
+        id,
+        {
+          lastChat: newChat._id,
+        },
+        { new: true }
+      );
+
       let notification = await ChatNotification.findById(newNotif._id, {})
         .populate("sender")
         .populate("for")
@@ -336,6 +344,14 @@ module.exports = {
       };
 
       const newChat = await Chat.create(newChatData);
+
+      await Room.findByIdAndUpdate(
+        id,
+        {
+          lastChat: newChat._id,
+        },
+        { new: true }
+      );
 
       if (newChat) {
         const getNewChat = await Chat.findOne({ _id: newChat._id }).populate(

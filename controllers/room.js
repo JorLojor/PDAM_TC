@@ -65,7 +65,8 @@ module.exports = {
         .skip((page - 1) * limit)
         .limit(limit)
         .populate("users", "name")
-        .populate("lastChat");
+        .populate("lastChat")
+        .sort({ updatedAt: -1 });
 
       result = {
         data: data,
