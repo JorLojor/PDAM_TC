@@ -1108,42 +1108,40 @@ module.exports = {
         }
       });
 
-      let materis = [];
+      if (valid) {
+        let materis = [];
 
-      validKelas.materi.map((m) => {
-        materis.push(m);
-      });
+        validKelas.materi.map((m) => {
+          materis.push(m);
+        });
 
-      if (materis) {
-        for (let i = 0; i < materis.length; i++) {
-          const materi = await Materi.findById(materis[i]);
+        if (materis) {
+          for (let i = 0; i < materis.length; i++) {
+            const materi = await Materi.findById(materis[i]);
 
-          for (let j = 0; j < materi.items.length; i++) {
-            console.log(materi.items[j].quiz);
-            const haveAnswered = await TestAnswer.findOne({
-              user: req.user.id,
-              $and: [
-                {
-                  test: materi.items[j].quiz,
-                },
-              ],
-            });
+            for (let j = 0; j < materi.items.length; i++) {
+              console.log(materi.items[j].quiz);
+              const haveAnswered = await TestAnswer.findOne({
+                user: req.user.id,
+                $and: [
+                  {
+                    test: materi.items[j].quiz,
+                  },
+                ],
+              });
 
-            if (!haveAnswered) {
-              return response(
-                400,
-                {},
-                "Anda belum mengerjakan semua quiz yang tersedia",
-                res
-              );
+              if (!haveAnswered) {
+                return response(
+                  400,
+                  {},
+                  "Anda belum mengerjakan semua quiz yang tersedia",
+                  res
+                );
+              }
             }
           }
         }
-      }
 
-      return res.json({ validKelas, materis });
-
-      if (valid) {
         const data = await ClassResolvementRequest.create({
           user: req.user.id,
           kelas: validKelas._id,
