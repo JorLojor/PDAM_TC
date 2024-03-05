@@ -1086,6 +1086,9 @@ module.exports = {
 
   submitClassResolvement: async (req, res) => {
     try {
+      const session = await mongoose.startSession();
+      session.startTransaction();
+
       const { kelas } = req.body;
 
       if (!kelas) {
@@ -1094,13 +1097,13 @@ module.exports = {
 
       const validKelas = await Kelas.findOne({
         slug: kelas,
-      });
+      }).session(session);
 
       if (!validKelas) {
         return response(404, {}, "Kelas tidak ditemukan", res);
       }
 
-      const user = await userModel.findById(req.user.id);
+      const user = await userModel.findById(req.user.id).session(session);
 
       const haveSubmitted = await ClassResolvementRequest.findOne({
         kelas: validKelas._id,
@@ -1109,23 +1112,31 @@ module.exports = {
             user: req.user.id,
           },
         ],
-      });
+      }).session(session);
 
       if (haveSubmitted) {
-        return response(
+        response(
           400,
           {},
           "Anda sudah melakukan permohonan pada kelas ini",
           res
         );
+
+        await session.abortTransaction();
+
+        return;
       }
 
       let valid = false;
 
-      user.kelas.map((m) => {
+      user.kelas.map(async (m) => {
         if (m.kelas.toHexString() == validKelas._id.toHexString()) {
           if (m.isDone == true) {
-            return response(400, {}, "Anda sudah menyelesaikan kelas ini", res);
+            response(400, {}, "Anda sudah menyelesaikan kelas ini", res);
+
+            await session.abortTransaction();
+
+            return;
           }
 
           valid = true;
@@ -1141,10 +1152,14 @@ module.exports = {
 
         if (materis) {
           for (let i = 0; i < materis.length; i++) {
-            const materi = await Materi.findById(materis[i]);
+            const materi = await Materi.findById(materis[i]).session(session);
 
-            const preTest = await Test.findById(materi.test.pre);
-            const postTest = await Test.findById(materi.test.post);
+            const preTest = await Test.findById(materi.test.pre).session(
+              session
+            );
+            const postTest = await Test.findById(materi.test.post).session(
+              session
+            );
 
             if (preTest) {
               const haveAnsweredPre = await TestAnswer.findOne({
@@ -1154,15 +1169,19 @@ module.exports = {
                     test: materi.test.pre,
                   },
                 ],
-              });
+              }).session(session);
 
               if (!haveAnsweredPre) {
-                return response(
+                response(
                   400,
                   {},
                   "Anda belum mengerjakan pre test pada kelas ini",
                   res
                 );
+
+                await session.abortTransaction();
+
+                return;
               }
             }
 
@@ -1174,20 +1193,26 @@ module.exports = {
                     test: materi.test.post,
                   },
                 ],
-              });
+              }).session(session);
 
               if (!haveAnsweredPost) {
-                return response(
+                response(
                   400,
                   {},
                   "Anda belum mengerjakan post test pada kelas ini",
                   res
                 );
+
+                await session.abortTransaction();
+
+                return;
               }
             }
 
             for (let j = 0; j < materi.items.length; j++) {
-              const quiz = await Test.findById(materi.items[j].quiz);
+              const quiz = await Test.findById(materi.items[j].quiz).session(
+                session
+              );
 
               if (quiz) {
                 const haveAnswered = await TestAnswer.findOne({
@@ -1197,15 +1222,19 @@ module.exports = {
                       test: materi.items[j].quiz,
                     },
                   ],
-                });
+                }).session(session);
 
                 if (!haveAnswered) {
-                  return response(
+                  response(
                     400,
                     {},
                     "Anda belum mengerjakan semua quiz yang tersedia",
                     res
                   );
+
+                  await session.abortTransaction();
+
+                  return;
                 }
               }
             }
@@ -1217,21 +1246,29 @@ module.exports = {
           kelas: validKelas._id,
         });
 
-        return response(
+        await session.commitTransaction();
+
+        response(
           201,
           data,
           "Permohonan penyelesaian kelas berhasil diajukan",
           res
         );
       } else {
-        return response(400, {}, "Anda tidak terdaftar di kelas ini", res);
+        response(400, {}, "Anda tidak terdaftar di kelas ini", res);
+
+        await session.abortTransaction();
+
+        return;
       }
     } catch (error) {
       console.log(error);
 
-      return res
-        .status(500)
-        .json({ error: "Internal server error, coba lagi" });
+      res.status(500).json({ error: "Internal server error, coba lagi" });
+
+      await session.abortTransaction();
+    } finally {
+      session.endSession();
     }
   },
 
