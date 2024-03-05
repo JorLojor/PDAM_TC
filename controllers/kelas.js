@@ -1972,58 +1972,72 @@ module.exports = {
 
         session.endSession();
       } else {
-        if (!resultkelas.peserta.includes(resultUser._id)) {
-          if (
-            (resultkelas.kelasType === 1 && resultUser.userType === 1) ||
-            (resultkelas.kelasType === 0 &&
-              (resultUser.userType === 1 || resultUser.userType === 0))
-          ) {
-            const extractedPesertaKelas = [...resultkelas.peserta];
-            const extractedKelasUser = [...resultUser.kelas];
+        const today = moment().format("ddd MMM DD YYYY");
 
-            extractedPesertaKelas.push({
-              user: resultUser._id,
-            });
+        const last = moment(
+          resultkelas.jadwal[resultkelas.jadwal.length - 1].tanggal
+        ).format("ddd MMM DD YYYY");
 
-            extractedKelasUser.push({
-              kelas: resultkelas._id,
-            });
+        if (moment(today).isAfter(last)) {
+          response(400, resultkelas, "Kelas sudah berakhir", res);
 
-            const resultEditKelas = await KelasModel.findOneAndUpdate(
-              { slug: slug },
-              { $set: { peserta: extractedPesertaKelas } },
-              { new: true, session }
-            );
-            const resultEditUser = await UserModel.findOneAndUpdate(
-              { _id: idUser },
-              { $set: { kelas: extractedKelasUser } },
-              { new: true, session }
-            );
+          await session.abortTransaction();
 
-            await session.commitTransaction();
-            session.endSession();
+          session.endSession();
+        } else {
+          if (!resultkelas.peserta.includes(resultUser._id)) {
+            if (
+              (resultkelas.kelasType === 1 && resultUser.userType === 1) ||
+              (resultkelas.kelasType === 0 &&
+                (resultUser.userType === 1 || resultUser.userType === 0))
+            ) {
+              const extractedPesertaKelas = [...resultkelas.peserta];
+              const extractedKelasUser = [...resultUser.kelas];
 
-            await sendClassEnrollmentMail(
-              resultUser.email,
-              resultkelas.nama,
-              resultUser.username
-            );
+              extractedPesertaKelas.push({
+                user: resultUser._id,
+              });
 
-            response(200, resultkelas, "Berhasil enroll", res);
+              extractedKelasUser.push({
+                kelas: resultkelas._id,
+              });
+
+              const resultEditKelas = await KelasModel.findOneAndUpdate(
+                { slug: slug },
+                { $set: { peserta: extractedPesertaKelas } },
+                { new: true, session }
+              );
+              const resultEditUser = await UserModel.findOneAndUpdate(
+                { _id: idUser },
+                { $set: { kelas: extractedKelasUser } },
+                { new: true, session }
+              );
+
+              await session.commitTransaction();
+              session.endSession();
+
+              await sendClassEnrollmentMail(
+                resultUser.email,
+                resultkelas.nama,
+                resultUser.username
+              );
+
+              response(200, resultkelas, "Berhasil enroll", res);
+            } else {
+              response(
+                401,
+                resultkelas,
+                "Anda tidak bisa enroll untuk kelas ini (Status : Khusus Peserta Internal)",
+                res
+              );
+              await session.abortTransaction();
+              session.endSession();
+            }
           } else {
-            response(
-              401,
-              resultkelas,
-              "Anda tidak bisa enroll untuk kelas ini (Status : Khusus Peserta Internal)",
-              res
-            );
+            response(400, {}, "User sudah terdaftar di kelas", res);
             await session.abortTransaction();
             session.endSession();
           }
-        } else {
-          response(400, {}, "User sudah terdaftar di kelas", res);
-          await session.abortTransaction();
-          session.endSession();
         }
       }
     } catch (error) {
@@ -2187,60 +2201,87 @@ module.exports = {
       const extracted = [...get.peserta];
 
       for (let i = 0; i < id.length; i++) {
-        const selectPeserta = extracted.filter(
-          (v) => v.user.toString() === id[i]
-        );
-        const withoutSelected = extracted.filter(
-          (v) => v.user.toString() !== id[i]
-        );
+        if (status == "declined") {
+          const getKelas = await KelasModel.findOne({ slug }).session(session);
+          const getUser = await UserModel.findOne({ _id: id[i] }).session(
+            session
+          );
 
-        if (selectPeserta.length > 0) {
-          selectPeserta[0].status = status;
+          const kelasWithoutUser = getKelas.peserta.filter(
+            (v) => v.user.toString() !== getUser._id.toString()
+          );
+
+          await KelasModel.findOneAndUpdate(
+            { slug },
+            { $set: { peserta: kelasWithoutUser } },
+            { new: true, session }
+          );
+
+          const userWithoutKelas = getUser.kelas.filter(
+            (v) => v.kelas.toString() !== getKelas._id.toString()
+          );
+
+          await UserModel.findOneAndUpdate(
+            { _id: id },
+            { $set: { kelas: userWithoutKelas } },
+            { new: true, session }
+          );
+        } else {
+          const selectPeserta = extracted.filter(
+            (v) => v.user.toString() === id[i]
+          );
+          const withoutSelected = extracted.filter(
+            (v) => v.user.toString() !== id[i]
+          );
+
+          if (selectPeserta.length > 0) {
+            selectPeserta[0].status = status;
+          }
+
+          const mergePesertaList = [...withoutSelected, ...selectPeserta];
+
+          await KelasModel.findOneAndUpdate(
+            { slug },
+            { $set: { peserta: mergePesertaList } },
+            { new: true, session }
+          );
+
+          const getUser = await UserModel.findOne({
+            _id: id[i],
+          })
+            .select("kelas")
+            .session(session);
+
+          const extractUser = [...getUser.kelas];
+
+          const selectKelas = extractUser.filter(
+            (v) => v.kelas.toString() === get._id.toString()
+          );
+          const withoutSelectedKelas = extractUser.filter(
+            (v) => v.kelas.toString() !== get._id.toString()
+          );
+
+          selectKelas[0].status = status;
+
+          const mergeKelasList = [...withoutSelectedKelas, ...selectKelas];
+
+          await UserModel.findOneAndUpdate(
+            { _id: id[i] },
+            { $set: { kelas: mergeKelasList } },
+            { new: true, session }
+          );
+
+          await classEnrollmentLog.create({
+            user: id[i],
+            kelas: kelas._id,
+          });
+
+          const user = await UserModel.findOne({
+            _id: id[i],
+          });
+
+          await sendClassEnrollmentMail(user.email, kelas.nama, user.username);
         }
-
-        const mergePesertaList = [...withoutSelected, ...selectPeserta];
-
-        await KelasModel.findOneAndUpdate(
-          { slug },
-          { $set: { peserta: mergePesertaList } },
-          { new: true, session }
-        );
-
-        const getUser = await UserModel.findOne({
-          _id: id[i],
-        })
-          .select("kelas")
-          .session(session);
-
-        const extractUser = [...getUser.kelas];
-
-        const selectKelas = extractUser.filter(
-          (v) => v.kelas.toString() === get._id.toString()
-        );
-        const withoutSelectedKelas = extractUser.filter(
-          (v) => v.kelas.toString() !== get._id.toString()
-        );
-
-        selectKelas[0].status = status;
-
-        const mergeKelasList = [...withoutSelectedKelas, ...selectKelas];
-
-        await UserModel.findOneAndUpdate(
-          { _id: id[i] },
-          { $set: { kelas: mergeKelasList } },
-          { new: true, session }
-        );
-
-        await classEnrollmentLog.create({
-          user: id[i],
-          kelas: kelas._id,
-        });
-
-        const user = await UserModel.findOne({
-          _id: id[i],
-        });
-
-        await sendClassEnrollmentMail(user.email, kelas.nama, user.username);
       }
 
       await session.commitTransaction();
@@ -2685,8 +2726,49 @@ module.exports = {
 
         totalData = rawData.length;
 
+        let realData = [];
+
+        data.map(async (d) => {
+          let newEnrolment = false;
+
+          for (let i = 0; i < d.peserta.length; i++) {
+            if (d.peserta[i].status == "pending") {
+              newEnrolment = true;
+
+              break;
+            }
+          }
+
+          realData.push({
+            _id: d._id,
+            kodeKelas: d.kodeKelas,
+            nama: d.nama,
+            kapasitasPeserta: d.kapasitasPeserta,
+            description: d.description,
+            methods: d.methods,
+            materi: d.materi,
+            absensi: d.absensi,
+            peserta: d.peserta,
+            kodeNotaDinas: d.kodeNotaDinas,
+            kelasType: d.kelasType,
+            jadwal: d.jadwal,
+            kategori: d.kategori,
+            trainingMethod: d.trainingMethod,
+            kelasStatus: d.kelasStatus,
+            image: d.image,
+            linkPelatihan: d.linkPelatihan,
+            isActive: d.isActive,
+            status: d.status,
+            slug: d.slug,
+            createdAt: d.createdAt,
+            updatedAt: d.updatedAt,
+            __v: d.__v,
+            newEnrolment,
+          });
+        });
+
         result = {
-          data: data,
+          data: realData,
           "total data": totalData,
         };
 
