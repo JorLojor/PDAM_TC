@@ -46,7 +46,11 @@ module.exports = {
 
   dashboardCard: async (req, res) => {
     try {
-      let kelas = await Kelas.find();
+      let kelas = await Kelas.find({
+        status: {
+          $ne: "deleted",
+        },
+      });
 
       let today = new Date();
 
