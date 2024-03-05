@@ -345,11 +345,11 @@ module.exports = {
   getTest: async (req, res) => {
     try {
       const { id } = req.params;
-      const { kelas } = req.query;
+      // const { kelas } = req.query;
 
-      if (!kelas) {
-        return response(404, id, "Mohon isi kelas", res);
-      }
+      // if (!kelas) {
+      //   return response(404, id, "Mohon isi kelas", res);
+      // }
 
       const result = await Test.findById(id).populate("pembuat");
 
@@ -357,28 +357,37 @@ module.exports = {
         return response(404, id, "Test tidak di temukan", res);
       }
 
-      const realKelas = await Kelas.findById(kelas);
+      // const realKelas = await Kelas.findById(kelas);
 
-      const today = moment().format("ddd MMM DD YYYY");
+      // const today = moment().format("ddd MMM DD YYYY");
 
-      const last = moment(
-        realKelas.jadwal[realKelas.jadwal.length - 1].tanggal
-      ).format("ddd MMM DD YYYY");
+      // const last = moment(
+      //   realKelas.jadwal[realKelas.jadwal.length - 1].tanggal
+      // ).format("ddd MMM DD YYYY");
 
-      if (moment(today).isAfter(last)) {
-        return response(400, {}, "Kelas sudah berakhir", res);
-      }
+      // if (moment(today).isAfter(last)) {
+      //   return response(400, {}, "Kelas sudah berakhir", res);
+      // }
 
-      checkAnswer = await testAnswer.findOne({
+      // checkAnswer = await testAnswer.findOne({
+      //   test: id,
+      //   $and: [
+      //     {
+      //       user: req.user.id,
+      //     },
+      //     {
+      //       class: {
+      //         $in: kelas,
+      //       },
+      //     },
+      //   ],
+      // });
+
+      let checkAnswer = await testAnswer.findOne({
         test: id,
         $and: [
           {
             user: req.user.id,
-          },
-          {
-            class: {
-              $in: kelas,
-            },
           },
         ],
       });
@@ -416,6 +425,8 @@ module.exports = {
             data.push({
               test: test.judul,
               kelas: kelas.nama,
+              nilai: result[i].nilai,
+              type: test.type,
               waktu: moment(result[i].createdAt).format("DD-MM-YYYY HH:mm:ss"),
             });
           }
