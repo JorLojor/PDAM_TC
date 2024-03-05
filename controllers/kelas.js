@@ -1970,58 +1970,72 @@ module.exports = {
 
         session.endSession();
       } else {
-        if (!resultkelas.peserta.includes(resultUser._id)) {
-          if (
-            (resultkelas.kelasType === 1 && resultUser.userType === 1) ||
-            (resultkelas.kelasType === 0 &&
-              (resultUser.userType === 1 || resultUser.userType === 0))
-          ) {
-            const extractedPesertaKelas = [...resultkelas.peserta];
-            const extractedKelasUser = [...resultUser.kelas];
+        const today = moment().format("ddd MMM DD YYYY");
 
-            extractedPesertaKelas.push({
-              user: resultUser._id,
-            });
+        const last = moment(
+          resultkelas.jadwal[resultkelas.jadwal.length - 1].tanggal
+        ).format("ddd MMM DD YYYY");
 
-            extractedKelasUser.push({
-              kelas: resultkelas._id,
-            });
+        if (moment(today).isAfter(last)) {
+          response(400, resultkelas, "Kelas sudah berakhir", res);
 
-            const resultEditKelas = await KelasModel.findOneAndUpdate(
-              { slug: slug },
-              { $set: { peserta: extractedPesertaKelas } },
-              { new: true, session }
-            );
-            const resultEditUser = await UserModel.findOneAndUpdate(
-              { _id: idUser },
-              { $set: { kelas: extractedKelasUser } },
-              { new: true, session }
-            );
+          await session.abortTransaction();
 
-            await session.commitTransaction();
-            session.endSession();
+          session.endSession();
+        } else {
+          if (!resultkelas.peserta.includes(resultUser._id)) {
+            if (
+              (resultkelas.kelasType === 1 && resultUser.userType === 1) ||
+              (resultkelas.kelasType === 0 &&
+                (resultUser.userType === 1 || resultUser.userType === 0))
+            ) {
+              const extractedPesertaKelas = [...resultkelas.peserta];
+              const extractedKelasUser = [...resultUser.kelas];
 
-            await sendClassEnrollmentMail(
-              resultUser.email,
-              resultkelas.nama,
-              resultUser.username
-            );
+              extractedPesertaKelas.push({
+                user: resultUser._id,
+              });
 
-            response(200, resultkelas, "Berhasil enroll", res);
+              extractedKelasUser.push({
+                kelas: resultkelas._id,
+              });
+
+              const resultEditKelas = await KelasModel.findOneAndUpdate(
+                { slug: slug },
+                { $set: { peserta: extractedPesertaKelas } },
+                { new: true, session }
+              );
+              const resultEditUser = await UserModel.findOneAndUpdate(
+                { _id: idUser },
+                { $set: { kelas: extractedKelasUser } },
+                { new: true, session }
+              );
+
+              await session.commitTransaction();
+              session.endSession();
+
+              await sendClassEnrollmentMail(
+                resultUser.email,
+                resultkelas.nama,
+                resultUser.username
+              );
+
+              response(200, resultkelas, "Berhasil enroll", res);
+            } else {
+              response(
+                401,
+                resultkelas,
+                "Anda tidak bisa enroll untuk kelas ini (Status : Khusus Peserta Internal)",
+                res
+              );
+              await session.abortTransaction();
+              session.endSession();
+            }
           } else {
-            response(
-              401,
-              resultkelas,
-              "Anda tidak bisa enroll untuk kelas ini (Status : Khusus Peserta Internal)",
-              res
-            );
+            response(400, {}, "User sudah terdaftar di kelas", res);
             await session.abortTransaction();
             session.endSession();
           }
-        } else {
-          response(400, {}, "User sudah terdaftar di kelas", res);
-          await session.abortTransaction();
-          session.endSession();
         }
       }
     } catch (error) {
