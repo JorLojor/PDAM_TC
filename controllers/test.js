@@ -412,11 +412,13 @@ module.exports = {
 
           const test = await Test.findById(result[i].test);
 
-          data.push({
-            test: test.judul,
-            kelas: kelas.nama,
-            waktu: moment(result[i].createdAt).format("DD-MM-YYYY HH:mm:ss"),
-          });
+          if (kelas && nama) {
+            data.push({
+              test: test.judul,
+              kelas: kelas.nama,
+              waktu: moment(result[i].createdAt).format("DD-MM-YYYY HH:mm:ss"),
+            });
+          }
         }
       }
 
