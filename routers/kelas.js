@@ -24,7 +24,7 @@ const storage = multer.diskStorage({
 const upload = multer({ storage });
 
 // router.get("/", auth.user, Controller.getAllKelas);
-router.get("/", Controller.getAllKelas); //testing
+router.get("/", Controller.getAllKelasAdmin); //testing
 router.get("/all", auth.user, Controller.getAllKelasAdmin); //testing
 router.get("/absensi/:kelas", auth.user, Controller.getAbsensi);
 router.get("/report", auth.user, Controller.getWholeReport); //testing
