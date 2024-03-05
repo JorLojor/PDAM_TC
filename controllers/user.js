@@ -3,6 +3,7 @@ const ClassResolvementRequest = require("../models/classResolvementRequest");
 const Materi = require("../models/materi");
 const userModel = require("../models/user");
 const TestAnswer = require("../models/testAnswer");
+const Test = require("../models/test");
 const Sertifikat = require("../models/sertifikat");
 const Kelas = require("../models/kelas");
 const Kategori = require("../models/kategori");
@@ -1088,14 +1089,14 @@ module.exports = {
         ],
       });
 
-      // if (haveSubmitted) {
-      //   return response(
-      //     400,
-      //     {},
-      //     "Anda sudah melakukan permohonan pada kelas ini",
-      //     res
-      //   );
-      // }
+      if (haveSubmitted) {
+        return response(
+          400,
+          {},
+          "Anda sudah melakukan permohonan pada kelas ini",
+          res
+        );
+      }
 
       let valid = false;
 
@@ -1120,11 +1121,10 @@ module.exports = {
           for (let i = 0; i < materis.length; i++) {
             const materi = await Materi.findById(materis[i]);
 
-            if (
-              materi.test.pre != "" &&
-              materi.test.pre &&
-              materi.test.pre != undefined
-            ) {
+            const preTest = await Test.findById(materi.test.pre);
+            const postTest = await Test.findById(materi.test.post);
+
+            if (preTest) {
               const haveAnsweredPre = await TestAnswer.findOne({
                 user: req.user.id,
                 $and: [
@@ -1144,11 +1144,7 @@ module.exports = {
               }
             }
 
-            if (
-              materi.test.post != "" &&
-              materi.test.post &&
-              materi.test.post != undefined
-            ) {
+            if (postTest) {
               const haveAnsweredPost = await TestAnswer.findOne({
                 user: req.user.id,
                 $and: [
@@ -1169,11 +1165,9 @@ module.exports = {
             }
 
             for (let j = 0; j < materi.items.length; j++) {
-              if (
-                materi.items[j].quiz != "" &&
-                materi.items[j].quiz &&
-                materi.items[j].quiz != undefined
-              ) {
+              const quiz = await Test.findById(materi.items[j].quiz);
+
+              if (quiz) {
                 const haveAnswered = await TestAnswer.findOne({
                   user: req.user.id,
                   $and: [
@@ -1680,7 +1674,7 @@ module.exports = {
     } catch (error) {
       console.log(error);
 
-      response(500, error, error.message, res)
+      response(500, error, error.message, res);
     }
   },
 
@@ -1764,7 +1758,7 @@ module.exports = {
         .findById(id)
         .populate({
           path: "kelas.kelas",
-          match: { status: { $ne: "deleted" } }
+          match: { status: { $ne: "deleted" } },
         })
         .select("kelas");
 
