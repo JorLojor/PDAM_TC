@@ -347,9 +347,9 @@ module.exports = {
       const { id } = req.params;
       const { kelas } = req.query;
 
-      // if (!kelas) {
-      //   return response(404, id, "Mohon isi kelas", res);
-      // }
+      if (!kelas) {
+        return response(404, id, "Mohon isi kelas", res);
+      }
 
       const result = await Test.findById(id).populate("pembuat");
 
@@ -357,30 +357,31 @@ module.exports = {
         return response(404, id, "Test tidak di temukan", res);
       }
 
-      let checkAnswer = await testAnswer.findOne({
+      const realKelas = await Kelas.findById(kelas);
+
+      const today = moment().format("ddd MMM DD YYYY");
+
+      const last = moment(
+        realKelas.jadwal[realKelas.jadwal.length - 1].tanggal
+      ).format("ddd MMM DD YYYY");
+
+      if (moment(today).isAfter(last)) {
+        return response(400, {}, "Kelas sudah berakhir", res);
+      }
+
+      checkAnswer = await testAnswer.findOne({
         test: id,
         $and: [
           {
             user: req.user.id,
           },
+          {
+            class: {
+              $in: kelas,
+            },
+          },
         ],
       });
-
-      if (kelas) {
-        checkAnswer = await testAnswer.findOne({
-          test: id,
-          $and: [
-            {
-              user: req.user.id,
-            },
-            {
-              class: {
-                $in: kelas,
-              },
-            },
-          ],
-        });
-      }
 
       if (checkAnswer) {
         return response(400, [], "Test sudah dijawab", res);
@@ -724,7 +725,8 @@ module.exports = {
                 answer = answer + quizTest.answers.length;
 
                 duration =
-                  duration + converttoSecond(quizTest.finishAt, quizTest.startAt);
+                  duration +
+                  converttoSecond(quizTest.finishAt, quizTest.startAt);
               }
             }
 
@@ -1582,7 +1584,7 @@ module.exports = {
         { _id: idTest, "question.answer._id": idAnswer },
         { $pull: { "question.$[outer].answer": { _id: idAnswer } } },
         { arrayFilters: [{ "outer.answer._id": idAnswer }], session }
-      )
+      );
 
       return response(200, {}, "Quiz Berhasil di perbaharui", res);
     } catch (error) {

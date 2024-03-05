@@ -686,7 +686,7 @@ module.exports = {
       }
 
       const user = await userModel.findOne({
-        $or: [{ username }, { email: username }],
+        username,
       });
 
       if (user) {
