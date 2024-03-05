@@ -129,7 +129,7 @@ module.exports = {
               k.jadwal[k.jadwal.length - 1].tanggal
             ).format("YYYY-MM-DD");
 
-            if (moment(schedule).isSameOrBefore(today)) {
+            if (moment(schedule).isSameOrAfter(today)) {
               onGoingClass = onGoingClass + 1;
 
               k.peserta.map((p) => {
@@ -217,11 +217,17 @@ module.exports = {
       } else if (req.user.role < 2) {
         kelas.map((k) => {
           if (startDate) {
+            const finalSchedule = moment(
+              k.jadwal[k.jadwal.length - 1].tanggal
+            ).format("YYYY-MM-DD");
+
+            const startSchedule = moment(k.jadwal[0].tanggal).format(
+              "YYYY-MM-DD"
+            );
+
             if (
-              moment(k.jadwal[0].tanggal).format("YYYY-MM-DD") >= startDate &&
-              moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
-                "YYYY-MM-DD"
-              ) < today
+              moment(startSchedule).isSameOrAfter(startDate) &&
+              moment(finalSchedule).isBefore(today)
             ) {
               onGoingClass = onGoingClass + 1;
               classCount = classCount + 1;
@@ -246,11 +252,11 @@ module.exports = {
               });
             }
           } else {
-            if (
-              moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
-                "YYYY-MM-DD"
-              ) <= today
-            ) {
+            const schedule = moment(
+              k.jadwal[k.jadwal.length - 1].tanggal
+            ).format("YYYY-MM-DD");
+
+            if (moment(schedule).isSameOrAfter(today)) {
               onGoingClass = onGoingClass + 1;
 
               k.peserta.map((p) => {
@@ -333,11 +339,17 @@ module.exports = {
 
         kelas.map((k) => {
           if (startDate) {
+            const finalSchedule = moment(
+              k.jadwal[k.jadwal.length - 1].tanggal
+            ).format("YYYY-MM-DD");
+
+            const startSchedule = moment(k.jadwal[0].tanggal).format(
+              "YYYY-MM-DD"
+            );
+
             if (
-              moment(k.jadwal[0].tanggal).format("YYYY-MM-DD") >= startDate &&
-              moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
-                "YYYY-MM-DD"
-              ) < today
+              moment(startSchedule).isSameOrAfter(startDate) &&
+              moment(finalSchedule).isBefore(today)
             ) {
               kelasIds.push(k._id);
             }
@@ -349,11 +361,11 @@ module.exports = {
               finishedClass = finishedClass + 1;
             }
           } else {
-            if (
-              moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
-                "YYYY-MM-DD"
-              ) <= today
-            ) {
+            const schedule = moment(
+              k.jadwal[k.jadwal.length - 1].tanggal
+            ).format("YYYY-MM-DD");
+
+            if (moment(schedule).isSameOrAfter(today)) {
               kelasIds.push(k._id);
             } else {
               finishedClass = finishedClass + 1;
