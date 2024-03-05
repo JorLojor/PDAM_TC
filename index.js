@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const app = express();
 const cors = require("cors");
 const http = require("http");
+const rateLimit = require("express-rate-limit");
 const server = http.createServer(app);
 const { Server } = require("socket.io");
 const morgan = require("morgan");
@@ -20,6 +21,13 @@ const fs = require("fs");
 const path = require("path");
 
 app.use(cors());
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+});
+
+app.use(limiter);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
