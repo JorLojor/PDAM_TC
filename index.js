@@ -3,7 +3,6 @@ const mongoose = require("mongoose");
 const app = express();
 const cors = require("cors");
 const http = require("http");
-const Queue = require("p-queue");
 const rateLimit = require("express-rate-limit");
 const server = http.createServer(app);
 const { Server } = require("socket.io");
@@ -29,14 +28,6 @@ const limiter = rateLimit({
 });
 
 app.use(limiter);
-
-const queue = new Queue({ concurrency: 1 });
-
-app.use((req, res, next) => {
-  queue.add(() => {
-    next();
-  });
-});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
