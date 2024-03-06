@@ -1222,8 +1222,10 @@ module.exports = {
                     }
                   }
                 }
+              }
 
-                for (let j = 0; j < materi.items.length; j++) {
+              for (let j = 0; j < materi.items.length; j++) {
+                if (materi.items[j].hasOwnProperty("quiz")) {
                   const quiz = await Test.findById(
                     materi.items[j].quiz
                   ).session(session);
