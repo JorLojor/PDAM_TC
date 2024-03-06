@@ -1088,7 +1088,6 @@ module.exports = {
     const session = await mongoose.startSession();
     session.startTransaction();
     try {
-
       const { kelas } = req.body;
 
       if (!kelas) {
@@ -1154,100 +1153,104 @@ module.exports = {
           for (let i = 0; i < materis.length; i++) {
             const materi = await Materi.findById(materis[i]).session(session);
 
-            if (
-              materi.test.pre != "" &&
-              materi.test.pre &&
-              materi.test.pre != undefined
-            ) {
-              const preTest = await Test.findById(materi.test.pre).session(
-                session
-              );
-
-              if (preTest) {
-                const haveAnsweredPre = await TestAnswer.findOne({
-                  user: req.user.id,
-                  $and: [
-                    {
-                      test: materi.test.pre,
-                    },
-                  ],
-                }).session(session);
-
-                if (!haveAnsweredPre) {
-                  response(
-                    400,
-                    {},
-                    "Anda belum mengerjakan pre test pada kelas ini",
-                    res
+            if (materi) {
+              if (materi.hasOwnProperty("test")) {
+                if (
+                  materi.test.post != "" &&
+                  materi.test.post &&
+                  materi.test.post != undefined
+                ) {
+                  const preTest = await Test.findById(materi.test.pre).session(
+                    session
                   );
 
-                  await session.abortTransaction();
+                  if (preTest) {
+                    const haveAnsweredPre = await TestAnswer.findOne({
+                      user: req.user.id,
+                      $and: [
+                        {
+                          test: materi.test.pre,
+                        },
+                      ],
+                    }).session(session);
 
-                  return;
+                    if (!haveAnsweredPre) {
+                      response(
+                        400,
+                        {},
+                        "Anda belum mengerjakan pre test pada kelas ini",
+                        res
+                      );
+
+                      await session.abortTransaction();
+
+                      return;
+                    }
+                  }
                 }
-              }
-            }
 
-            if (
-              materi.test.post != "" &&
-              materi.test.post &&
-              materi.test.post != undefined
-            ) {
-              const postTest = await Test.findById(materi.test.post).session(
-                session
-              );
+                if (
+                  materi.test.post != "" &&
+                  materi.test.post &&
+                  materi.test.post != undefined
+                ) {
+                  const postTest = await Test.findById(
+                    materi.test.post
+                  ).session(session);
 
-              if (postTest) {
-                const haveAnsweredPost = await TestAnswer.findOne({
-                  user: req.user.id,
-                  $and: [
-                    {
-                      test: materi.test.post,
-                    },
-                  ],
-                }).session(session);
+                  if (postTest) {
+                    const haveAnsweredPost = await TestAnswer.findOne({
+                      user: req.user.id,
+                      $and: [
+                        {
+                          test: materi.test.post,
+                        },
+                      ],
+                    }).session(session);
 
-                if (!haveAnsweredPost) {
-                  response(
-                    400,
-                    {},
-                    "Anda belum mengerjakan post test pada kelas ini",
-                    res
-                  );
+                    if (!haveAnsweredPost) {
+                      response(
+                        400,
+                        {},
+                        "Anda belum mengerjakan post test pada kelas ini",
+                        res
+                      );
 
-                  await session.abortTransaction();
+                      await session.abortTransaction();
 
-                  return;
+                      return;
+                    }
+                  }
                 }
-              }
-            }
 
-            for (let j = 0; j < materi.items.length; j++) {
-              const quiz = await Test.findById(materi.items[j].quiz).session(
-                session
-              );
+                for (let j = 0; j < materi.items.length; j++) {
+                  const quiz = await Test.findById(
+                    materi.items[j].quiz
+                  ).session(session);
 
-              if (quiz) {
-                const haveAnswered = await TestAnswer.findOne({
-                  user: req.user.id,
-                  $and: [
-                    {
-                      test: materi.items[j].quiz,
-                    },
-                  ],
-                }).session(session);
+                  if (quiz) {
+                    const haveAnswered = await TestAnswer.findOne({
+                      user: req.user.id,
+                      $and: [
+                        {
+                          test: materi.items[j].quiz,
+                        },
+                      ],
+                    }).session(session);
 
-                if (!haveAnswered) {
-                  response(
-                    400,
-                    {},
-                    "Anda belum mengerjakan semua quiz yang tersedia",
-                    res
-                  );
+                    if (!haveAnswered) {
+                      response(
+                        400,
+                        {},
+                        "Anda belum mengerjakan semua quiz yang tersedia",
+                        res
+                      );
 
-                  await session.abortTransaction();
+                      await session.abortTransaction();
 
-                  return;
+                      return;
+                    }
+                  }
                 }
               }
             }
@@ -1619,8 +1622,9 @@ module.exports = {
       let user = data.map((val, idx) => {
         return {
           value: val._id,
-          label: `${val.name} (${val.username}) - ${val.userType === 1 ? "Internal" : "Eksternal"
-            }`,
+          label: `${val.name} (${val.username}) - ${
+            val.userType === 1 ? "Internal" : "Eksternal"
+          }`,
         };
       });
 
