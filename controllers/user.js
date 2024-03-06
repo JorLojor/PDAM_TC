@@ -1171,6 +1171,9 @@ module.exports = {
                         {
                           test: materi.test.pre,
                         },
+                        {
+                          class: validKelas._id,
+                        },
                       ],
                     }).session(session);
 
@@ -1205,6 +1208,9 @@ module.exports = {
                         {
                           test: materi.test.post,
                         },
+                        {
+                          class: validKelas._id,
+                        },
                       ],
                     }).session(session);
 
@@ -1236,6 +1242,9 @@ module.exports = {
                       $and: [
                         {
                           test: materi.items[j].quiz,
+                        },
+                        {
+                          class: validKelas._id,
                         },
                       ],
                     }).session(session);
