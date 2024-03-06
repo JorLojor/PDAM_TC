@@ -1085,9 +1085,9 @@ module.exports = {
   },
 
   submitClassResolvement: async (req, res) => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
     try {
-      const session = await mongoose.startSession();
-      session.startTransaction();
 
       const { kelas } = req.body;
 
@@ -1606,9 +1606,8 @@ module.exports = {
       let user = data.map((val, idx) => {
         return {
           value: val._id,
-          label: `${val.name} (${val.username}) - ${
-            val.userType === 1 ? "Internal" : "Eksternal"
-          }`,
+          label: `${val.name} (${val.username}) - ${val.userType === 1 ? "Internal" : "Eksternal"
+            }`,
         };
       });
 
