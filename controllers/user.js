@@ -1154,11 +1154,11 @@ module.exports = {
             const materi = await Materi.findById(materis[i]).session(session);
 
             if (materi) {
-              if (materi.hasOwnProperty("test")) {
+              if ("test" in materi) {
                 if (
-                  materi.test.post != "" &&
-                  materi.test.post &&
-                  materi.test.post != undefined
+                  materi.test.pre != "" &&
+                  materi.test.pre &&
+                  materi.test.pre != undefined
                 ) {
                   const preTest = await Test.findById(materi.test.pre).session(
                     session
@@ -1225,7 +1225,7 @@ module.exports = {
               }
 
               for (let j = 0; j < materi.items.length; j++) {
-                if (materi.items[j].hasOwnProperty("quiz")) {
+                if ("quiz" in materi.items[j]) {
                   const quiz = await Test.findById(
                     materi.items[j].quiz
                   ).session(session);
