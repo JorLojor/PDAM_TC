@@ -1154,58 +1154,71 @@ module.exports = {
           for (let i = 0; i < materis.length; i++) {
             const materi = await Materi.findById(materis[i]).session(session);
 
-            const preTest = await Test.findById(materi.test.pre).session(
-              session
-            );
-            const postTest = await Test.findById(materi.test.post).session(
-              session
-            );
+            if (
+              materi.test.pre != "" &&
+              materi.test.pre &&
+              materi.test.pre != undefined
+            ) {
+              const preTest = await Test.findById(materi.test.pre).session(
+                session
+              );
 
-            if (preTest) {
-              const haveAnsweredPre = await TestAnswer.findOne({
-                user: req.user.id,
-                $and: [
-                  {
-                    test: materi.test.pre,
-                  },
-                ],
-              }).session(session);
+              if (preTest) {
+                const haveAnsweredPre = await TestAnswer.findOne({
+                  user: req.user.id,
+                  $and: [
+                    {
+                      test: materi.test.pre,
+                    },
+                  ],
+                }).session(session);
 
-              if (!haveAnsweredPre) {
-                response(
-                  400,
-                  {},
-                  "Anda belum mengerjakan pre test pada kelas ini",
-                  res
-                );
+                if (!haveAnsweredPre) {
+                  response(
+                    400,
+                    {},
+                    "Anda belum mengerjakan pre test pada kelas ini",
+                    res
+                  );
 
-                await session.abortTransaction();
+                  await session.abortTransaction();
 
-                return;
+                  return;
+                }
               }
             }
 
-            if (postTest) {
-              const haveAnsweredPost = await TestAnswer.findOne({
-                user: req.user.id,
-                $and: [
-                  {
-                    test: materi.test.post,
-                  },
-                ],
-              }).session(session);
+            if (
+              materi.test.post != "" &&
+              materi.test.post &&
+              materi.test.post != undefined
+            ) {
+              const postTest = await Test.findById(materi.test.post).session(
+                session
+              );
 
-              if (!haveAnsweredPost) {
-                response(
-                  400,
-                  {},
-                  "Anda belum mengerjakan post test pada kelas ini",
-                  res
-                );
+              if (postTest) {
+                const haveAnsweredPost = await TestAnswer.findOne({
+                  user: req.user.id,
+                  $and: [
+                    {
+                      test: materi.test.post,
+                    },
+                  ],
+                }).session(session);
 
-                await session.abortTransaction();
+                if (!haveAnsweredPost) {
+                  response(
+                    400,
+                    {},
+                    "Anda belum mengerjakan post test pada kelas ini",
+                    res
+                  );
 
-                return;
+                  await session.abortTransaction();
+
+                  return;
+                }
               }
             }
 
