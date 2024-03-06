@@ -56,6 +56,7 @@ const documentationRoute = require("./routers/documentation");
 const evaluationFormRoute = require("./routers/evaluationForm");
 const evaluationFormQuestionRoute = require("./routers/evaluationFormQuestion");
 const rankingRoute = require("./routers/ranking");
+const kelasBesarRoute = require("./routers/kelasBesar");
 const { getNotifIo, storeIo } = require("./controllers/chat");
 const { storeRecentClassIO } = require("./controllers/kelas");
 const { log } = require("console");
@@ -80,6 +81,7 @@ app.use("/documentation/", documentationRoute);
 app.use("/evaluation-form/", evaluationFormRoute);
 app.use("/evaluation-form-question/", evaluationFormQuestionRoute);
 app.use("/ranking/", rankingRoute);
+app.use('/kelas-besar/', kelasBesarRoute)
 
 const uploadsDirectory = path.join(__dirname, "upload");
 

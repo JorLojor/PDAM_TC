@@ -4,10 +4,10 @@ const { Schema } = mongoose;
 const kelasBesarSchema = new Schema(
   {
     title: { type: String, required: true },
-    image: { type: String, required: true },
-    status: { type: String, required: true },
+    picture: { type: String, required: true },
+    status: { type: Number, required: true },
   },
-  { timestamps: false, _id: false }
+  { timestamps: false }
 );
 
-module.exports = kelasBesarSchema;
+module.exports = mongoose.model("kelasBesar", kelasBesarSchema);
