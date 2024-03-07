@@ -1154,7 +1154,7 @@ module.exports = {
             const materi = await Materi.findById(materis[i]).session(session);
 
             if (materi) {
-              if ("test" in materi) {
+              if (materi.hasOwnProperty("test")) {
                 if (
                   materi.test.pre != "" &&
                   materi.test.pre &&
@@ -1231,7 +1231,7 @@ module.exports = {
               }
 
               for (let j = 0; j < materi.items.length; j++) {
-                if ("quiz" in materi.items[j]) {
+                if (materi.items[j].hasOwnProperty("quiz")) {
                   const quiz = await Test.findById(
                     materi.items[j].quiz
                   ).session(session);
