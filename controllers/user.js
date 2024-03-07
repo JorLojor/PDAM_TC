@@ -937,43 +937,101 @@ module.exports = {
       let data = [];
       let kelas = [];
 
-      if (user.kelas.length > 0) {
-        user.kelas.map((m) => {
-          if (m.isDone == true) {
-            kelas.push(m.kelas);
-          }
-        });
-      }
+      if (req.user.role == 3) {
+        if (user.kelas.length > 0) {
+          user.kelas.map((m) => {
+            if (m.isDone == true) {
+              kelas.push(m.kelas);
+            }
+          });
+        }
 
-      if (kelas.length > 0) {
-        for (let i = 0; i < kelas.length; i++) {
-          const detailKelas = await Kelas.findById(kelas[i]);
+        if (kelas.length > 0) {
+          for (let i = 0; i < kelas.length; i++) {
+            const detailKelas = await Kelas.findById(kelas[i]);
 
-          if (kelasName) {
-            if (
-              !detailKelas.nama.toLowerCase().includes(kelasName.toLowerCase())
-            ) {
+            if (kelasName) {
+              if (
+                !detailKelas.nama
+                  .toLowerCase()
+                  .includes(kelasName.toLowerCase())
+              ) {
+                continue;
+              }
+            }
+
+            const evaluated = await EvaluationFormResult.findOne({
+              user: id,
+              kelas: kelas[i],
+            });
+
+            if (!evaluated) {
               continue;
             }
+
+            const sertifikat = await Sertifikat.findById(
+              detailKelas.desainSertifikat?.peserta
+            );
+
+            if (
+              (parseInt(isThere) === 0 && sertifikat !== null) ||
+              (parseInt(isThere) === 1 && sertifikat === null)
+            ) {
+              data.push({
+                sertifikat,
+                kelas: detailKelas?.nama,
+                idKelas: detailKelas?._id,
+              });
+            }
           }
+        }
+      } else if (req.user.role == 2) {
+        const dataKelas = await Kelas.find().populate("materi");
 
-          const evaluated = await EvaluationFormResult.findOne({
-            user: id,
-            kelas: kelas[i],
-          });
-
-          if (!evaluated) {
-            continue;
+        dataKelas.map((k) => {
+          if (k.materi) {
+            for (let i = 0; i < k.materi.length; i++) {
+              for (let j = 0; j < k.materi[i].instruktur.length; j++) {
+                if (k.materi[i].instruktur[j] == req.user.id) {
+                  kelas.push(k._id);
+                }
+              }
+            }
           }
+        });
 
-          const sertifikat = await Sertifikat.findById(
-            detailKelas.desainSertifikat?.peserta
-          );
+        kelas = kelas.filter((value, index, self) => {
+          return self.indexOf(value) === index;
+        });
 
-          if (
-            (parseInt(isThere) === 0 && sertifikat !== null) ||
-            (parseInt(isThere) === 1 && sertifikat === null)
-          ) {
+        if (kelas.length > 0) {
+          for (let i = 0; i < kelas.length; i++) {
+            const detailKelas = await Kelas.findById(kelas[i]);
+
+            if (kelasName) {
+              if (
+                !detailKelas.nama
+                  .toLowerCase()
+                  .includes(kelasName.toLowerCase())
+              ) {
+                continue;
+              }
+            }
+
+            const today = moment().format("ddd MMM DD YYYY");
+
+            const last = moment(
+              detailKelas.jadwal[detailKelas.jadwal.length - 1].tanggal
+            ).format("ddd MMM DD YYYY");
+
+            if (moment(today).isBefore(last)) {
+              continue;
+            }
+
+            const sertifikat = await Sertifikat.findById(
+              detailKelas.desainSertifikat?.instruktur
+            );
+
             data.push({
               sertifikat,
               kelas: detailKelas?.nama,
@@ -1842,15 +1900,41 @@ module.exports = {
     try {
       let get = await userModel
         .findById(id)
-        .populate({
-          path: "kelas.kelas",
-          match: { status: { $ne: "deleted" } },
-        })
+        // .populate({
+        //   // path: "kelas.kelas",
+        //   match: { status: { $ne: "deleted" } },
+        // })
         .select("kelas");
 
-      get = await Kategori.populate(get, {
-        path: "kelas.kelas.kategori",
+      let ids = [];
+
+      get.kelas.map((g) => {
+        ids.push(g.kelas);
       });
+
+      get = await Kelas.find({
+        _id: {
+          $in: ids,
+        },
+        $and: [
+          {
+            status: { $ne: "deleted" },
+          },
+        ],
+      }).sort({ createdAt: -1 });
+
+      get = await Kategori.populate(get, {
+        path: "kategori",
+      });
+
+      get.map((g) => {
+        console.log(g.createdAt);
+      });
+
+      get = {
+        id,
+        kelas: get,
+      };
 
       response(200, get, "Data ditemukan", res);
     } catch (error) {

@@ -6,7 +6,11 @@ const formidable = require("express-formidable");
 
 //router.get('/all' ,userController.getAllUser);// note
 router.get("/all", userController.getAllUser);
-router.get("/certificate", auth.student, userController.getCertificate);
+router.get(
+  "/certificate",
+  auth.instrukturAndUser,
+  userController.getCertificate
+);
 router.post("/my", userController.getSingleUserPersonal);
 router.get("/dashboard-card", auth.user, userController.dashboardCard);
 router.get(
