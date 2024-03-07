@@ -3,6 +3,7 @@ const router = express.Router();
 const auth = require("../middleware/auth");
 const userController = require("../controllers/user");
 const formidable = require("express-formidable");
+const User = require('../models/user')
 
 //router.get('/all' ,userController.getAllUser);// note
 router.get("/all", userController.getAllUser);
@@ -69,6 +70,7 @@ router.put(
   formidable(),
   userController.updateUser
 );
+router.delete("/deleteCV/:id", auth.admin, userController.hapusCV);
 router.delete("/:id", auth.admin, userController.deleteUser);
 router.put("/forgot/pass", userController.forgotPassword);
 router.get("/reset-password/:code", userController.checkUserResetPassword);
@@ -77,5 +79,4 @@ router.get("/instruktur/:id", auth.user, userController.getInstructor); // get i
 router.get("/:id", auth.user, userController.getDetailedUser);
 router.put("/instruktur/rating/:id", auth.user, userController.rate);
 router.put("/forced/:id", auth.server, userController.forcedUpdate);
-router.delete("/deleteCV/:id", auth.admin, userController.hapusCV);
 module.exports = router;

@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const fs = require("fs");
 const moment = require("moment");
 const path = require("path");
+const KelasModel = require("../models/kelas");
 
 module.exports = {
     index: async (req, res) => {
@@ -50,6 +51,7 @@ module.exports = {
             const status = req.fields[`status`];
 
             let picture = req.files[`picture`];
+            let kelas = JSON.parse(req.fields[`kelas`]);
 
             if (!title) {
                 return response(400, {}, "Mohon isi judul", res);
@@ -94,6 +96,7 @@ module.exports = {
                 title,
                 picture,
                 status,
+                kelas
             });
             await data.save({ session })
             await session.commitTransaction();
@@ -114,6 +117,7 @@ module.exports = {
             const status = req.fields[`status`];
 
             let picture = req.files[`picture`];
+            let kelas = JSON.parse(req.fields[`kelas`]);
             const oldData = await KelasBesar.findOne({ _id: id });
 
             if (!title) {
@@ -164,6 +168,7 @@ module.exports = {
                     title,
                     picture,
                     status,
+                    kelas
                 },
                 {
                     new: true,
@@ -246,4 +251,19 @@ module.exports = {
             return response(500, error, "Server error", res);
         }
     },
+    getKelas: async (req, res) => {
+        try {
+            const data = await KelasModel.find({ status: "published" }).select('_id nama')
+            const selectAble = data.map(val => {
+                return {
+                    label: val.nama,
+                    value: val._id
+                }
+            })
+
+            return response(200, selectAble, "berhasil get kelas", res);
+        } catch (error) {
+            return response(500, error, "Server error", res);
+        }
+    }
 }

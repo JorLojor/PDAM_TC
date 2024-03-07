@@ -36,7 +36,6 @@ app.use(morgan("dev"));
 mongoose.connect(process.env.mongodb2);
 
 // routes
-
 const chatRoute = require("./routers/chat");
 const roomRoute = require("./routers/room");
 const kelasRoutes = require("./routers/kelas");

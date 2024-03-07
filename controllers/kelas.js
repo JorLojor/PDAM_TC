@@ -891,6 +891,7 @@ module.exports = {
                 image: kelas[g].image,
                 jamMulai: kelas[g].jadwal[h].jamMulai,
                 linkZoom: kelas[g].linkPelatihan,
+                methods: kelas[g].methods,
                 materi,
               });
             }
@@ -1614,7 +1615,8 @@ module.exports = {
       let status = "pending";
 
       if (req.file) {
-        imageKelas = req.file.path.split("/PDAM_TC/")[1];
+        const path = req.file.path.replaceAll("\\", '/')
+        imageKelas = "/upload/"+path.split("/upload/")[1];
       }
 
       if (kodeNotaDinas !== "undefined") {
@@ -1742,7 +1744,9 @@ module.exports = {
       let imageKelas;
 
       if (req.file) {
-        imageKelas = "/upload/" + req.file.path.split("/upload/")[1];
+        const path = req.file.path.replaceAll("\\", '/')
+        imageKelas = "/upload/"+path.split("/upload/")[1];
+        // imageKelas = "/upload/" + req.file.path.split("/upload/")[1];
       }
 
       let collectedAbsensi = [];
