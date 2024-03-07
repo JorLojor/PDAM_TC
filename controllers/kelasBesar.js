@@ -95,7 +95,7 @@ module.exports = {
                 picture,
                 status,
             });
-            await data.save({session})
+            await data.save({ session })
             await session.commitTransaction();
 
             return response(200, data, "berhasil menambahkan kelas besar", res);
@@ -114,7 +114,7 @@ module.exports = {
             const status = req.fields[`status`];
 
             let picture = req.files[`picture`];
-            const oldData = await KelasBesar.findOne({_id: id});
+            const oldData = await KelasBesar.findOne({ _id: id });
 
             if (!title) {
                 return response(400, {}, "Mohon isi judul", res);
@@ -190,45 +190,60 @@ module.exports = {
     },
     publishedKelasList: async (req, res) => {
         try {
-          let { page, limits, isPaginate } = req.query;
-    
-          const totalData = await KelasBesar.find({
-            status: 1,
-          }).countDocuments();
-    
-          if (isPaginate === 0) {
+            let { page, limits, isPaginate } = req.query;
+
+            const totalData = await KelasBesar.find({
+                status: 1,
+            }).countDocuments();
+
+            if (isPaginate === 0) {
+                const data = await KelasBesar.find({
+                    status: 1,
+                })
+                    .sort({ createdAt: -1 })
+                    .limit(4);
+
+                result = {
+                    data: data,
+                    "total data": totalData,
+                };
+
+                return response(200, results, "get kelas unggulan");
+            }
+
+            page = parseInt(page) || 1;
+            limits = parseInt(limits) || 4;
+
             const data = await KelasBesar.find({
-              status: 1,
+                status: 1,
             })
-              .sort({ createdAt: -1 })
-              .limit(4);
-    
+                .skip((page - 1) * limits)
+                .limit(limits)
+                .sort({ createdAt: -1 });
+
             result = {
-              data: data,
-              "total data": totalData,
+                data: data,
+                "total data": totalData,
             };
-    
-            return response(200, results, "get kelas unggulan");
-          }
-    
-          page = parseInt(page) || 1;
-          limits = parseInt(limits) || 4;
-    
-          const data = await KelasBesar.find({
-            status: 1,
-          })
-            .skip((page - 1) * limits)
-            .limit(limits)
-            .sort({ createdAt: -1 });
-    
-          result = {
-            data: data,
-            "total data": totalData,
-          };
-    
-          return response(200, data, "berhasil get kelas unggulan", res);
+
+            return response(200, data, "berhasil get kelas unggulan", res);
         } catch (error) {
-          return response(500, error, "Server error", res);
+            return response(500, error, "Server error", res);
         }
-      },
+    },
+    show: async (req, res) => {
+        try {
+            const id = req.params.id;
+
+            const data = await KelasBesar.findById(id, { status: 1 })
+
+            if (!data) {
+                return response(400, {}, "Kelas Unggulan tidak ditemukan", res);
+            }
+
+            return response(200, data, "berhasil get kelas unggulan", res);
+        } catch (error) {
+            return response(500, error, "Server error", res);
+        }
+    },
 }

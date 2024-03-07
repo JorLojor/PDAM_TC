@@ -890,6 +890,7 @@ module.exports = {
                 kelas: kelas[g].nama,
                 image: kelas[g].image,
                 jamMulai: kelas[g].jadwal[h].jamMulai,
+                linkZoom: kelas[g].linkPelatihan,
                 materi,
               });
             }
