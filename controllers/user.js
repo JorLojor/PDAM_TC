@@ -986,7 +986,9 @@ module.exports = {
           }
         }
       } else if (req.user.role == 2) {
-        const dataKelas = await Kelas.find().populate("materi");
+        const dataKelas = await Kelas.find({
+          status: "ended",
+        }).populate("materi");
 
         dataKelas.map((k) => {
           if (k.materi) {
@@ -1018,15 +1020,15 @@ module.exports = {
               }
             }
 
-            const today = moment().format("ddd MMM DD YYYY");
+            // const today = moment().format("ddd MMM DD YYYY");
 
-            const last = moment(
-              detailKelas.jadwal[detailKelas.jadwal.length - 1].tanggal
-            ).format("ddd MMM DD YYYY");
+            // const last = moment(
+            //   detailKelas.jadwal[detailKelas.jadwal.length - 1].tanggal
+            // ).format("ddd MMM DD YYYY");
 
-            if (moment(today).isBefore(last)) {
-              continue;
-            }
+            // if (moment(today).isBefore(last)) {
+            //   continue;
+            // }
 
             const sertifikat = await Sertifikat.findById(
               detailKelas.desainSertifikat?.instruktur
