@@ -11,6 +11,7 @@ router.get("/published", Controller.publishedKelasList);
 router.put("/:id", auth.user, formidable(), Controller.update);
 router.delete("/:id", auth.user, Controller.destroy);
 router.get("/show/:id", Controller.show)
+router.get("/kelas/detail/:id", Controller.getOneKelas)
 router.get("/kelas", Controller.getKelas)
 
 module.exports = router;

@@ -185,7 +185,14 @@ module.exports = {
     destroy: async (req, res) => {
         try {
             const id = req.params.id;
-
+            const found = await KelasBesar.findById(id)
+            const dirname = __dirname.replace("controllers", "");
+            if (found.picture != null && found.picture != undefined) {
+                fs.unlinkSync(path.join(dirname, found.picture), {
+                    recursive: true,
+                    force: true,
+                });
+            }
             const data = await KelasBesar.findOneAndRemove({ _id: id });
 
             return response(200, data, "berhasil hapus kelas unggulan", res);
@@ -240,7 +247,7 @@ module.exports = {
         try {
             const id = req.params.id;
 
-            const data = await KelasBesar.findById(id, { status: 1 })
+            const data = await KelasBesar.findById(id).populate('kelas', ['nama', 'slug', '_id', 'jadwal'])
 
             if (!data) {
                 return response(400, {}, "Kelas Unggulan tidak ditemukan", res);
@@ -264,6 +271,23 @@ module.exports = {
             return response(200, selectAble, "berhasil get kelas", res);
         } catch (error) {
             return response(500, error, "Server error", res);
+        }
+    },
+    getOneKelas: async (req, res) => {
+        const id = req.params.id;
+
+        try {
+            let kelas = await KelasModel.findById(id).populate(
+                "materi materi.instruktur peserta kategori trainingMethod"
+            );
+
+            if (!kelas) {
+                response(404, id, "Kelas tidak ditemukan", res);
+            }
+
+            response(200, kelas, "kelas ditemukan", res);
+        } catch (error) {
+            response(500, error, "Server error", res);
         }
     }
 }
