@@ -1911,13 +1911,14 @@ module.exports = {
           path: "kelas.kelas",
           match: { status: { $ne: "deleted" } },
         })
-        .select("kelas");
+        .select("kelas")
+        .sort({ "kelas.createdAt": 1 });
 
-      let ids = [];
+      // let ids = [];
 
-      get.kelas.map((g) => {
-        ids.push(g.kelas);
-      });
+      // get.kelas.map((g) => {
+      //   ids.push(g.kelas);
+      // });
 
       // get = await Kelas.find({
       //   _id: {
