@@ -1907,10 +1907,10 @@ module.exports = {
     try {
       let get = await userModel
         .findById(id)
-        // .populate({
-        //   // path: "kelas.kelas",
-        //   match: { status: { $ne: "deleted" } },
-        // })
+        .populate({
+          path: "kelas.kelas",
+          match: { status: { $ne: "deleted" } },
+        })
         .select("kelas");
 
       let ids = [];
@@ -1919,29 +1919,25 @@ module.exports = {
         ids.push(g.kelas);
       });
 
-      get = await Kelas.find({
-        _id: {
-          $in: ids,
-        },
-        $and: [
-          {
-            status: { $ne: "deleted" },
-          },
-        ],
-      }).sort({ createdAt: -1 });
+      // get = await Kelas.find({
+      //   _id: {
+      //     $in: ids,
+      //   },
+      //   $and: [
+      //     {
+      //       status: { $ne: "deleted" },
+      //     },
+      //   ],
+      // }).sort({ createdAt: -1 });
 
       get = await Kategori.populate(get, {
         path: "kategori",
       });
 
-      get.map((g) => {
-        console.log(g.createdAt);
-      });
-
-      get = {
-        id,
-        kelas: get,
-      };
+      // get = {
+      //   id,
+      //   kelas: get,
+      // };
 
       response(200, get, "Data ditemukan", res);
     } catch (error) {
