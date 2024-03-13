@@ -16,6 +16,10 @@ const materiSchema = new Schema(
     description: { type: String, required: true },
     items: [itemsMateriSchema],
     instruktur: [{ type: mongoose.Schema.Types.ObjectId, ref: "User" }],
+    test: {
+      type: Object,
+      default: {},
+    },
   },
   { timestamps: true }
 );
