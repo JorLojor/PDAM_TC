@@ -11,6 +11,11 @@ router.get(
   auth.user,
   Controller.getResultDetailByInstructor
 );
+router.get(
+  "/result-instructor/:kelas",
+  auth.user,
+  Controller.getResultByInstructor
+);
 router.get("/result/:kelas", auth.user, Controller.getResult);
 router.get(
   "/result-detail/:kelas/:user",
