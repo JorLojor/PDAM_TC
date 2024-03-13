@@ -9,8 +9,8 @@ const multer = require("multer");
 const response = require("../respons/response");
 const _ = require("lodash");
 const Test = require("../models/test");
-const fs = require('fs');
-const path = require('path');
+const fs = require("fs");
+const path = require("path");
 
 module.exports = {
   getAllMateri: async (req, res) => {
@@ -19,7 +19,7 @@ module.exports = {
 
       let ids = [];
       let len = 0;
-      let where = {}
+      let where = {};
       let startDate = new Date(start);
       let endDate = new Date(end);
 
@@ -33,13 +33,18 @@ module.exports = {
         //     ids.push(u._id);
         //   }
         // });
-        where.section = { $regex: `^${section}`, $options: 'i' }
+        where.section = { $regex: `^${section}`, $options: "i" };
       }
-      if ((start != '' && start != 'undefined') && (end != '' && end != 'undefined')) {
+      if (
+        start != "" &&
+        start != "undefined" &&
+        end != "" &&
+        end != "undefined"
+      ) {
         where.createdAt = {
           $gte: startDate,
-          $lte: endDate
-        }
+          $lte: endDate,
+        };
       }
 
       let data = await MateriModel.find()
@@ -47,7 +52,7 @@ module.exports = {
         .sort({ createdAt: -1 });
 
       if (instruktur) {
-        where.instruktur = { $in: instruktur }
+        where.instruktur = { $in: instruktur };
       }
 
       // if (ids.length > 0) {
@@ -108,7 +113,13 @@ module.exports = {
       //     }
       //   }
       // }
-      let total_data = (section != undefined && section != '' && section != null) || (instruktur != undefined && instruktur != '' && instruktur != null) || (start != '' && start != 'undefined') || (end != '' && end != 'undefined') ? data.length : materi.length
+      let total_data =
+        (section != undefined && section != "" && section != null) ||
+        (instruktur != undefined && instruktur != "" && instruktur != null) ||
+        (start != "" && start != "undefined") ||
+        (end != "" && end != "undefined")
+          ? data.length
+          : materi.length;
       result = {
         data: data,
         "total data": total_data,
@@ -242,7 +253,7 @@ module.exports = {
                 title === related &&
                 parentCode.split(".")[0] === kodeMateri
               ) {
-                const filterPath = file.path.replaceAll('\\', '/')
+                const filterPath = file.path.replaceAll("\\", "/");
                 const pathlama = filterPath.split("/upload/");
                 const cleanedAttachmentPath = pathlama[1].replace(/\s/g, "");
                 attachmentFiles.push(cleanedAttachmentPath);
@@ -277,6 +288,7 @@ module.exports = {
           slug: slug,
           items: itemsList,
           instruktur: instruktur,
+          test: {},
         });
       });
 
@@ -367,35 +379,37 @@ module.exports = {
 
   deleteAttachment: async (req, res) => {
     try {
-      const { id } = req.params
-      const { attach } = req.body
-      const itemId = new mongoose.Types.ObjectId(id)
-      const filePath = 'upload/' + attach;
+      const { id } = req.params;
+      const { attach } = req.body;
+      const itemId = new mongoose.Types.ObjectId(id);
+      const filePath = "upload/" + attach;
 
       const absoluteFilePath = path.resolve(filePath);
 
       fs.access(absoluteFilePath, fs.constants.F_OK, (err) => {
         if (err) {
-          if (err.code === 'ENOENT') {
+          if (err.code === "ENOENT") {
             return response(200, {}, "tidak ada file", res);
           } else {
-            console.error('Error accessing file:', err);
+            console.error("Error accessing file:", err);
             return response(500, {}, "Internal Server Error", res);
           }
         } else {
           fs.unlink(absoluteFilePath, (err) => {
             if (err) {
-              console.error('Error deleting file:', err);
+              console.error("Error deleting file:", err);
               return response(500, {}, "Internal Server Error", res);
             } else {
-              MateriModel.findOneAndUpdate({ "items._id": itemId },
+              MateriModel.findOneAndUpdate(
+                { "items._id": itemId },
                 { $pull: { "items.$[item].attachment": attach } },
-                { arrayFilters: [{ "item._id": itemId }] })
+                { arrayFilters: [{ "item._id": itemId }] }
+              )
                 .then(() => {
                   return response(200, {}, "Materi berhasil diubah", res);
                 })
                 .catch((err) => {
-                  console.error('Error updating MateriModel:', err);
+                  console.error("Error updating MateriModel:", err);
                   return response(500, {}, "Internal Server Error", res);
                 });
             }
@@ -403,7 +417,7 @@ module.exports = {
         }
       });
     } catch (error) {
-      console.error('Error:', error);
+      console.error("Error:", error);
       return response(500, {}, "Internal Server Error", res);
     }
   },
@@ -425,15 +439,19 @@ module.exports = {
       const newItems = items.map((val, idx) => {
         let attachmentFiles = [...checkMateri.items[idx].attachment];
         val.attachment.forEach((v, i) => {
-          if (typeof v === "object" && v.originName != null && v.originName !== undefined) {
-            const file = req.files.find(f => f.originalname === v.originName)
-            const filterPath = file.path.replaceAll('\\', '/')
+          if (
+            typeof v === "object" &&
+            v.originName != null &&
+            v.originName !== undefined
+          ) {
+            const file = req.files.find((f) => f.originalname === v.originName);
+            const filterPath = file.path.replaceAll("\\", "/");
             const pathlama = filterPath.split("/upload/");
             const cleanedAttachmentPath = pathlama[1].replace(/\s/g, "");
             attachmentFiles.push(cleanedAttachmentPath);
             // console.log('yikes', v.originName)
           }
-        })
+        });
         // if (req.files) {
         //   req.files.map((file) => {
         //     const [context, related, parentCode] = file.filename.split("---");
@@ -669,18 +687,24 @@ module.exports = {
 
   getInstrukturThatHaveMateri: async (req, res) => {
     try {
-      const materiList = await MateriModel.find({}).select('instruktur').populate('instruktur', ['_id', 'name'])
-      const listIntruktur = []
+      const materiList = await MateriModel.find({})
+        .select("instruktur")
+        .populate("instruktur", ["_id", "name"]);
+      const listIntruktur = [];
 
       if (!materiList) {
         response(404, null, "Instruktur tidak di temukan", res);
       }
 
       for (let i = 0; i < materiList.length; i++) {
-        listIntruktur.push({ _id: materiList[i].instruktur[0]._id, name: materiList[i].instruktur[0].name })
+        listIntruktur.push({
+          _id: materiList[i].instruktur[0]._id,
+          name: materiList[i].instruktur[0].name,
+        });
       }
       const filteredIns = listIntruktur.filter(
-        (item, index, self) => index === self.findIndex((t) => t._id === item._id)
+        (item, index, self) =>
+          index === self.findIndex((t) => t._id === item._id)
       );
       const mapped = filteredIns.map((v, i) => {
         return {
@@ -693,5 +717,5 @@ module.exports = {
     } catch (error) {
       response(500, error, error.message, res);
     }
-  }
+  },
 };
