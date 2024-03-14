@@ -1242,14 +1242,16 @@ module.exports = {
 
   getKelasByInstruktur: async (req, res) => {
     const { instruktur } = req.params;
+
     const name =
       req.query.kelas && req.query.kelas.length > 0 ? req.query.kelas : null;
+
     try {
       let data = [];
 
       let materiContainer = [];
 
-      const materis = await MateriModel.find({ instruktur: instruktur });
+      const materis = await MateriModel.find({ instruktur }).select("_id");
 
       if (materis.length > 0) {
         materis.map((materi) => {
@@ -1280,16 +1282,21 @@ module.exports = {
             });
 
             if (kelas1.length > 0) {
-              data.push({ kelas: kelas1 });
+              for (let i = 0; i < kelas1.length; i++) {
+                data.push(kelas1[i]);
+              }
             }
           } else if (kelas.length > 0) {
-            data.push({ kelas });
+            for (let i = 0; i < kelas.length; i++) {
+              data.push(kelas[i]);
+            }
           }
         }
       }
 
       return response(200, data, "Kelas berhasil ditemukan", res);
     } catch (error) {
+      console.log(error);
       return response(500, null, error.message, res);
     }
   },

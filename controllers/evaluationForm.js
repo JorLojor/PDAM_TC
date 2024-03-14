@@ -101,34 +101,45 @@ module.exports = {
           ],
         }).populate("user");
 
-        if (evaluationResult.length > 2) {
-          let nilaiInstruktur = 0;
+        // if (evaluationResult.length > 2) {
+        //   let nilaiInstruktur = 0;
 
-          if (evaluationResult.length > 3) {
-            let nilaiIntrukturTotal = 0;
+        //   if (evaluationResult.length > 3) {
+        //     let nilaiIntrukturTotal = 0;
 
-            for (let i = 2; i < evaluationResult.length; i++) {
-              nilaiIntrukturTotal =
-                nilaiIntrukturTotal + evaluationResult[i].instruktur;
-            }
+        //     for (let i = 2; i < evaluationResult.length; i++) {
+        //       nilaiIntrukturTotal =
+        //         nilaiIntrukturTotal + evaluationResult[i].instruktur;
+        //     }
 
-            nilaiInstruktur =
-              nilaiIntrukturTotal - (evaluationResult.length - 2);
-          } else {
-            nilaiInstruktur = evaluationResult[2].instruktur;
-          }
+        //     nilaiInstruktur =
+        //       nilaiIntrukturTotal - (evaluationResult.length - 2);
+        //   } else {
+        //     nilaiInstruktur = evaluationResult[2].instruktur;
+        //   }
 
-          data.push({
-            _id: evaluationResult[0]._id,
-            kelas: evaluationResult[0].kelas,
-            user: evaluationResult[0].user,
-            sapras: evaluationResult[0].sapras,
-            materi: evaluationResult[1].materi,
-            instruktur: nilaiInstruktur,
-            createdAt: evaluationResult[0].createdAt,
-            updatedAt: evaluationResult[0].updatedAt,
-          });
-        }
+        //   data.push({
+        //     _id: evaluationResult[0]._id,
+        //     kelas: evaluationResult[0].kelas,
+        //     user: evaluationResult[0].user,
+        //     sapras: evaluationResult[0].sapras,
+        //     materi: evaluationResult[1].materi,
+        //     instruktur: nilaiInstruktur,
+        //     createdAt: evaluationResult[0].createdAt,
+        //     updatedAt: evaluationResult[0].updatedAt,
+        //   });
+        // }
+
+        data.push({
+          _id: evaluationResult[0]._id,
+          kelas: evaluationResult[0].kelas,
+          user: evaluationResult[0].user,
+          sapras: evaluationResult[0].sapras,
+          materi: evaluationResult[0].materi,
+          instruktur: evaluationResult[0].instruktur,
+          createdAt: evaluationResult[0].createdAt,
+          updatedAt: evaluationResult[0].updatedAt,
+        });
       }
 
       const page = parseInt(req.query.page) || 1;
