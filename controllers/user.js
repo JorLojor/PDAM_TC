@@ -61,6 +61,8 @@ module.exports = {
 
       today = moment(today).format("YYYY-MM-DD");
 
+      let finishedIds = [];
+
       let onGoingClass = 0;
       let finishedClass = 0;
       let ranking = "";
@@ -81,6 +83,8 @@ module.exports = {
 
           if (me.kelas[i].isDone) {
             finishedClass = finishedClass + 1;
+
+            finishedIds.push(me.kelas[i].kelas);
           }
         }
 
@@ -110,14 +114,37 @@ module.exports = {
               moment(startSchedule).isSameOrAfter(startDate) &&
               moment(finalSchedule).isBefore(today)
             ) {
-              onGoingClass = onGoingClass + 1;
-              classCount = classCount + 1;
+              if (finishedIds.length > 0) {
+                let none = false;
 
-              kelasIds.push(k._id);
+                for (let i = 0; i < finishedIds.length; i++) {
+                  if (k._id == finishedIds[i]) {
+                    none = true;
 
-              k.peserta.map((p) => {
-                userIds.push(p.user);
-              });
+                    break;
+                  }
+                }
+
+                if (none) {
+                  onGoingClass = onGoingClass + 1;
+                  classCount = classCount + 1;
+
+                  kelasIds.push(k._id);
+
+                  k.peserta.map((p) => {
+                    userIds.push(p.user);
+                  });
+                }
+              } else {
+                onGoingClass = onGoingClass + 1;
+                classCount = classCount + 1;
+
+                kelasIds.push(k._id);
+
+                k.peserta.map((p) => {
+                  userIds.push(p.user);
+                });
+              }
             }
             if (
               moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
@@ -137,11 +164,31 @@ module.exports = {
             ).format("YYYY-MM-DD");
 
             if (moment(schedule).isSameOrAfter(today)) {
-              onGoingClass = onGoingClass + 1;
+              if (finishedIds.length > 0) {
+                let none = false;
 
-              k.peserta.map((p) => {
-                userIds.push(p.user);
-              });
+                for (let i = 0; i < finishedIds.length; i++) {
+                  if (k._id == finishedIds[i]) {
+                    none = true;
+
+                    break;
+                  }
+                }
+
+                if (none) {
+                  onGoingClass = onGoingClass + 1;
+
+                  k.peserta.map((p) => {
+                    userIds.push(p.user);
+                  });
+                }
+              } else {
+                onGoingClass = onGoingClass + 1;
+
+                k.peserta.map((p) => {
+                  userIds.push(p.user);
+                });
+              }
             } else {
               finishedClass = finishedClass + 1;
 
