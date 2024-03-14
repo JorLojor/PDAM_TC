@@ -78,6 +78,10 @@ module.exports = {
 
         for (let i = 0; i < me.kelas.length; i++) {
           kelasIds.push(me.kelas[i].kelas);
+
+          if (me.kelas[i].isDone) {
+            finishedClass = finishedClass + 1;
+          }
         }
 
         kelas = await Kelas.find({
@@ -120,7 +124,6 @@ module.exports = {
                 "YYYY-MM-DD"
               ) >= today
             ) {
-              finishedClass = finishedClass + 1;
               classCount = classCount + 1;
               kelasIds.push(k._id);
 

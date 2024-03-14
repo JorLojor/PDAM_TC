@@ -417,11 +417,11 @@ module.exports = {
 
       if (result.length > 0) {
         for (let i = 0; i < result.length; i++) {
-          const kelas = await Kelas.findById(result[i].kelas);
+          const kelas = await Kelas.findById(result[i].class);
 
           const test = await Test.findById(result[i].test);
 
-          if (kelas && nama) {
+          if (kelas) {
             data.push({
               test: test.judul,
               kelas: kelas.nama,
