@@ -2812,6 +2812,7 @@ module.exports = {
             slug: d.slug,
             createdAt: d.createdAt,
             updatedAt: d.updatedAt,
+            desainSertifikat: d.desainSertifikat,
             __v: d.__v,
             newEnrolment,
           });
