@@ -122,8 +122,14 @@ module.exports = {
             _id: evaluationResult[0]._id,
             kelas: evaluationResult[0].kelas,
             user: evaluationResult[0].user,
-            sapras: evaluationResult[0].sapras,
-            materi: evaluationResult[1].materi,
+            sapras:
+              evaluationResult[0].sapras > 0
+                ? evaluationResult[0].sapras
+                : evaluationResult[1].sapras,
+            materi:
+              evaluationResult[1].materi > 0
+                ? evaluationResult[1].materi
+                : evaluationResult[0].materi,
             instruktur: nilaiInstruktur,
             createdAt: evaluationResult[0].createdAt,
             updatedAt: evaluationResult[0].updatedAt,

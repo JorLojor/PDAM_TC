@@ -669,8 +669,6 @@ module.exports = {
       for (var i = 0; i < kelas.peserta.length; i++) {
         const user = await User.findById(kelas.peserta[i].user);
 
-        console.log(user);
-
         if (user) {
           if (preTestId) {
             const preTestScore = await testAnswer.findOne({
