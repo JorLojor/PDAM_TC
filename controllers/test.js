@@ -669,6 +669,8 @@ module.exports = {
       for (var i = 0; i < kelas.peserta.length; i++) {
         const user = await User.findById(kelas.peserta[i].user);
 
+        console.log(user);
+
         if (user) {
           if (preTestId) {
             const preTestScore = await testAnswer.findOne({
@@ -720,9 +722,9 @@ module.exports = {
             let score = 0;
             let duration = 0;
 
-            for (var i = 0; i < quizIds.length; i++) {
+            for (var j = 0; j < quizIds.length; j++) {
               const quizTest = await TestAnswer.findOne({
-                test: quizIds[i],
+                test: quizIds[j],
                 $and: [
                   {
                     class: id,
