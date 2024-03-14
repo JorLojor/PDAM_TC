@@ -28,7 +28,7 @@ function converttoSecond(finish, start) {
   var dateFinish = new Date(finish);
   var dateStart = new Date(start);
 
-  const diffTime = Math.abs(dateFinish - dateStart);
+  const diffTime = (dateFinish.getTime() - dateStart.getTime()) / 1000;
 
   return diffTime;
 }

@@ -709,7 +709,7 @@ module.exports = {
             if (postTestScore) {
               postTest = postTestScore.nilai;
               postTestDuration = converttoMinute(
-                converttoSecond(postTest.finishAt, postTest.startAt)
+                converttoSecond(postTestScore.finishAt, postTestScore.startAt)
               );
             }
           }
