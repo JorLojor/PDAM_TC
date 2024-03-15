@@ -2625,6 +2625,37 @@ module.exports = {
             .sort({ createdAt: -1 });
         }
 
+        if (status) {
+          ids = [];
+
+          data.map((k) => {
+            if (status == k.status) {
+              ids.push(k._id);
+            }
+          });
+
+          data = await KelasModel.find({
+            _id: { $in: ids },
+            status: { $ne: "deleted" },
+            isActive: isActive,
+          })
+            .populate("materi")
+            .populate("peserta.user")
+            .populate("kategori")
+            .populate({
+              path: "desainSertifikat.peserta",
+              model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'peserta' reference
+            })
+            .populate({
+              path: "desainSertifikat.instruktur",
+              model: "Sertifikat", // Replace 'Sertifikat' with the actual model name for the 'instruktur' reference
+            })
+            .populate({
+              path: "trainingMethod",
+            })
+            .sort({ createdAt: -1 });
+        }
+
         if (data) {
           totalData = data.length;
         }
@@ -2644,7 +2675,7 @@ module.exports = {
           status: { $ne: "deleted" },
         });
 
-        if (nama || userType || fromDate || toDate) {
+        if (nama || userType || fromDate || toDate || status) {
           rawData = await KelasModel.find({
             _id: { $in: ids },
           });
