@@ -269,59 +269,47 @@ module.exports = {
 
         response(200, data, "get user dashboard card", res);
       } else if (req.user.role < 2) {
+        if (startDate) {
+          classCount = 0;
+        }
+
         kelas.map((k) => {
           if (startDate) {
-            const finalSchedule = moment(
-              k.jadwal[k.jadwal.length - 1].tanggal
-            ).format("YYYY-MM-DD");
-
-            const startSchedule = moment(k.jadwal[0].tanggal).format(
-              "YYYY-MM-DD"
-            );
-
-            if (
-              moment(startSchedule).isSameOrAfter(startDate) &&
-              moment(finalSchedule).isBefore(today)
-            ) {
-              onGoingClass = onGoingClass + 1;
-              classCount = classCount + 1;
-
-              kelasIds.push(k._id);
-
-              k.peserta.map((p) => {
-                userIds.push(p.user);
-              });
-            }
-            if (
-              moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
-                "YYYY-MM-DD"
-              ) >= today
-            ) {
+            if (k.status == "ended") {
               finishedClass = finishedClass + 1;
-              classCount = classCount + 1;
-              kelasIds.push(k._id);
 
-              k.peserta.map((p) => {
-                userIds.push(p.user);
-              });
+              kelasIds.push(k._id);
+            } else {
+              const finalSchedule = moment(
+                k.jadwal[k.jadwal.length - 1].tanggal
+              ).format("YYYY-MM-DD");
+
+              const startSchedule = moment(k.jadwal[0].tanggal).format(
+                "YYYY-MM-DD"
+              );
+
+              if (
+                moment(startSchedule).isSameOrAfter(startDate) &&
+                moment(finalSchedule).isBefore(today)
+              ) {
+                onGoingClass = onGoingClass + 1;
+
+                classCount = classCount + 1;
+
+                kelasIds.push(k._id);
+
+                k.peserta.map((p) => {
+                  userIds.push(p.user);
+                });
+              }
             }
           } else {
-            const schedule = moment(
-              k.jadwal[k.jadwal.length - 1].tanggal
-            ).format("YYYY-MM-DD");
-
-            if (moment(schedule).isSameOrAfter(today)) {
+            if (k.status == "ended") {
+              finishedClass = finishedClass + 1;
+            } else {
               onGoingClass = onGoingClass + 1;
 
-              k.peserta.map((p) => {
-                userIds.push(p.user);
-              });
-            } else {
-              finishedClass = finishedClass + 1;
-
-              k.peserta.map((p) => {
-                userIds.push(p.user);
-              });
+              kelasIds.push(k._id);
             }
           }
         });
@@ -383,10 +371,6 @@ module.exports = {
 
         classCount = kelas.length;
 
-        if (startDate) {
-          classCount = 0;
-        }
-
         kelas = await Kelas.find({ _id: { $in: kelasIds } });
 
         kelasIds = [];
@@ -405,24 +389,17 @@ module.exports = {
               moment(startSchedule).isSameOrAfter(startDate) &&
               moment(finalSchedule).isBefore(today)
             ) {
-              kelasIds.push(k._id);
-            }
-            if (
-              moment(k.jadwal[k.jadwal.length - 1].tanggal).format(
-                "YYYY-MM-DD"
-              ) >= today
-            ) {
-              finishedClass = finishedClass + 1;
+              if (k.status == "ended") {
+                finishedClass = finishedClass + 1;
+              } else {
+                kelasIds.push(k._id);
+              }
             }
           } else {
-            const schedule = moment(
-              k.jadwal[k.jadwal.length - 1].tanggal
-            ).format("YYYY-MM-DD");
-
-            if (moment(schedule).isSameOrAfter(today)) {
-              kelasIds.push(k._id);
-            } else {
+            if (k.status == "ended") {
               finishedClass = finishedClass + 1;
+            } else {
+              kelasIds.push(k._id);
             }
           }
         });
