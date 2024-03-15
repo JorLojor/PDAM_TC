@@ -2458,7 +2458,7 @@ module.exports = {
           len = nama.length;
 
           kelas.map(async (k) => {
-            if (k.nama.substring(0, len).toLowerCase() == nama.toLowerCase()) {
+            if (k.nama.toLowerCase().includes(nama.toLowerCase())) {
               ids.push(k._id);
             }
           });
