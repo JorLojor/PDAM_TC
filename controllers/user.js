@@ -115,22 +115,33 @@ module.exports = {
               "YYYY-MM-DD"
             );
 
-            if (
-              moment(startSchedule).isSameOrAfter(startDate) &&
-              moment(finalSchedule).isBefore(today)
-            ) {
-              if (finishedIds.length > 0) {
-                let none = false;
+            if (endDate) {
+              if (
+                moment(startSchedule).isSameOrAfter(startDate) &&
+                moment(finalSchedule).isSameOrBefore(endDate)
+              ) {
+                if (finishedIds.length > 0) {
+                  let none = false;
 
-                for (let i = 0; i < finishedIds.length; i++) {
-                  if (k._id == finishedIds[i]) {
-                    none = true;
+                  for (let i = 0; i < finishedIds.length; i++) {
+                    if (k._id == finishedIds[i]) {
+                      none = true;
 
-                    break;
+                      break;
+                    }
                   }
-                }
 
-                if (none) {
+                  if (none) {
+                    onGoingClass = onGoingClass + 1;
+                    classCount = classCount + 1;
+
+                    kelasIds.push(k._id);
+
+                    k.peserta.map((p) => {
+                      userIds.push(p.user);
+                    });
+                  }
+                } else {
                   onGoingClass = onGoingClass + 1;
                   classCount = classCount + 1;
 
@@ -140,15 +151,43 @@ module.exports = {
                     userIds.push(p.user);
                   });
                 }
-              } else {
-                onGoingClass = onGoingClass + 1;
-                classCount = classCount + 1;
+              }
+            } else {
+              if (
+                moment(startSchedule).isSameOrAfter(startDate) &&
+                moment(finalSchedule).isBefore(today)
+              ) {
+                if (finishedIds.length > 0) {
+                  let none = false;
 
-                kelasIds.push(k._id);
+                  for (let i = 0; i < finishedIds.length; i++) {
+                    if (k._id == finishedIds[i]) {
+                      none = true;
 
-                k.peserta.map((p) => {
-                  userIds.push(p.user);
-                });
+                      break;
+                    }
+                  }
+
+                  if (none) {
+                    onGoingClass = onGoingClass + 1;
+                    classCount = classCount + 1;
+
+                    kelasIds.push(k._id);
+
+                    k.peserta.map((p) => {
+                      userIds.push(p.user);
+                    });
+                  }
+                } else {
+                  onGoingClass = onGoingClass + 1;
+                  classCount = classCount + 1;
+
+                  kelasIds.push(k._id);
+
+                  k.peserta.map((p) => {
+                    userIds.push(p.user);
+                  });
+                }
               }
             }
             if (
@@ -413,14 +452,27 @@ module.exports = {
               "YYYY-MM-DD"
             );
 
-            if (
-              moment(startSchedule).isSameOrAfter(startDate) &&
-              moment(finalSchedule).isBefore(today)
-            ) {
-              if (k.status == "ended") {
-                finishedClass = finishedClass + 1;
-              } else {
-                kelasIds.push(k._id);
+            if (endDate) {
+              if (
+                moment(startSchedule).isSameOrAfter(startDate) &&
+                moment(finalSchedule).isSameOrBefore(endDate)
+              ) {
+                if (k.status == "ended") {
+                  finishedClass = finishedClass + 1;
+                } else {
+                  kelasIds.push(k._id);
+                }
+              }
+            } else {
+              if (
+                moment(startSchedule).isSameOrAfter(startDate) &&
+                moment(finalSchedule).isBefore(today)
+              ) {
+                if (k.status == "ended") {
+                  finishedClass = finishedClass + 1;
+                } else {
+                  kelasIds.push(k._id);
+                }
               }
             }
           } else {
