@@ -59,6 +59,11 @@ module.exports = {
           ? moment(req.query.startDate).format("YYYY-MM-DD")
           : null;
 
+      const endDate =
+        req.query.endDate != "" && req.query.endDate
+          ? moment(req.query.endDate).format("YYYY-MM-DD")
+          : null;
+
       today = moment(today).format("YYYY-MM-DD");
 
       let finishedIds = [];
@@ -275,32 +280,55 @@ module.exports = {
 
         kelas.map((k) => {
           if (startDate) {
-            if (k.status == "ended") {
-              finishedClass = finishedClass + 1;
+            const finalSchedule = moment(
+              k.jadwal[k.jadwal.length - 1].tanggal
+            ).format("YYYY-MM-DD");
 
-              kelasIds.push(k._id);
+            const startSchedule = moment(k.jadwal[0].tanggal).format(
+              "YYYY-MM-DD"
+            );
+
+            if (endDate) {
+              if (
+                moment(startSchedule).isSameOrAfter(startDate) &&
+                moment(finalSchedule).isSameOrBefore(endDate)
+              ) {
+                if (k.status == "ended") {
+                  finishedClass = finishedClass + 1;
+
+                  classCount = classCount + 1;
+                } else {
+                  onGoingClass = onGoingClass + 1;
+
+                  classCount = classCount + 1;
+
+                  kelasIds.push(k._id);
+
+                  k.peserta.map((p) => {
+                    userIds.push(p.user);
+                  });
+                }
+              }
             } else {
-              const finalSchedule = moment(
-                k.jadwal[k.jadwal.length - 1].tanggal
-              ).format("YYYY-MM-DD");
-
-              const startSchedule = moment(k.jadwal[0].tanggal).format(
-                "YYYY-MM-DD"
-              );
-
               if (
                 moment(startSchedule).isSameOrAfter(startDate) &&
                 moment(finalSchedule).isBefore(today)
               ) {
-                onGoingClass = onGoingClass + 1;
+                if (k.status == "ended") {
+                  finishedClass = finishedClass + 1;
 
-                classCount = classCount + 1;
+                  classCount = classCount + 1;
+                } else {
+                  onGoingClass = onGoingClass + 1;
 
-                kelasIds.push(k._id);
+                  classCount = classCount + 1;
 
-                k.peserta.map((p) => {
-                  userIds.push(p.user);
-                });
+                  kelasIds.push(k._id);
+
+                  k.peserta.map((p) => {
+                    userIds.push(p.user);
+                  });
+                }
               }
             }
           } else {
