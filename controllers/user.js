@@ -26,6 +26,7 @@ const { getInstructorClass } = require("../service");
 const classEnrollmentLog = require("../models/classEnrollmentLog");
 const EvaluationFormResult = require("../models/evaluationFormResult");
 const { log } = require("console");
+const RecentClass = require("../models/recentClass");
 
 module.exports = {
   getbyEmail: async (req, res) => {
@@ -1031,6 +1032,97 @@ module.exports = {
     }
   },
 
+  saveRecentClass: async function (req, res) {
+    try {
+      const { id, idUser } = req.params
+      const check = await RecentClass.findOne({
+        user: idUser,
+        $and: [
+          {
+            kelas: id,
+          },
+        ],
+      });
+
+      if (check) {
+        const data = await RecentClass.find({
+          user: idUser,
+        })
+          .populate("kelas")
+          .sort({ number: 1 });
+
+        return data;
+      }
+
+      const first = await RecentClass.findOne({
+        number: 1,
+        $and: [
+          {
+            user: idUser,
+          },
+        ],
+      });
+
+      const second = await RecentClass.findOne({
+        number: 2,
+        $and: [
+          {
+            user: idUser,
+          },
+        ],
+      });
+
+      const third = await RecentClass.findOne({
+        number: 3,
+        $and: [
+          {
+            user: idUser,
+          },
+        ],
+      });
+
+      const fourth = await RecentClass.findOne({
+        number: 4,
+        $and: [
+          {
+            user: idUser,
+          },
+        ],
+      });
+
+      if (first) {
+        await RecentClass.findByIdAndUpdate(first._id, {
+          number: 2,
+        });
+      }
+
+      if (second) {
+        await RecentClass.findByIdAndUpdate(second._id, {
+          number: 3,
+        });
+      }
+
+      if (third) {
+        await RecentClass.findByIdAndUpdate(third._id, {
+          number: 4,
+        });
+      }
+
+      if (fourth) {
+        await RecentClass.findByIdAndDelete(fourth._id);
+      }
+
+      await RecentClass.create({
+        number: 1,
+        kelas: id,
+        user: idUser,
+      });
+      response(200, {}, "Berhasil update recent class", res);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error, coba lagi", mes: error });
+    }
+  },
+
   getCertificate: async (req, res) => {
     try {
       const id = req.user.id;
@@ -1805,9 +1897,8 @@ module.exports = {
       let user = data.map((val, idx) => {
         return {
           value: val._id,
-          label: `${val.name} (${val.username}) - ${
-            val.userType === 1 ? "Internal" : "Eksternal"
-          }`,
+          label: `${val.name} (${val.username}) - ${val.userType === 1 ? "Internal" : "Eksternal"
+            }`,
         };
       });
 

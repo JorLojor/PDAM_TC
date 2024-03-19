@@ -46,7 +46,7 @@ const kelasSchema = new Schema(
       enum: ["pending", "draft", "publish", "ended", "deleted"],
     },
     linkEvaluasi: { type: String, required: false },
-    slug: { type: String, required: true, unique: true },
+    slug: { type: String, required: true },
     desainSertifikat: { type: desainSertifikatSchema, required: false },
     orderRecent: { type: Number, required: false },
   },

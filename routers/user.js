@@ -79,4 +79,5 @@ router.get("/instruktur/:id", auth.user, userController.getInstructor); // get i
 router.get("/:id", auth.user, userController.getDetailedUser);
 router.put("/instruktur/rating/:id", auth.user, userController.rate);
 router.put("/forced/:id", auth.server, userController.forcedUpdate);
+router.post('/save-recent-class/:id/:idUser', auth.user, userController.saveRecentClass);
 module.exports = router;
