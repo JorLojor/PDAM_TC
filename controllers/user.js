@@ -1418,7 +1418,7 @@ module.exports = {
             const materi = await Materi.findById(materis[i]).session(session);
 
             if (materi) {
-              if (materi.hasOwnProperty("test")) {
+              if (materi.test) {
                 if (
                   materi.test.pre != "" &&
                   materi.test.pre &&
