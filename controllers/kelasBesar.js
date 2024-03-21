@@ -202,42 +202,9 @@ module.exports = {
     },
     publishedKelasList: async (req, res) => {
         try {
-            let { page, limits, isPaginate } = req.query;
-
-            const totalData = await KelasBesar.find({
-                status: 1,
-            }).countDocuments();
-
-            if (isPaginate === 0) {
-                const data = await KelasBesar.find({
-                    status: 1,
-                })
-                    .sort({ createdAt: -1 })
-                    .limit(4);
-
-                result = {
-                    data: data,
-                    "total data": totalData,
-                };
-
-                return response(200, results, "get kelas unggulan");
-            }
-
-            page = parseInt(page) || 1;
-            limits = parseInt(limits) || 4;
-
             const data = await KelasBesar.find({
-                status: 1,
-            })
-                .skip((page - 1) * limits)
-                .limit(limits)
-                .sort({ createdAt: -1 });
-
-            result = {
-                data: data,
-                "total data": totalData,
-            };
-
+                    status: 1,
+            }).sort({ createdAt: -1 })
             return response(200, data, "berhasil get kelas unggulan", res);
         } catch (error) {
             return response(500, error, "Server error", res);

@@ -1774,11 +1774,12 @@ module.exports = {
       if (jadwalBaru) {
         parsedJadwal = JSON.parse(jadwalBaru);
       }
+      const randomNumber = Math.floor(Math.random() * 12948192821);
 
       const kelas = {
         kodeKelas: kodeKelas ?? checkKelas.kodeKelas,
         nama: nama ?? checkKelas.nama,
-        slug: nama ? _.kebabCase(nama) : checkKelas.slug,
+        slug: _.kebabCase(nama) + randomNumber,
         harga: harga ?? checkKelas.harga,
         kapasitasPeserta: kapasitasPeserta ?? checkKelas.kapasitasPeserta,
         description: description ?? checkKelas.description,
