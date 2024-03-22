@@ -345,11 +345,11 @@ module.exports = {
   getTest: async (req, res) => {
     try {
       const { id } = req.params;
-      // const { kelas } = req.query;
+      const { kelas } = req.query;
 
-      // if (!kelas) {
-      //   return response(404, id, "Mohon isi kelas", res);
-      // }
+      if (!kelas) {
+        return response(404, id, "Mohon isi kelas", res);
+      }
 
       const result = await Test.findById(id).populate("pembuat");
 
@@ -369,25 +369,16 @@ module.exports = {
       //   return response(400, {}, "Kelas sudah berakhir", res);
       // }
 
-      // checkAnswer = await testAnswer.findOne({
-      //   test: id,
-      //   $and: [
-      //     {
-      //       user: req.user.id,
-      //     },
-      //     {
-      //       class: {
-      //         $in: kelas,
-      //       },
-      //     },
-      //   ],
-      // });
-
-      let checkAnswer = await testAnswer.findOne({
+      checkAnswer = await testAnswer.findOne({
         test: id,
         $and: [
           {
             user: req.user.id,
+          },
+          {
+            class: {
+              $in: kelas,
+            },
           },
         ],
       });
