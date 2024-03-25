@@ -849,6 +849,179 @@ module.exports = {
     }
   },
 
+  getReportbyClass: async (req, res) => {
+    try {
+      const { kelas } = req.params;
+
+      let data = [];
+
+      const classes = await KelasModel.findOne({
+        _id: kelas,
+      });
+
+      if (!classes) {
+        response(400, {}, "Kelas tidak ditemukan", res);
+      }
+
+      const result = await TestAnswer.find({
+        class: kelas,
+      }).populate("test");
+
+      let postTestId = null;
+      let preTestId = null;
+      let quizIds = [];
+
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].test.type == "pre") {
+          preTestId = result[i].test._id;
+
+          break;
+        }
+      }
+
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].test.type == "post") {
+          postTestId = result[i].test._id;
+
+          break;
+        }
+      }
+
+      for (let i = 0; i < result.length; i++) {
+        if (result[i].test.type == "quiz") {
+          quizIds.push(result[i].test._id);
+        }
+      }
+
+      for (let i = 0; i < classes.peserta.length; i++) {
+        const user = await UserModel.findById(classes.peserta[i].user);
+
+        let postTest = 0;
+        let preTest = 0;
+        let quiz = 0;
+
+        if (preTestId) {
+          const preTestScore = await testAnswer.findOne({
+            test: preTestId,
+            $and: [
+              {
+                class: kelas,
+              },
+              {
+                user: user._id,
+              },
+            ],
+          });
+
+          if (preTestScore) {
+            preTest = preTestScore.nilai;
+          }
+        }
+
+        if (postTestId) {
+          const postTestScore = await testAnswer
+            .findOne({
+              test: postTestId,
+              $and: [
+                {
+                  class: kelas,
+                },
+                {
+                  user: user._id,
+                },
+              ],
+            })
+            .populate("user", "name");
+
+          if (postTestScore) {
+            postTest = postTestScore.nilai;
+          }
+        }
+
+        let answer = 0;
+
+        if (quizIds.length > 0) {
+          let score = 0;
+          let duration = 0;
+
+          for (var j = 0; j < quizIds.length; j++) {
+            const quizTest = await TestAnswer.findOne({
+              test: quizIds[j],
+              $and: [
+                {
+                  class: kelas,
+                },
+                {
+                  user: user._id,
+                },
+              ],
+            });
+
+            if (quizTest) {
+              score = score + quizTest.nilai;
+            }
+          }
+
+          quiz = score / quizIds.length;
+        }
+
+        let absen = await Absensi.find({
+          user: user._id,
+          $and: [
+            {
+              kelas,
+            },
+          ],
+        });
+
+        let masuk = 0;
+        let keluar = 0;
+
+        if (absen.length > 0) {
+          for (let j = 0; j < absen.length; j++) {
+            if (absen[j].status == "masuk") {
+              masuk = masuk + 1;
+            } else if (absen[j].status == "hadir") {
+              masuk = masuk + 1;
+            } else if (absen[j].status == "absen") {
+              keluar = keluar + 1;
+            } else if (absen[j].status == "tidak hadir") {
+              keluar = keluar + 1;
+            }
+          }
+        }
+
+        absen = [
+          {
+            name: "masuk",
+            jumlah_absen: masuk,
+            hadir: masuk,
+          },
+          {
+            name: "keluar",
+            jumlah_absen: keluar,
+            hadir: keluar,
+          },
+        ];
+
+        data.push({
+          nipp: user.nipp,
+          name: user.name,
+          unit_kerja: user.instansi,
+          nilai_pre_test: preTest,
+          nilai_post_test: postTest,
+          nilai_quiz: quiz,
+          absen,
+        });
+      }
+
+      return response(200, data, "berhasil ambil data", res);
+    } catch (error) {
+      console.log(error);
+      response(500, error, error.message, res);
+    }
+  },
+
   getIncomingSchedule: async (req, res) => {
     try {
       kelasIds = await getInstructorClass(req.user.id);
