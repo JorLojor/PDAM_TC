@@ -901,7 +901,7 @@ module.exports = {
         let quiz = 0;
 
         if (preTestId) {
-          const preTestScore = await testAnswer.findOne({
+          const preTestScore = await TestAnswer.findOne({
             test: preTestId,
             $and: [
               {
@@ -919,7 +919,7 @@ module.exports = {
         }
 
         if (postTestId) {
-          const postTestScore = await testAnswer
+          const postTestScore = await TestAnswer
             .findOne({
               test: postTestId,
               $and: [

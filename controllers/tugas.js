@@ -288,7 +288,7 @@ module.exports = {
       });
 
       if (cekUser) {
-        response(400, user, "anda sudah mengumpulkan", res);
+        return response(400, user, "anda sudah mengumpulkan", res);
       }
 
       const checkKelas = await KelasModel.findOne({ slug: kelas });
@@ -325,9 +325,9 @@ module.exports = {
         { pengumpulanTugas: data },
         { new: true }
       );
-      response(200, result, "pengumpulan berhasil di tambahkan", res);
+      return response(200, result, "pengumpulan berhasil di tambahkan", res);
     } catch (error) {
-      response(500, error, error.message, res);
+      return response(500, error, error.message, res);
     }
   },
 
