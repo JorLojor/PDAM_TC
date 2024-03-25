@@ -994,12 +994,12 @@ module.exports = {
         absen = [
           {
             name: "masuk",
-            jumlah_absen: masuk,
+            jumlah_absen: classes.absensi.length,
             hadir: masuk,
           },
           {
             name: "keluar",
-            jumlah_absen: keluar,
+            jumlah_absen: classes.absensi.length,
             hadir: keluar,
           },
         ];
@@ -1008,9 +1008,9 @@ module.exports = {
           nipp: user.nipp,
           name: user.name,
           unit_kerja: user.instansi,
-          nilai_pre_test: preTest,
-          nilai_post_test: postTest,
-          nilai_quiz: quiz,
+          nilai_pre_test: preTest > 0 ? preTest : "",
+          nilai_post_test: postTest > 0 ? postTest : "",
+          nilai_quiz: quiz > 0 ? quiz : "",
           absen,
         });
       }

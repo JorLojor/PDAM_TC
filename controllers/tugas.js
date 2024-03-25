@@ -169,11 +169,11 @@ module.exports = {
             const deadline = await TaskDeadline.find({
               task: task[i],
             }).populate({
-              path: 'task',
+              path: "task",
               populate: {
-                path: 'materi',
-                model: 'Materi',
-                select: "section"
+                path: "materi",
+                model: "Materi",
+                select: "section",
               },
             });
 
@@ -282,7 +282,7 @@ module.exports = {
       let cekUser = false;
 
       tugas.pengumpulanTugas.forEach((e) => {
-        if (user == e.user) {
+        if (user == e.user && kelas == e.kelas) {
           cekUser = true;
         }
       });
