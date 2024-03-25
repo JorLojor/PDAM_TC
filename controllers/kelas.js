@@ -2360,7 +2360,7 @@ module.exports = {
         .populate({
           path: "trainingMethod",
         })
-        .select("materi nama linkPelatihan")
+        .select("materi nama linkPelatihan jadwal _id")
         .exec();
 
       if (!kelas) {
@@ -2398,8 +2398,10 @@ module.exports = {
       const data = {
         _id: kelas._id,
         nama: kelas.nama,
+        jadwal: kelas.jadwal,
         materi: kelas.materi,
         linkPelatihan: kelas.linkPelatihan,
+        idKelas: kelas._id,
         isDone,
         isEvaluated,
       };
