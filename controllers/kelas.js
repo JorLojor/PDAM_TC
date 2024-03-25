@@ -973,36 +973,25 @@ module.exports = {
             },
           ],
         });
-
-        let masuk = 0;
-        let keluar = 0;
+        let reportAbsen = []
 
         if (absen.length > 0) {
-          for (let j = 0; j < absen.length; j++) {
-            if (absen[j].status == "masuk") {
-              masuk = masuk + 1;
-            } else if (absen[j].status == "hadir") {
-              masuk = masuk + 1;
-            } else if (absen[j].status == "absen") {
-              keluar = keluar + 1;
-            } else if (absen[j].status == "tidak hadir") {
-              keluar = keluar + 1;
-            }
-          }
+          classes.absensi.map(val => {
+            reportAbsen.push({
+              name: val.name,
+              jumlah_absen: classes.jadwal.length,
+              hadir: absen.filter(absensi => absensi.absenName === val.name).length ?? 0
+            })
+          })
+        } else {
+          classes.absensi.map(val => {
+            reportAbsen.push({
+              name: val.name,
+              jumlah_absen: classes.jadwal.length,
+              hadir: 0
+            })
+          })
         }
-
-        absen = [
-          {
-            name: "masuk",
-            jumlah_absen: classes.absensi.length,
-            hadir: masuk,
-          },
-          {
-            name: "keluar",
-            jumlah_absen: classes.absensi.length,
-            hadir: keluar,
-          },
-        ];
 
         data.push({
           nipp: user.nipp,
@@ -1011,7 +1000,7 @@ module.exports = {
           nilai_pre_test: preTest > 0 ? preTest : "",
           nilai_post_test: postTest > 0 ? postTest : "",
           nilai_quiz: quiz > 0 ? quiz : "",
-          absen,
+          absen: reportAbsen,
         });
       }
 
