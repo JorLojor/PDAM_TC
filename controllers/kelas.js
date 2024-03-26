@@ -996,6 +996,7 @@ module.exports = {
         data.push({
           nipp: user.nipp,
           name: user.name,
+          user_type: user.userType == 1 ? "internal" : "external",
           unit_kerja: user.instansi,
           nilai_pre_test: preTest > 0 ? preTest : "",
           nilai_post_test: postTest > 0 ? postTest : "",
@@ -1007,7 +1008,7 @@ module.exports = {
       return response(200, data, "berhasil ambil data", res);
     } catch (error) {
       console.log(error);
-      response(500, error, error.message, res);
+      return response(500, error, error.message, res);
     }
   },
 
@@ -1781,6 +1782,7 @@ module.exports = {
         link,
         absensi,
         trainingMethod,
+        biaya
       } = req.body;
 
       let imageKelas = null;
@@ -1867,6 +1869,7 @@ module.exports = {
         kategori,
         trainingMethod,
         status,
+        biaya: biaya.replaceAll(',','')
       });
 
       const result = await kelas.save({ session });
@@ -1905,6 +1908,7 @@ module.exports = {
         absensi,
         status,
         trainingMethod,
+        biaya
       } = req.body;
 
       const checkKelas = await KelasModel.findById(id);
@@ -1959,6 +1963,7 @@ module.exports = {
         kategori: kategori ?? checkKelas.kategori,
         status: newStatus ?? checkKelas.status,
         trainingMethod: trainingMethod ?? checkKelas.trainingMethod,
+        biaya: biaya.replaceAll(',','') ?? checkKelas.biaya
       };
 
       const result = await KelasModel.findByIdAndUpdate(id, kelas, {
