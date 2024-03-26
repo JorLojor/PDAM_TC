@@ -27,6 +27,7 @@ const upload = multer({ storage });
 router.get("/", Controller.getAllKelasAdmin); //testing
 router.get("/all", auth.user, Controller.getAllKelasAdmin); //testing
 router.get("/absensi/:kelas", auth.user, Controller.getAbsensi);
+router.get("/report/annual/:year", auth.user, Controller.getAnnualReport); //testing
 router.get("/report", auth.user, Controller.getWholeReport); //testing
 router.get("/report/:kelas", auth.user, Controller.getReportbyClass); //testing
 router.get("/today", auth.user, Controller.getTodayClass); //testing
