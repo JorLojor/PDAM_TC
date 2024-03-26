@@ -18,6 +18,11 @@ router.get(
 );
 router.get("/result/:kelas", auth.user, Controller.getResult);
 router.get(
+  "/result-detail/:kelasId/",
+  auth.user,
+  Controller.getResultDetailByClass
+);
+router.get(
   "/result-detail/:kelas/:user",
   auth.user,
   Controller.getResultDetail
