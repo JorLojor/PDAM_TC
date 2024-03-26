@@ -849,6 +849,76 @@ module.exports = {
     }
   },
 
+  getAnnualReport: async (req, res) => {
+    try {
+      const { year } = req.params;
+
+      let startDate = new Date(year, 0);
+      let endDate = new Date(year, 11);
+
+      let data = [];
+
+      const kelas = await KelasModel.find({
+        $and: [
+          { createdAt: { $gt: startDate } },
+          { createdAt: { $lt: endDate } },
+        ],
+      }).sort("createdAt");
+
+      if (kelas.length > 0) {
+        for (let i = 0; i < kelas.length; i++) {
+          const month = moment(kelas[i].createdAt).locale("id").format("MMMM");
+
+          let peserta = "";
+
+          for (let j = 0; j < kelas[i].peserta.length; j++) {
+            const user = await UserModel.findById(kelas[i].peserta[j].user);
+
+            peserta = peserta + `${user.name}, `;
+          }
+
+          peserta = peserta.substring(0, peserta.length - 2);
+
+          let instruktur = "";
+
+          if (kelas[i].materi.length > 0) {
+            for (let j = 0; j < kelas[i].materi.length; j++) {
+              const materi = await MateriModel.findById(kelas[i].materi[j]);
+
+              for (let k = 0; k < materi.instruktur.length; k++) {
+                const user = await UserModel.findById(materi.instruktur[k]);
+
+                instruktur = instruktur + `${user.name}, `;
+              }
+            }
+          }
+
+          instruktur = instruktur.substring(0, instruktur.length - 2);
+
+          data.push({
+            month,
+            monthNumber: parseInt(
+              moment(kelas[i].createdAt).locale("id").format("M")
+            ),
+            nama: kelas[i].nama,
+            tanggal_kegiatan: moment(kelas[i].createdAt)
+              .locale("id")
+              .format("DD-MM-YYY"),
+            jumlah_peserta: kelas[i].peserta.length,
+            peserta,
+            instruktur,
+            biaya: kelas[i].biaya,
+          });
+        }
+      }
+
+      response(200, data, "berhasil Get laporan kelas tahunan", res);
+    } catch (error) {
+      console.log(error);
+      response(500, error, error.message, res);
+    }
+  },
+
   getReportbyClass: async (req, res) => {
     try {
       const { kelas } = req.params;
