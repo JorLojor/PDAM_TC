@@ -1137,9 +1137,9 @@ module.exports = {
       let kelas = [];
 
       if (req.user.role == 3) {
-        if (user.kelas.length > 0) {
+        if (user.kelas.length > 0 ) {
           user.kelas.map((m) => {
-            if (m.isDone == true) {
+            if (m.isDone == true && parseInt(isThere) != 3 || parseInt(isThere) == 3) {
               kelas.push(m.kelas);
             }
           });
