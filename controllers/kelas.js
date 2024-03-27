@@ -1402,7 +1402,13 @@ module.exports = {
             moment(from).isSameOrBefore(join) &&
             moment(to).isSameOrAfter(join)
           ) {
-            students.push(kelas.peserta[i]);
+            const user = await UserModel.findById(kelas.peserta[i].user);
+
+            students.push({
+              user,
+              status: kelas.peserta[i].status,
+              createdAt: kelas.peserta[i].createdAt,
+            });
           }
         }
 
