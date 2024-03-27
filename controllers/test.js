@@ -345,14 +345,16 @@ module.exports = {
   getTest: async (req, res) => {
     try {
       const { id } = req.params;
-      const { kelas } = req.query;
+      const { kelas, adm } = req.query;
 
+      const result = await Test.findById(id).populate("pembuat");
+      
+      if (parseInt(adm) == 1) {
+        return response(200, result, "Test di dapat", res);
+      }
       if (!kelas) {
         return response(404, id, "Mohon isi kelas", res);
       }
-
-      const result = await Test.findById(id).populate("pembuat");
-
       if (!result) {
         return response(404, id, "Test tidak di temukan", res);
       }

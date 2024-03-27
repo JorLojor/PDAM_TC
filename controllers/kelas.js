@@ -31,7 +31,7 @@ module.exports = {
 
       const fromDate2 = fromDate
         ? moment(req.query.fromDate).format("ddd MMM DD YYYY") +
-          "07:00:00 GMT+0700 (Western Indonesia Time)"
+        "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
       const toDate = req.query.toDate
@@ -40,7 +40,7 @@ module.exports = {
 
       const toDate2 = toDate
         ? moment(req.query.toDate).format("ddd MMM DD YYYY") +
-          "07:00:00 GMT+0700 (Western Indonesia Time)"
+        "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
       const date1 = moment().format("ddd MMM DD YYYY");
@@ -223,7 +223,7 @@ module.exports = {
 
       const fromDate2 = fromDate
         ? moment(req.query.fromDate).format("ddd MMM DD YYYY") +
-          "07:00:00 GMT+0700 (Western Indonesia Time)"
+        "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
       const toDate = req.query.toDate
@@ -232,7 +232,7 @@ module.exports = {
 
       const toDate2 = toDate
         ? moment(req.query.toDate).format("ddd MMM DD YYYY") +
-          "07:00:00 GMT+0700 (Western Indonesia Time)"
+        "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
       let totalData = await KelasModel.countDocuments();
@@ -971,7 +971,7 @@ module.exports = {
         let quiz = 0;
 
         if (preTestId) {
-          const preTestScore = await testAnswer.findOne({
+          const preTestScore = await TestAnswer.findOne({
             test: preTestId,
             $and: [
               {
@@ -989,7 +989,7 @@ module.exports = {
         }
 
         if (postTestId) {
-          const postTestScore = await testAnswer
+          const postTestScore = await TestAnswer
             .findOne({
               test: postTestId,
               $and: [
@@ -1043,52 +1043,43 @@ module.exports = {
             },
           ],
         });
-
-        let masuk = 0;
-        let keluar = 0;
+        let reportAbsen = []
 
         if (absen.length > 0) {
-          for (let j = 0; j < absen.length; j++) {
-            if (absen[j].status == "masuk") {
-              masuk = masuk + 1;
-            } else if (absen[j].status == "hadir") {
-              masuk = masuk + 1;
-            } else if (absen[j].status == "absen") {
-              keluar = keluar + 1;
-            } else if (absen[j].status == "tidak hadir") {
-              keluar = keluar + 1;
-            }
-          }
+          classes.absensi.map(val => {
+            reportAbsen.push({
+              name: val.name,
+              jumlah_absen: classes.jadwal.length,
+              hadir: absen.filter(absensi => absensi.absenName === val.name).length ?? 0
+            })
+          })
+        } else {
+          classes.absensi.map(val => {
+            reportAbsen.push({
+              name: val.name,
+              jumlah_absen: classes.jadwal.length,
+              hadir: 0
+            })
+          })
         }
-
-        absen = [
-          {
-            name: "masuk",
-            jumlah_absen: classes.absensi.length,
-            hadir: masuk,
-          },
-          {
-            name: "keluar",
-            jumlah_absen: classes.absensi.length,
-            hadir: keluar,
-          },
-        ];
 
         data.push({
           nipp: user.nipp,
           name: user.name,
+          user_type: user.userType == 1 ? "internal" : "external",
           unit_kerja: user.instansi,
+          jabatan: user.jabatan ?? "-",
           nilai_pre_test: preTest > 0 ? preTest : "",
           nilai_post_test: postTest > 0 ? postTest : "",
           nilai_quiz: quiz > 0 ? quiz : "",
-          absen,
+          absen: reportAbsen,
         });
       }
 
       return response(200, data, "berhasil ambil data", res);
     } catch (error) {
       console.log(error);
-      response(500, error, error.message, res);
+      return response(500, error, error.message, res);
     }
   },
 
@@ -1133,6 +1124,8 @@ module.exports = {
                 kelas: kelas[g].nama,
                 image: kelas[g].image,
                 jamMulai: kelas[g].jadwal[h].jamMulai,
+                linkZoom: kelas[g].linkPelatihan,
+                methods: kelas[g].methods,
                 materi,
               });
             }
@@ -1176,7 +1169,7 @@ module.exports = {
           kelas = await KelasModel.find({
             _id: { $in: ids },
             status: { $ne: "deleted" },
-          }).populate("materi peserta kategori trainingMethod");
+          }).populate("materi peserta kategori trainingMethod")
 
           if (kelas.length > 0) {
             for (let i = 0; i < kelas.length; i++) {
@@ -1246,6 +1239,7 @@ module.exports = {
 
         data = await KelasModel.find({
           _id: { $in: kelasIds },
+          status: { $ne: "deleted" }
         })
           .skip((page - 1) * limit)
           .limit(limit)
@@ -1272,9 +1266,22 @@ module.exports = {
         };
       }
 
-      response(200, finalResult, "berhasil Get kelas", res);
+      return response(200, finalResult, "berhasil Get kelas", res);
     } catch (error) {
-      response(500, error, error.message, res);
+      return response(500, error, error.message, res);
+    }
+  },
+
+  changeStatusPostTest: async function (req, res) {
+    try {
+      const kelas = await KelasModel.findByIdAndUpdate(req.params.id, [{
+        $set: {
+          activePostTest: { "$eq": [false, "$activePostTest"] }
+        }
+      }], { new: true })
+      return response(200, kelas, "berhasil aktifkan post test", res);
+    } catch (error) {
+      return response(500, error, error.message, res);
     }
   },
 
@@ -1378,40 +1385,41 @@ module.exports = {
 
   getStudents: async (req, res) => {
     try {
-      const students = await UserModel.find({
-        role: 3,
-      });
-
-      const from = req.query.from
-        ? moment(new Date(req.query.from)).format("MM DD YYYY")
-        : null;
-
-      const to = req.query.to
-        ? moment(new Date(req.query.to)).format("MM DD YYYY")
-        : null;
-
-      if (from && to) {
-        let studentsBox = [];
-
-        for (let i = 0; i < students.length; i++) {
-          const join = moment(new Date(students[i].createdAt)).format(
-            "MM DD YYYY"
-          );
-
-          if (
-            moment(from).isSameOrBefore(join) &&
-            moment(to).isSameOrAfter(join)
-          ) {
-            studentsBox.push(students[i]);
+      if (req.query.from && req.query.to) {
+        const totalData = await UserModel.countDocuments({
+          role: 3,
+          createdAt: {
+            $gte: new Date(req.query.from),
+            $lt: new Date(req.query.to)
           }
-        }
+        })
 
-        response(200, studentsBox, "murid kelas ditemukan", res);
+        const students = await UserModel.find({
+          role: 3,
+          createdAt: {
+            $gte: new Date(req.query.from),
+            $lt: new Date(req.query.to)
+          }
+        }).skip((parseInt(req.query.page) - 1) * parseInt(req.query.limit))
+          .limit(parseInt(req.query.limit)).sort({ createdAt: -1 });
+
+        return response(200, {
+          students,
+          totalData: totalData
+        }, "murid kelas ditemukan", res);
       } else {
-        response(400, {}, "mohon isi tanggal", res);
+        const totalData = await UserModel.countDocuments({ role: 3 })
+
+        const students = await UserModel.find({ role: 3 }).skip((parseInt(req.query.page) - 1) * parseInt(req.query.limit))
+          .limit(parseInt(req.query.limit)).sort({ createdAt: -1 });
+
+        return response(200, {
+          students,
+          totalData: totalData
+        }, "berhasil", res);
       }
     } catch (e) {
-      console.log(e);
+      return response(500, e, "something went wrong", res);
     }
   },
 
@@ -1934,13 +1942,15 @@ module.exports = {
         link,
         absensi,
         trainingMethod,
+        biaya
       } = req.body;
 
       let imageKelas = null;
       let status = "pending";
 
       if (req.file) {
-        imageKelas = req.file.path.split("/PDAM_TC/")[1];
+        const path = req.file.path.replaceAll("\\", '/')
+        imageKelas = "/upload/" + path.split("/upload/")[1];
       }
 
       if (kodeNotaDinas !== "undefined") {
@@ -1991,8 +2001,8 @@ module.exports = {
               filtered[0].status === "pending"
                 ? "pending"
                 : filtered[0].status === "Approved"
-                ? "draft"
-                : "declined";
+                  ? "draft"
+                  : "declined";
           }
         }
       }
@@ -2019,6 +2029,7 @@ module.exports = {
         kategori,
         trainingMethod,
         status,
+        biaya: biaya.replaceAll(',', '')
       });
 
       const result = await kelas.save({ session });
@@ -2057,6 +2068,7 @@ module.exports = {
         absensi,
         status,
         trainingMethod,
+        biaya
       } = req.body;
 
       const checkKelas = await KelasModel.findById(id);
@@ -2068,7 +2080,9 @@ module.exports = {
       let imageKelas;
 
       if (req.file) {
-        imageKelas = "/upload/" + req.file.path.split("/upload/")[1];
+        const path = req.file.path.replaceAll("\\", '/')
+        imageKelas = "/upload/" + path.split("/upload/")[1];
+        // imageKelas = "/upload/" + req.file.path.split("/upload/")[1];
       }
 
       let collectedAbsensi = [];
@@ -2086,11 +2100,12 @@ module.exports = {
       if (jadwalBaru) {
         parsedJadwal = JSON.parse(jadwalBaru);
       }
+      const randomNumber = Math.floor(Math.random() * 12948192821);
 
       const kelas = {
         kodeKelas: kodeKelas ?? checkKelas.kodeKelas,
         nama: nama ?? checkKelas.nama,
-        slug: nama ? _.kebabCase(nama) : checkKelas.slug,
+        slug: _.kebabCase(nama) + randomNumber,
         harga: harga ?? checkKelas.harga,
         kapasitasPeserta: kapasitasPeserta ?? checkKelas.kapasitasPeserta,
         description: description ?? checkKelas.description,
@@ -2108,6 +2123,7 @@ module.exports = {
         kategori: kategori ?? checkKelas.kategori,
         status: newStatus ?? checkKelas.status,
         trainingMethod: trainingMethod ?? checkKelas.trainingMethod,
+        biaya: biaya?.replaceAll(',', '') ?? checkKelas.biaya
       };
 
       const result = await KelasModel.findByIdAndUpdate(id, kelas, {
@@ -2671,7 +2687,7 @@ module.exports = {
         .populate({
           path: "trainingMethod",
         })
-        .select("materi nama linkPelatihan")
+        .select("materi nama linkPelatihan jadwal _id")
         .exec();
 
       if (!kelas) {
@@ -2709,8 +2725,10 @@ module.exports = {
       const data = {
         _id: kelas._id,
         nama: kelas.nama,
+        jadwal: kelas.jadwal,
         materi: kelas.materi,
         linkPelatihan: kelas.linkPelatihan,
+        idKelas: kelas._id,
         isDone,
         isEvaluated,
       };
@@ -2834,7 +2852,7 @@ module.exports = {
               for (var i = 0; i < k.jadwal.length; i++) {
                 if (
                   moment(k.jadwal[i].tanggal).format("YYYY-MM-DD") >=
-                    fromDate &&
+                  fromDate &&
                   moment(k.jadwal[i].tanggal).format("YYYY-MM-DD") <= toDate
                 ) {
                   ids.push(k._id);
@@ -3162,8 +3180,10 @@ module.exports = {
             slug: d.slug,
             createdAt: d.createdAt,
             updatedAt: d.updatedAt,
+            desainSertifikat: d.desainSertifikat,
             __v: d.__v,
             newEnrolment,
+            activePostTest: d.activePostTest,
           });
         });
 
@@ -3232,7 +3252,7 @@ module.exports = {
             for (let j = 0; j < registered[i].kelas.length; j++) {
               if (
                 registered[i].kelas[j].kelas.toString() ==
-                  getKelas._id.toString() &&
+                getKelas._id.toString() &&
                 registered[i].kelas[j].status == status
               ) {
                 pesertaIds.push(registered[i]._id);
@@ -3290,7 +3310,7 @@ module.exports = {
           for (let j = 0; j < registered[i].kelas.length; j++) {
             if (
               registered[i].kelas[j].kelas.toString() ==
-                getKelas._id.toString() &&
+              getKelas._id.toString() &&
               registered[i].kelas[j].status == status
             ) {
               pesertaIds.push(registered[i]._id);

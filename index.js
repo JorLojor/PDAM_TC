@@ -36,7 +36,6 @@ app.use(morgan("dev"));
 mongoose.connect(process.env.mongodb2);
 
 // routes
-
 const chatRoute = require("./routers/chat");
 const roomRoute = require("./routers/room");
 const kelasRoutes = require("./routers/kelas");
@@ -56,6 +55,7 @@ const documentationRoute = require("./routers/documentation");
 const evaluationFormRoute = require("./routers/evaluationForm");
 const evaluationFormQuestionRoute = require("./routers/evaluationFormQuestion");
 const rankingRoute = require("./routers/ranking");
+const kelasBesarRoute = require("./routers/kelasBesar");
 const { getNotifIo, storeIo } = require("./controllers/chat");
 const { storeRecentClassIO } = require("./controllers/kelas");
 const { log } = require("console");
@@ -80,6 +80,7 @@ app.use("/documentation/", documentationRoute);
 app.use("/evaluation-form/", evaluationFormRoute);
 app.use("/evaluation-form-question/", evaluationFormQuestionRoute);
 app.use("/ranking/", rankingRoute);
+app.use('/kelas-besar/', kelasBesarRoute)
 
 const uploadsDirectory = path.join(__dirname, "upload");
 
@@ -89,33 +90,30 @@ app.get("/", (req, res) => {
   res.send("bismillah hirrohman nirrohim");
 });
 
-io.on("connection", (socket) => {
-  // console.log("User connected to socket!");
+// io.on("connection", (socket) => {
 
-  socket.on("send-message", async ({ room, sender, chat }) => {
-    // console.log(room, sender, chat);
-    try {
-      const send = await storeIo({ room, sender, chat });
-      const notif = await getNotifIo({ room, sender, chat });
+//   socket.on("send-message", async ({ room, sender, chat }) => {
+//     try {
+//       const send = await storeIo({ room, sender, chat });
+//       const notif = await getNotifIo({ room, sender, chat });
 
-      io.emit("new-message", send);
-      io.emit("new-notif", notif);
-    } catch (error) {
-      console.log(error);
-    }
-  });
+//       io.emit("new-message", send);
+//       io.emit("new-notif", notif);
+//     } catch (error) {
+//       console.log(error);
+//     }
+//   });
 
-  socket.on("save-recent-class", async ({ id, id_user }) => {
-    // console.log(id, id_user);
-    try {
-      const recentClass = await storeRecentClassIO({ id, id_user });
+//   socket.on("save-recent-class", async ({ id, id_user }) => {
+//     try {
+//       const recentClass = await storeRecentClassIO({ id, id_user });
 
-      io.emit("recent-class", recentClass);
-    } catch (error) {
-      console.log(error);
-    }
-  });
-});
+//       io.emit("recent-class", recentClass);
+//     } catch (error) {
+//       console.log(error);
+//     }
+//   });
+// });
 
 server.listen(process.env.local_port, () => {
   console.log(`Server dimulai pada server ${process.env.local_port}`);

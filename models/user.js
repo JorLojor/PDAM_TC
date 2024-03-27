@@ -24,6 +24,7 @@ const userSchema = new Schema(
     nilai: [
       { type: mongoose.Schema.Types.ObjectId, required: false, ref: "nilai" },
     ], // nilai ref nilai,
+    jabatan: { type: String, required: false },
     rating: [
       {
         type: mongoose.Schema.Types.ObjectId,

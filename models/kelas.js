@@ -25,6 +25,9 @@ const kelasSchema = new Schema(
         time: String,
       },
     ],
+    biaya: { type: String, required: false },
+    tempat: { type: String, required: false },
+    lembaga: { type: String, required: false },
     peserta: [{ type: pesertaKelasSchema, required: false }],
     kodeNotaDinas: { type: String, required: false },
     classPermission: { type: String, required: false },
@@ -49,6 +52,7 @@ const kelasSchema = new Schema(
     slug: { type: String, required: true, unique: true },
     desainSertifikat: { type: desainSertifikatSchema, required: false },
     orderRecent: { type: Number, required: false },
+    activePostTest: { type: Boolean, required: false, default: false },
   },
   { timestamps: true }
 );

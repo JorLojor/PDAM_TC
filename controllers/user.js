@@ -26,6 +26,7 @@ const { getInstructorClass } = require("../service");
 const classEnrollmentLog = require("../models/classEnrollmentLog");
 const EvaluationFormResult = require("../models/evaluationFormResult");
 const { log } = require("console");
+const RecentClass = require("../models/recentClass");
 
 module.exports = {
   getbyEmail: async (req, res) => {
@@ -1031,6 +1032,97 @@ module.exports = {
     }
   },
 
+  saveRecentClass: async function (req, res) {
+    try {
+      const { id, idUser } = req.params
+      const check = await RecentClass.findOne({
+        user: idUser,
+        $and: [
+          {
+            kelas: id,
+          },
+        ],
+      });
+
+      if (check) {
+        const data = await RecentClass.find({
+          user: idUser,
+        })
+          .populate("kelas")
+          .sort({ number: 1 });
+
+        return data;
+      }
+
+      const first = await RecentClass.findOne({
+        number: 1,
+        $and: [
+          {
+            user: idUser,
+          },
+        ],
+      });
+
+      const second = await RecentClass.findOne({
+        number: 2,
+        $and: [
+          {
+            user: idUser,
+          },
+        ],
+      });
+
+      const third = await RecentClass.findOne({
+        number: 3,
+        $and: [
+          {
+            user: idUser,
+          },
+        ],
+      });
+
+      const fourth = await RecentClass.findOne({
+        number: 4,
+        $and: [
+          {
+            user: idUser,
+          },
+        ],
+      });
+
+      if (first) {
+        await RecentClass.findByIdAndUpdate(first._id, {
+          number: 2,
+        });
+      }
+
+      if (second) {
+        await RecentClass.findByIdAndUpdate(second._id, {
+          number: 3,
+        });
+      }
+
+      if (third) {
+        await RecentClass.findByIdAndUpdate(third._id, {
+          number: 4,
+        });
+      }
+
+      if (fourth) {
+        await RecentClass.findByIdAndDelete(fourth._id);
+      }
+
+      await RecentClass.create({
+        number: 1,
+        kelas: id,
+        user: idUser,
+      });
+      response(200, {}, "Berhasil update recent class", res);
+    } catch (error) {
+      res.status(500).json({ error: "Internal server error, coba lagi", mes: error });
+    }
+  },
+
   getCertificate: async (req, res) => {
     try {
       const id = req.user.id;
@@ -1045,9 +1137,9 @@ module.exports = {
       let kelas = [];
 
       if (req.user.role == 3) {
-        if (user.kelas.length > 0) {
+        if (user.kelas.length > 0 ) {
           user.kelas.map((m) => {
-            if (m.isDone == true) {
+            if (m.isDone == true && parseInt(isThere) != 3 || parseInt(isThere) == 3) {
               kelas.push(m.kelas);
             }
           });
@@ -1072,14 +1164,23 @@ module.exports = {
               kelas: kelas[i],
             });
 
+            if (parseInt(isThere) === 3) {
+              const sertifikat = await Sertifikat.findById(
+                detailKelas.desainSertifikat?.peserta
+              );
+              data.push({
+                sertifikat,
+                kelas: detailKelas?.nama,
+                jadwal: detailKelas?.jadwal,
+                idKelas: detailKelas?._id,
+              });
+            }
             if (!evaluated) {
               continue;
             }
-
             const sertifikat = await Sertifikat.findById(
               detailKelas.desainSertifikat?.peserta
             );
-
             if (
               (parseInt(isThere) === 0 && sertifikat !== null) ||
               (parseInt(isThere) === 1 && sertifikat === null)
@@ -1087,6 +1188,7 @@ module.exports = {
               data.push({
                 sertifikat,
                 kelas: detailKelas?.nama,
+                jadwal: detailKelas?.jadwal,
                 idKelas: detailKelas?._id,
               });
             }
@@ -1141,11 +1243,17 @@ module.exports = {
               detailKelas.desainSertifikat?.instruktur
             );
 
-            data.push({
-              sertifikat,
-              kelas: detailKelas?.nama,
-              idKelas: detailKelas?._id,
-            });
+            if (
+              (parseInt(isThere) === 0 && sertifikat !== null) ||
+              (parseInt(isThere) === 1 && sertifikat === null)
+            ) {
+              data.push({
+                sertifikat,
+                kelas: detailKelas?.nama,
+                jadwal: detailKelas?.jadwal,
+                idKelas: detailKelas?._id,
+              });
+            }
           }
         }
       }
@@ -1800,9 +1908,8 @@ module.exports = {
       let user = data.map((val, idx) => {
         return {
           value: val._id,
-          label: `${val.name} (${val.username}) - ${
-            val.userType === 1 ? "Internal" : "Eksternal"
-          }`,
+          label: `${val.name} (${val.username}) - ${val.userType === 1 ? "Internal" : "Eksternal"
+            }`,
         };
       });
 
