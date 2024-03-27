@@ -52,6 +52,7 @@ const kelasSchema = new Schema(
     slug: { type: String, required: true, unique: true },
     desainSertifikat: { type: desainSertifikatSchema, required: false },
     orderRecent: { type: Number, required: false },
+    activePostTest: { type: Boolean, required: false, default: false },
   },
   { timestamps: true }
 );

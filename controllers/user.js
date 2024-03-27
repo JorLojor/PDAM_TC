@@ -1164,14 +1164,23 @@ module.exports = {
               kelas: kelas[i],
             });
 
+            if (parseInt(isThere) === 3) {
+              const sertifikat = await Sertifikat.findById(
+                detailKelas.desainSertifikat?.peserta
+              );
+              data.push({
+                sertifikat,
+                kelas: detailKelas?.nama,
+                jadwal: detailKelas?.jadwal,
+                idKelas: detailKelas?._id,
+              });
+            }
             if (!evaluated) {
               continue;
             }
-
             const sertifikat = await Sertifikat.findById(
               detailKelas.desainSertifikat?.peserta
             );
-
             if (
               (parseInt(isThere) === 0 && sertifikat !== null) ||
               (parseInt(isThere) === 1 && sertifikat === null)
@@ -1179,6 +1188,7 @@ module.exports = {
               data.push({
                 sertifikat,
                 kelas: detailKelas?.nama,
+                jadwal: detailKelas?.jadwal,
                 idKelas: detailKelas?._id,
               });
             }
@@ -1240,6 +1250,7 @@ module.exports = {
               data.push({
                 sertifikat,
                 kelas: detailKelas?.nama,
+                jadwal: detailKelas?.jadwal,
                 idKelas: detailKelas?._id,
               });
             }

@@ -1168,7 +1168,7 @@ module.exports = {
           kelas = await KelasModel.find({
             _id: { $in: ids },
             status: { $ne: "deleted" },
-          }).populate("materi peserta kategori trainingMethod");
+          }).populate("materi peserta kategori trainingMethod")
 
           if (kelas.length > 0) {
             for (let i = 0; i < kelas.length; i++) {
@@ -1238,6 +1238,7 @@ module.exports = {
 
         data = await KelasModel.find({
           _id: { $in: kelasIds },
+          status: { $ne: "deleted" }
         })
           .skip((page - 1) * limit)
           .limit(limit)
@@ -1264,9 +1265,22 @@ module.exports = {
         };
       }
 
-      response(200, finalResult, "berhasil Get kelas", res);
+      return response(200, finalResult, "berhasil Get kelas", res);
     } catch (error) {
-      response(500, error, error.message, res);
+      return response(500, error, error.message, res);
+    }
+  },
+
+  changeStatusPostTest: async function(req,res){
+    try {
+      const kelas = await KelasModel.findByIdAndUpdate(req.params.id, [{
+        $set: {
+          activePostTest: { "$eq": [false, "$activePostTest"] }
+        }
+      }], {new: true})
+      return response(200, kelas, "berhasil aktifkan post test", res);
+    } catch (error) {
+      return response(500, error, error.message, res);
     }
   },
 
@@ -3093,6 +3107,7 @@ module.exports = {
             desainSertifikat: d.desainSertifikat,
             __v: d.__v,
             newEnrolment,
+            activePostTest: d.activePostTest,
           });
         });
 
