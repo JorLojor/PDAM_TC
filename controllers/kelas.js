@@ -1385,16 +1385,51 @@ module.exports = {
   getOneKelas: async (req, res) => {
     const id = req.params.id;
 
+    const from = req.query.from
+      ? moment(new Date(req.query.from)).format("MM DD YYYY")
+      : null;
+
+    const to = req.query.to
+      ? moment(new Date(req.query.to)).format("MM DD YYYY")
+      : null;
+
     try {
-      let kelas = await KelasModel.findById(id).populate(
-        "materi peserta kategori trainingMethod"
-      );
+      if (from && to) {
+        let kelas = await KelasModel.findById(id).populate("peserta");
 
-      if (!kelas) {
-        response(404, id, "Kelas tidak ditemukan", res);
+        let students = [];
+
+        for (let i = 0; i < kelas.peserta.length; i++) {
+          const join = moment(new Date(kelas.peserta[i].createdAt)).format(
+            "MM DD YYYY"
+          );
+
+          if (
+            moment(from).isSameOrBefore(join) &&
+            moment(to).isSameOrAfter(join)
+          ) {
+            const user = await UserModel.findById(kelas.peserta[i].user);
+
+            students.push({
+              user,
+              status: kelas.peserta[i].status,
+              createdAt: kelas.peserta[i].createdAt,
+            });
+          }
+        }
+
+        response(200, students, "murid kelas ditemukan", res);
+      } else {
+        let kelas = await KelasModel.findById(id).populate(
+          "materi peserta kategori trainingMethod"
+        );
+
+        if (!kelas) {
+          response(404, id, "Kelas tidak ditemukan", res);
+        }
+
+        response(200, kelas, "kelas ditemukan", res);
       }
-
-      response(200, kelas, "kelas ditemukan", res);
     } catch (error) {
       response(500, error, "Server error", res);
     }
