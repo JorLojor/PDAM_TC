@@ -1376,6 +1376,45 @@ module.exports = {
     }
   },
 
+  getStudents: async (req, res) => {
+    try {
+      const students = await UserModel.find({
+        role: 3,
+      });
+
+      const from = req.query.from
+        ? moment(new Date(req.query.from)).format("MM DD YYYY")
+        : null;
+
+      const to = req.query.to
+        ? moment(new Date(req.query.to)).format("MM DD YYYY")
+        : null;
+
+      if (from && to) {
+        let studentsBox = [];
+
+        for (let i = 0; i < students.length; i++) {
+          const join = moment(new Date(students[i].createdAt)).format(
+            "MM DD YYYY"
+          );
+
+          if (
+            moment(from).isSameOrBefore(join) &&
+            moment(to).isSameOrAfter(join)
+          ) {
+            studentsBox.push(students[i]);
+          }
+        }
+
+        response(200, studentsBox, "murid kelas ditemukan", res);
+      } else {
+        response(400, {}, "mohon isi tanggal", res);
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  },
+
   getOneKelas: async (req, res) => {
     const id = req.params.id;
 

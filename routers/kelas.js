@@ -51,6 +51,7 @@ router.get(
   auth.instruktur,
   Controller.getPesertaByInstruktur
 );
+router.get("/student", auth.user, Controller.getStudents);
 router.get("/:id", auth.user, Controller.getOneKelas);
 router.get("/slug/:slug", auth.user, Controller.getOneKelasBySlug);
 router.post("/nd/", auth.server, Controller.getOneKelasByND);
