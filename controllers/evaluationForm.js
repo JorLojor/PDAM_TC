@@ -386,7 +386,15 @@ module.exports = {
           .populate("evaluationForm")
           .populate("evaluationFormQuestion")
           .populate("instructor")
-          .populate("kelas");
+          .populate({
+            path: "kelas",
+            populate: {
+              path: "materi",
+              populate: {
+                path: "instruktur"
+              }
+            },
+          })
 
         if (result.length > 0) {
           let instructorIds = [];
@@ -506,7 +514,12 @@ module.exports = {
           .populate("evaluationForm")
           .populate("evaluationFormQuestion")
           .populate("instructor")
-          .populate("kelas");
+          .populate({
+            path: "kelas",
+            populate: {
+              path: "materi",
+            },
+          })
 
         if (result.length > 0) {
           let instructorIds = [];
@@ -526,6 +539,7 @@ module.exports = {
                 question: result[i].evaluationFormQuestion.name,
                 type: result[i].evaluationFormQuestion.type,
                 answer: result[i].value,
+                namaAtasan: result[i].namaAtasan,
               });
             }
           }
@@ -597,12 +611,14 @@ module.exports = {
             }
           }
         }
-
-        data.push({
-          user: result.length > 0 ? result[0].user : "",
-          result: evaluation,
-          message,
-        });
+        if(result.length > 0){
+          data.push({
+            user: result[0].user,
+            result: evaluation,
+            message,
+            kelas
+          });
+        }
       }
 
       return response(200, data, "Data detail hasil form", res);

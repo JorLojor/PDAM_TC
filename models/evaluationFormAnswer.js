@@ -33,6 +33,9 @@ const evaluationFormAnswer = new Schema(
       index: true,
       default: 0,
     },
+    namaAtasan: {
+      type: String
+    }
   },
   { timestamps: true }
 );

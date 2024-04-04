@@ -9,6 +9,7 @@ const Kelas = require("../models/kelas");
 const Kategori = require("../models/kategori");
 const ratingModel = require("../models/rating");
 const Nipp = require("../models/nipp");
+const Absen = require("../models/absensiPeserta")
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const response = require("../respons/response");
@@ -1417,8 +1418,16 @@ module.exports = {
         }
       });
 
-      if (valid) {
+      if (valid) { 
         let materis = [];
+        const absenPeserta = await Absen.find({
+          user: req.user.id,
+          kelas: validKelas._id
+        })
+        console.log(absenPeserta)
+        if(absenPeserta == null || absenPeserta.length == 0) {
+          return response(400, {}, "Anda Belum Absen", res);
+        }
 
         validKelas.materi.map((m) => {
           materis.push(m);

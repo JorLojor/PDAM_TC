@@ -51,6 +51,7 @@ module.exports = {
         instructor,
         value,
         message,
+        namaAtasan
       } = req.body;
 
       const user = req.user.id;
@@ -125,6 +126,7 @@ module.exports = {
           evaluationFormQuestion: evaluationFormQuestion[i],
           instructor,
           value: value[i],
+          namaAtasan
         });
       }
 
