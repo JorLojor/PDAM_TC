@@ -1424,7 +1424,6 @@ module.exports = {
           user: req.user.id,
           kelas: validKelas._id
         })
-        console.log(absenPeserta)
         if(absenPeserta == null || absenPeserta.length == 0) {
           return response(400, {}, "Anda Belum Absen", res);
         }
