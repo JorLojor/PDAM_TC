@@ -87,7 +87,18 @@ module.exports = {
         .populate("materi kategori trainingMethod")
         .sort({ createdAt: -1 });
 
-      let totalData = data.length;
+      let totalData = await KelasModel.countDocuments({
+        _id: {
+          $in: ids,
+        },
+        $and: [
+          {
+            status: {
+              $ne: "deleted",
+            },
+          },
+        ],
+      });
 
       if (userType || fromDate || toDate) {
         let ids = [];
@@ -112,6 +123,7 @@ module.exports = {
           _id: {
             $in: ids,
           },
+          status: { $ne: "deleted" }
         });
 
         ids = [];
@@ -183,7 +195,16 @@ module.exports = {
           .populate("materi kategori trainingMethod")
           .sort({ createdAt: -1 });
 
-        totalData = data.length;
+        totalData = await KelasModel.countDocuments({
+          _id: { $in: ids },
+          $and: [
+            {
+              status: {
+                $ne: "deleted",
+              },
+            },
+          ],
+        });
       }
 
       for (const kelas of data) {
@@ -235,7 +256,7 @@ module.exports = {
         "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
-      let totalData = await KelasModel.countDocuments();
+      let totalData = await KelasModel.countDocuments({ status: { $ne: "deleted" } });
 
       let data = await KelasModel.find({ status: { $ne: "deleted" } })
         .skip((halaman - 1) * batas)
@@ -302,13 +323,17 @@ module.exports = {
 
         data = await KelasModel.find({
           _id: { $in: ids },
+          status: { $ne: "deleted" }
         })
           .skip((halaman - 1) * batas)
           .limit(batas)
           .populate("materi kategori trainingMethod")
           .sort({ createdAt: -1 });
 
-        totalData = data.length;
+        totalData = await KelasModel.countDocuments({
+          _id: { $in: ids },
+          status: { $ne: "deleted" }
+        });
       }
 
       for (const kelas of data) {
@@ -869,17 +894,15 @@ module.exports = {
         for (let i = 0; i < kelas.length; i++) {
           const month = moment(kelas[i].createdAt).locale("id").format("MMMM");
 
-          let peserta = "";
+          let peserta = [];
 
           for (let j = 0; j < kelas[i].peserta.length; j++) {
             const user = await UserModel.findById(kelas[i].peserta[j].user);
 
-            peserta = peserta + `${user.name}, `;
+            peserta.push(user.name)
           }
 
-          peserta = peserta.substring(0, peserta.length - 2);
-
-          let instruktur = "";
+          let instruktur = [];
 
           if (kelas[i].materi.length > 0) {
             for (let j = 0; j < kelas[i].materi.length; j++) {
@@ -888,12 +911,10 @@ module.exports = {
               for (let k = 0; k < materi.instruktur.length; k++) {
                 const user = await UserModel.findById(materi.instruktur[k]);
 
-                instruktur = instruktur + `${user.name}, `;
+                instruktur.push(user.name);
               }
             }
           }
-
-          instruktur = instruktur.substring(0, instruktur.length - 2);
 
           data.push({
             month,
@@ -901,9 +922,7 @@ module.exports = {
               moment(kelas[i].createdAt).locale("id").format("M")
             ),
             nama: kelas[i].nama,
-            tanggal_kegiatan: moment(kelas[i].createdAt)
-              .locale("id")
-              .format("DD-MM-YYY"),
+            tanggal_kegiatan: kelas[i].jadwal,
             jumlah_peserta: kelas[i].peserta.length,
             peserta,
             instruktur,
@@ -1385,39 +1404,25 @@ module.exports = {
 
   getStudents: async (req, res) => {
     try {
+      let where = { role: 3 }
       if (req.query.from && req.query.to) {
-        const totalData = await UserModel.countDocuments({
-          role: 3,
-          createdAt: {
-            $gte: new Date(req.query.from),
-            $lt: new Date(req.query.to)
-          }
-        })
-
-        const students = await UserModel.find({
-          role: 3,
-          createdAt: {
-            $gte: new Date(req.query.from),
-            $lt: new Date(req.query.to)
-          }
-        }).skip((parseInt(req.query.page) - 1) * parseInt(req.query.limit))
-          .limit(parseInt(req.query.limit)).sort({ createdAt: -1 });
-
-        return response(200, {
-          students,
-          totalData: totalData
-        }, "murid kelas ditemukan", res);
-      } else {
-        const totalData = await UserModel.countDocuments({ role: 3 })
-
-        const students = await UserModel.find({ role: 3 }).skip((parseInt(req.query.page) - 1) * parseInt(req.query.limit))
-          .limit(parseInt(req.query.limit)).sort({ createdAt: -1 });
-
-        return response(200, {
-          students,
-          totalData: totalData
-        }, "berhasil", res);
+        where.createdAt = {
+          $gte: new Date(req.query.from),
+          $lt: new Date(req.query.to)
+        }
       }
+      if (req.query.name) {
+        where.name = { $regex: `^${req.query.name}`, $options: "i" }
+      }
+      const totalData = await UserModel.countDocuments(where)
+
+      const students = await UserModel.find(where).skip((parseInt(req.query.page) - 1) * parseInt(req.query.limit))
+        .limit(parseInt(req.query.limit)).sort({ name: 1 });
+
+      return response(200, {
+        students,
+        totalData: totalData
+      }, "berhasil", res);
     } catch (e) {
       return response(500, e, "something went wrong", res);
     }
