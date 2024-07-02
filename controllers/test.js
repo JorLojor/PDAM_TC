@@ -2086,7 +2086,25 @@ module.exports = {
       const { id, slug, title } = req.params;
       const test = await Test.findOne({ _id: id });
       const dirname = __dirname.replace("controllers", "");
-
+if (test.type == "pre") {
+        await MateriModel.findOneAndUpdate(
+          { "test.pre": new mongoose.Types.ObjectId(id) },
+          { $set: { "test.pre": null } },
+          { new : true, session }
+        );
+      } else if (test.type == "post") {
+        await MateriModel.findOneAndUpdate(
+          { "test.post": new mongoose.Types.ObjectId(id) },
+          { $set: { "test.post": null } },
+          { new : true, session }
+        );
+      } else if (test.type == "quiz") {
+        await MateriModel.findOneAndUpdate(
+          { slug, "items.title": title },
+          { $set: { "items.$.quiz": null } },
+          { new : true, session }
+        );
+      }
       test.question.forEach((question) => {
         if (question.img != null) {
           fs.unlinkSync(path.join(dirname, question.img), {
@@ -2105,27 +2123,7 @@ module.exports = {
         });
       });
       test.deleteOne({ session });
-
-      if (test.type == "pre") {
-        await MateriModel.updateOne(
-          { "test.pre": id },
-          { $set: { "test.pre": null } },
-          { upsert: true, new: true, session }
-        );
-      } else if (test.type == "post") {
-        await MateriModel.updateOne(
-          { "test.post": id },
-          { $set: { "test.post": null } },
-          { upsert: true, new: true, session }
-        );
-      } else if (test.type == "quiz") {
-        await MateriModel.updateOne(
-          { slug, "items.title": title },
-          { $set: { "items.$.quiz": null } },
-          { upsert: true, new: true, session }
-        );
-      }
-
+      
       await session.commitTransaction();
       response(200, [], "Test Berhasil Dihapus", res);
     } catch (error) {
