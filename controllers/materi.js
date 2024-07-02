@@ -236,6 +236,9 @@ module.exports = {
 
       JSON.parse(data).map((value, index) => {
         const { kodeMateri, section, description, items, instruktur } = value;
+        if((instruktur == undefined || instruktur == null || instruktur == 'null') || (section == undefined || section == null || section == 'null') || (description == undefined || description == null || description == 'null')){
+            return response(400, [], "Gagal dalam membuat materi!", res);
+        }
         const randomNumber = Math.floor(Math.random() * 12948192821);
         const slug = _.kebabCase(section) + randomNumber;
         let itemsList = [];
