@@ -80,7 +80,7 @@ app.use("/documentation/", documentationRoute);
 app.use("/evaluation-form/", evaluationFormRoute);
 app.use("/evaluation-form-question/", evaluationFormQuestionRoute);
 app.use("/ranking/", rankingRoute);
-app.use('/kelas-besar/', kelasBesarRoute)
+app.use("/kelas-besar/", kelasBesarRoute);
 
 const uploadsDirectory = path.join(__dirname, "upload");
 

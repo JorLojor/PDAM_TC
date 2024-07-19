@@ -31,7 +31,11 @@ router.get("/report/annual/:year", auth.user, Controller.getAnnualReport); //tes
 router.get("/report", auth.user, Controller.getWholeReport); //testing
 router.get("/report/:kelas", auth.user, Controller.getReportbyClass); //testing
 router.get("/today", auth.user, Controller.getTodayClass); //testing
-router.put("/change-status-post/:id", auth.admin, Controller.changeStatusPostTest)
+router.put(
+  "/change-status-post/:id",
+  auth.admin,
+  Controller.changeStatusPostTest
+);
 router.get(
   "/my-pending-class",
   auth.user,

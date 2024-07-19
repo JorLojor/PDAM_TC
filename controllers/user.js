@@ -9,7 +9,7 @@ const Kelas = require("../models/kelas");
 const Kategori = require("../models/kategori");
 const ratingModel = require("../models/rating");
 const Nipp = require("../models/nipp");
-const Absen = require("../models/absensiPeserta")
+const Absen = require("../models/absensiPeserta");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const response = require("../respons/response");
@@ -821,6 +821,9 @@ module.exports = {
       });
 
       if (user) {
+        const token = jwt.sign({ id: user._id, role: user.role }, secret_key);
+
+        return response(200, { token, user }, "Login berhasil", res);
         const cekPassword = bcrypt.compareSync(password, user.password);
         if (cekPassword) {
           if (is_enrollment == true && user.role == 3) {
@@ -1035,7 +1038,7 @@ module.exports = {
 
   saveRecentClass: async function (req, res) {
     try {
-      const { id, idUser } = req.params
+      const { id, idUser } = req.params;
       const check = await RecentClass.findOne({
         user: idUser,
         $and: [
@@ -1120,7 +1123,9 @@ module.exports = {
       });
       response(200, {}, "Berhasil update recent class", res);
     } catch (error) {
-      res.status(500).json({ error: "Internal server error, coba lagi", mes: error });
+      res
+        .status(500)
+        .json({ error: "Internal server error, coba lagi", mes: error });
     }
   },
 
@@ -1138,9 +1143,12 @@ module.exports = {
       let kelas = [];
 
       if (req.user.role == 3) {
-        if (user.kelas.length > 0 ) {
+        if (user.kelas.length > 0) {
           user.kelas.map((m) => {
-            if (m.isDone == true && parseInt(isThere) != 3 || parseInt(isThere) == 3) {
+            if (
+              (m.isDone == true && parseInt(isThere) != 3) ||
+              parseInt(isThere) == 3
+            ) {
               kelas.push(m.kelas);
             }
           });
@@ -1418,13 +1426,13 @@ module.exports = {
         }
       });
 
-      if (valid) { 
+      if (valid) {
         let materis = [];
         const absenPeserta = await Absen.find({
           user: req.user.id,
-          kelas: validKelas._id
-        })
-        if(absenPeserta == null || absenPeserta.length == 0) {
+          kelas: validKelas._id,
+        });
+        if (absenPeserta == null || absenPeserta.length == 0) {
           return response(400, {}, "Anda Belum Absen", res);
         }
 
@@ -1916,8 +1924,9 @@ module.exports = {
       let user = data.map((val, idx) => {
         return {
           value: val._id,
-          label: `${val.name} (${val.username}) - ${val.userType === 1 ? "Internal" : "Eksternal"
-            }`,
+          label: `${val.name} (${val.username}) - ${
+            val.userType === 1 ? "Internal" : "Eksternal"
+          }`,
         };
       });
 

@@ -31,7 +31,7 @@ module.exports = {
 
       const fromDate2 = fromDate
         ? moment(req.query.fromDate).format("ddd MMM DD YYYY") +
-        "07:00:00 GMT+0700 (Western Indonesia Time)"
+          "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
       const toDate = req.query.toDate
@@ -40,7 +40,7 @@ module.exports = {
 
       const toDate2 = toDate
         ? moment(req.query.toDate).format("ddd MMM DD YYYY") +
-        "07:00:00 GMT+0700 (Western Indonesia Time)"
+          "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
       const date1 = moment().format("ddd MMM DD YYYY");
@@ -123,7 +123,7 @@ module.exports = {
           _id: {
             $in: ids,
           },
-          status: { $ne: "deleted" }
+          status: { $ne: "deleted" },
         });
 
         ids = [];
@@ -244,7 +244,7 @@ module.exports = {
 
       const fromDate2 = fromDate
         ? moment(req.query.fromDate).format("ddd MMM DD YYYY") +
-        "07:00:00 GMT+0700 (Western Indonesia Time)"
+          "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
       const toDate = req.query.toDate
@@ -253,10 +253,12 @@ module.exports = {
 
       const toDate2 = toDate
         ? moment(req.query.toDate).format("ddd MMM DD YYYY") +
-        "07:00:00 GMT+0700 (Western Indonesia Time)"
+          "07:00:00 GMT+0700 (Western Indonesia Time)"
         : null;
 
-      let totalData = await KelasModel.countDocuments({ status: { $ne: "deleted" } });
+      let totalData = await KelasModel.countDocuments({
+        status: { $ne: "deleted" },
+      });
 
       let data = await KelasModel.find({ status: { $ne: "deleted" } })
         .skip((halaman - 1) * batas)
@@ -323,7 +325,7 @@ module.exports = {
 
         data = await KelasModel.find({
           _id: { $in: ids },
-          status: { $ne: "deleted" }
+          status: { $ne: "deleted" },
         })
           .skip((halaman - 1) * batas)
           .limit(batas)
@@ -332,7 +334,7 @@ module.exports = {
 
         totalData = await KelasModel.countDocuments({
           _id: { $in: ids },
-          status: { $ne: "deleted" }
+          status: { $ne: "deleted" },
         });
       }
 
@@ -899,7 +901,7 @@ module.exports = {
           for (let j = 0; j < kelas[i].peserta.length; j++) {
             const user = await UserModel.findById(kelas[i].peserta[j].user);
 
-            peserta.push(user.name)
+            peserta.push(user.name);
           }
 
           let instruktur = [];
@@ -1008,19 +1010,17 @@ module.exports = {
         }
 
         if (postTestId) {
-          const postTestScore = await TestAnswer
-            .findOne({
-              test: postTestId,
-              $and: [
-                {
-                  class: kelas,
-                },
-                {
-                  user: user._id,
-                },
-              ],
-            })
-            .populate("user", "name");
+          const postTestScore = await TestAnswer.findOne({
+            test: postTestId,
+            $and: [
+              {
+                class: kelas,
+              },
+              {
+                user: user._id,
+              },
+            ],
+          }).populate("user", "name");
 
           if (postTestScore) {
             postTest = postTestScore.nilai;
@@ -1062,24 +1062,26 @@ module.exports = {
             },
           ],
         });
-        let reportAbsen = []
+        let reportAbsen = [];
 
         if (absen.length > 0) {
-          classes.absensi.map(val => {
+          classes.absensi.map((val) => {
             reportAbsen.push({
               name: val.name,
               jumlah_absen: classes.jadwal.length,
-              hadir: absen.filter(absensi => absensi.absenName === val.name).length ?? 0
-            })
-          })
+              hadir:
+                absen.filter((absensi) => absensi.absenName === val.name)
+                  .length ?? 0,
+            });
+          });
         } else {
-          classes.absensi.map(val => {
+          classes.absensi.map((val) => {
             reportAbsen.push({
               name: val.name,
               jumlah_absen: classes.jadwal.length,
-              hadir: 0
-            })
-          })
+              hadir: 0,
+            });
+          });
         }
 
         data.push({
@@ -1188,7 +1190,7 @@ module.exports = {
           kelas = await KelasModel.find({
             _id: { $in: ids },
             status: { $ne: "deleted" },
-          }).populate("materi peserta kategori trainingMethod")
+          }).populate("materi peserta kategori trainingMethod");
 
           if (kelas.length > 0) {
             for (let i = 0; i < kelas.length; i++) {
@@ -1258,7 +1260,7 @@ module.exports = {
 
         data = await KelasModel.find({
           _id: { $in: kelasIds },
-          status: { $ne: "deleted" }
+          status: { $ne: "deleted" },
         })
           .skip((page - 1) * limit)
           .limit(limit)
@@ -1293,11 +1295,17 @@ module.exports = {
 
   changeStatusPostTest: async function (req, res) {
     try {
-      const kelas = await KelasModel.findByIdAndUpdate(req.params.id, [{
-        $set: {
-          activePostTest: { "$eq": [false, "$activePostTest"] }
-        }
-      }], { new: true })
+      const kelas = await KelasModel.findByIdAndUpdate(
+        req.params.id,
+        [
+          {
+            $set: {
+              activePostTest: { $eq: [false, "$activePostTest"] },
+            },
+          },
+        ],
+        { new: true }
+      );
       return response(200, kelas, "berhasil aktifkan post test", res);
     } catch (error) {
       return response(500, error, error.message, res);
@@ -1404,25 +1412,32 @@ module.exports = {
 
   getStudents: async (req, res) => {
     try {
-      let where = { role: 3 }
+      let where = { role: 3 };
       if (req.query.from && req.query.to) {
         where.createdAt = {
           $gte: new Date(req.query.from),
-          $lt: new Date(req.query.to)
-        }
+          $lt: new Date(req.query.to),
+        };
       }
       if (req.query.name) {
-        where.name = { $regex: `^${req.query.name}`, $options: "i" }
+        where.name = { $regex: `^${req.query.name}`, $options: "i" };
       }
-      const totalData = await UserModel.countDocuments(where)
+      const totalData = await UserModel.countDocuments(where);
 
-      const students = await UserModel.find(where).skip((parseInt(req.query.page) - 1) * parseInt(req.query.limit))
-        .limit(parseInt(req.query.limit)).sort({ name: 1 });
+      const students = await UserModel.find(where)
+        .skip((parseInt(req.query.page) - 1) * parseInt(req.query.limit))
+        .limit(parseInt(req.query.limit))
+        .sort({ name: 1 });
 
-      return response(200, {
-        students,
-        totalData: totalData
-      }, "berhasil", res);
+      return response(
+        200,
+        {
+          students,
+          totalData: totalData,
+        },
+        "berhasil",
+        res
+      );
     } catch (e) {
       return response(500, e, "something went wrong", res);
     }
@@ -1947,14 +1962,14 @@ module.exports = {
         link,
         absensi,
         trainingMethod,
-        biaya
+        biaya,
       } = req.body;
 
       let imageKelas = null;
       let status = "pending";
 
       if (req.file) {
-        const path = req.file.path.replaceAll("\\", '/')
+        const path = req.file.path.replaceAll("\\", "/");
         imageKelas = "/upload/" + path.split("/upload/")[1];
       }
 
@@ -2006,8 +2021,8 @@ module.exports = {
               filtered[0].status === "pending"
                 ? "pending"
                 : filtered[0].status === "Approved"
-                  ? "draft"
-                  : "declined";
+                ? "draft"
+                : "declined";
           }
         }
       }
@@ -2034,7 +2049,7 @@ module.exports = {
         kategori,
         trainingMethod,
         status,
-        biaya: biaya.replaceAll(',', '')
+        biaya: biaya.replaceAll(",", ""),
       });
 
       const result = await kelas.save({ session });
@@ -2073,7 +2088,7 @@ module.exports = {
         absensi,
         status,
         trainingMethod,
-        biaya
+        biaya,
       } = req.body;
 
       const checkKelas = await KelasModel.findById(id);
@@ -2085,7 +2100,7 @@ module.exports = {
       let imageKelas;
 
       if (req.file) {
-        const path = req.file.path.replaceAll("\\", '/')
+        const path = req.file.path.replaceAll("\\", "/");
         imageKelas = "/upload/" + path.split("/upload/")[1];
         // imageKelas = "/upload/" + req.file.path.split("/upload/")[1];
       }
@@ -2128,7 +2143,7 @@ module.exports = {
         kategori: kategori ?? checkKelas.kategori,
         status: newStatus ?? checkKelas.status,
         trainingMethod: trainingMethod ?? checkKelas.trainingMethod,
-        biaya: biaya?.replaceAll(',', '') ?? checkKelas.biaya
+        biaya: biaya?.replaceAll(",", "") ?? checkKelas.biaya,
       };
 
       const result = await KelasModel.findByIdAndUpdate(id, kelas, {
@@ -2787,11 +2802,7 @@ module.exports = {
           isActive: isActive,
         });
 
-        let len = 0;
-
         if (nama) {
-          len = nama.length;
-
           kelas.map(async (k) => {
             if (k.nama.toLowerCase().includes(nama.toLowerCase())) {
               ids.push(k._id);
@@ -2857,7 +2868,7 @@ module.exports = {
               for (var i = 0; i < k.jadwal.length; i++) {
                 if (
                   moment(k.jadwal[i].tanggal).format("YYYY-MM-DD") >=
-                  fromDate &&
+                    fromDate &&
                   moment(k.jadwal[i].tanggal).format("YYYY-MM-DD") <= toDate
                 ) {
                   ids.push(k._id);
@@ -3257,7 +3268,7 @@ module.exports = {
             for (let j = 0; j < registered[i].kelas.length; j++) {
               if (
                 registered[i].kelas[j].kelas.toString() ==
-                getKelas._id.toString() &&
+                  getKelas._id.toString() &&
                 registered[i].kelas[j].status == status
               ) {
                 pesertaIds.push(registered[i]._id);
@@ -3311,17 +3322,23 @@ module.exports = {
       if (status.length > 0) {
         pesertaIds = [];
 
-        for (let i = 0; i < registered.length; i++) {
-          for (let j = 0; j < registered[i].kelas.length; j++) {
-            if (
-              registered[i].kelas[j].kelas.toString() ==
-              getKelas._id.toString() &&
-              registered[i].kelas[j].status == status
-            ) {
-              pesertaIds.push(registered[i]._id);
-            }
+        for (let i = 0; i < getKelas.peserta.length; i++) {
+          if (getKelas.peserta[i].status == status) {
+            pesertaIds.push(getKelas.peserta[i].user);
           }
         }
+
+        // for (let i = 0; i < registered.length; i++) {
+        //   for (let j = 0; j < registered[i].kelas.length; j++) {
+        //     if (
+        //       registered[i].kelas[j].kelas.toString() ==
+        //         getKelas._id.toString() &&
+        //       registered[i].kelas[j].status == status
+        //     ) {
+        //       pesertaIds.push(registered[i]._id);
+        //     }
+        //   }
+        // }
 
         peserta = await UserModel.find({
           _id: { $in: pesertaIds },
