@@ -821,9 +821,9 @@ module.exports = {
       });
 
       if (user) {
-        const token = jwt.sign({ id: user._id, role: user.role }, secret_key);
+        // const token = jwt.sign({ id: user._id, role: user.role }, secret_key);
 
-        return response(200, { token, user }, "Login berhasil", res);
+        // return response(200, { token, user }, "Login berhasil", res);
         const cekPassword = bcrypt.compareSync(password, user.password);
         if (cekPassword) {
           if (is_enrollment == true && user.role == 3) {
