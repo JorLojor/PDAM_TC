@@ -3228,7 +3228,18 @@ module.exports = {
 
     try {
       const getKelas = await KelasModel.findOne({ slug });
-
+      const findVariable = {
+          kelas: {}
+      };
+      
+      if (getKelas) {
+            // Initialize findVariable.kelas if it does not exist
+            if (!findVariable.kelas.$elemMatch) {
+                findVariable.kelas.$elemMatch = {};
+            }
+            // Now you can safely set findVariable.kelas.kelas
+            findVariable.kelas.$elemMatch.kelas = getKelas._id;
+        }
       //? Get All Peserta Id, Expected Output UserID[]
       let pesertaIds = getKelas.peserta.map((v) => v.user);
 
@@ -3294,39 +3305,40 @@ module.exports = {
       }
 
       //? Get Data Peserta with Selected ID in pesertaIds, Expected Output User[]
-      peserta = await UserModel.find({ _id: { $in: pesertaIds } })
-        .skip((page - 1) * limit)
-        .limit(limit);
+    //   peserta = await UserModel.find({ _id: { $in: pesertaIds } })
+    //     .skip((page - 1) * limit)
+    //     .limit(limit);
 
-      let registered = peserta.map((p) => p);
+    //   let registered = peserta.map((p) => p);
 
       //? If Query has Type then Modify the Peserta
       if (type > -1) {
-        pesertaIds = [];
+        // pesertaIds = [];
 
-        for (let i = 0; i < registered.length; i++) {
-          if (registered[i].userType == type) {
-            pesertaIds.push(registered[i]._id);
-          }
-        }
+        // for (let i = 0; i < registered.length; i++) {
+        //   if (registered[i].userType == type) {
+        //     pesertaIds.push(registered[i]._id);
+        //   }
+        // }
 
-        peserta = await UserModel.find({
-          _id: { $in: pesertaIds },
-        })
-          .skip((page - 1) * limit)
-          .limit(limit);
+        // peserta = await UserModel.find({
+        //   _id: { $in: pesertaIds },
+        // })
+        //   .skip((page - 1) * limit)
+        //   .limit(limit);
+        findVariable.userType = type
       }
 
-      registered = peserta.map((p) => p);
+    //   registered = peserta.map((p) => p);
 
       if (status.length > 0) {
-        pesertaIds = [];
+        // pesertaIds = [];
 
-        for (let i = 0; i < getKelas.peserta.length; i++) {
-          if (getKelas.peserta[i].status == status) {
-            pesertaIds.push(getKelas.peserta[i].user);
-          }
-        }
+        // for (let i = 0; i < getKelas.peserta.length; i++) {
+        //   if (getKelas.peserta[i].status == status) {
+        //     pesertaIds.push(getKelas.peserta[i].user);
+        //   }
+        // }
 
         // for (let i = 0; i < registered.length; i++) {
         //   for (let j = 0; j < registered[i].kelas.length; j++) {
@@ -3340,20 +3352,24 @@ module.exports = {
         //   }
         // }
 
-        peserta = await UserModel.find({
-          _id: { $in: pesertaIds },
-        })
-          .skip((page - 1) * limit)
-          .limit(limit);
+        // peserta = await UserModel.find({
+        //   _id: { $in: pesertaIds },
+        // })
+        //   .skip((page - 1) * limit)
+        //   .limit(limit);
+        findVariable.kelas.$elemMatch.status = status
       }
-
-      if (peserta) {
-        totalData = peserta.length;
-      }
+    const pagData = await UserModel.find(findVariable)
+        .skip((page - 1) * limit)
+        .limit(limit);
+    const totalData = await UserModel.countDocuments(findVariable)
+    //   if (peserta) {
+    //     totalData = peserta.length;
+    //   }
 
       const result = {
         name: getKelas.nama,
-        peserta,
+        peserta: pagData,
         total: totalData,
         page: page,
         limit: limit,
